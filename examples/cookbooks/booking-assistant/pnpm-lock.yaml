@@ -21,8 +21,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(@modelcontextprotocol/sdk@1.30.1(zod@4.6.5))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5)
       '@openuidev/react-ui':
-        specifier: 0.18.3
-        version: 0.18.3(@openuidev/react-headless@0.18.4(react@19.2.4)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4)))(@openuidev/react-lang@1.1.0(@modelcontextprotocol/sdk@1.30.1(zod@4.6.5))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4))
+        specifier: 0.18.4
+        version: 0.18.4(@openuidev/react-headless@0.18.4(react@19.2.4)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4)))(@openuidev/react-lang@1.1.0(@modelcontextprotocol/sdk@1.30.1(zod@4.6.5))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4))
       '@openuidev/server':
         specifier: 0.4.0
         version: 0.4.0(@modelcontextprotocol/sdk@1.30.1(zod@4.6.5))(zod@4.6.5)
@@ -46,8 +46,8 @@ importers:
         version: 4.6.5
     devDependencies:
       '@openuidev/cli':
-        specifier: 0.6.1
-        version: 0.6.1(@types/node@22.20.4)
+        specifier: 0.6.2
+        version: 0.6.2(@types/node@22.20.4)
       '@types/node':
         specifier: ^22.15.32
         version: 22.20.4
@@ -614,8 +614,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@openuidev/cli@0.6.1':
-    resolution: {integrity: sha512-JhJSdPB+ubycQpW8v0hWQmTs7WcH65RE3pDGHZqSkGJRVVsFPls6S8p2VU8DuDdwpih/iM3AdaRu+yWAu1EqyA==}
+  '@openuidev/cli@0.6.2':
+    resolution: {integrity: sha512-wCVc5z8v522O6U193Lk4yaLlYhsf2MoeBsO8lPZFlmagkt3dMVjCvPTNyHOZUJCxJMs1KQO6ByiPZUkZQmKtZw==}
     hasBin: true
 
   '@openuidev/devtools@0.3.1':
@@ -667,8 +667,8 @@ packages:
       react-native:
         optional: true
 
-  '@openuidev/react-ui@0.18.3':
-    resolution: {integrity: sha512-DhN7WxgwbT09ncSoISZR25q1mSkP/eSAlBym0xnkekcfZE74flDYiD4PzQKybC+4vXsDOnMWCEeU+E1YFaRLLQ==}
+  '@openuidev/react-ui@0.18.4':
+    resolution: {integrity: sha512-7xxb1qffJtRb6GrOOwpzMtkv60CTKY6DdndK3pPVPMuqCqumQzHk4/2XvhX0Y8wN5py1f12k2oKsEJsxb+GErA==}
     peerDependencies:
       '@openuidev/react-headless': '>=0.18.2 <0.19.0'
       '@openuidev/react-lang': '>=1.0.0 <2.0.0'
@@ -2782,7 +2782,7 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.2.6':
     optional: true
 
-  '@openuidev/cli@0.6.1(@types/node@22.20.4)':
+  '@openuidev/cli@0.6.2(@types/node@22.20.4)':
     dependencies:
       '@inquirer/core': 11.2.1(@types/node@22.20.4)
       '@inquirer/prompts': 8.7.2(@types/node@22.20.4)
@@ -2835,7 +2835,7 @@ snapshots:
       '@modelcontextprotocol/sdk': 1.30.1(zod@4.6.5)
       react-dom: 19.2.4(react@19.2.4)
 
-  '@openuidev/react-ui@0.18.3(@openuidev/react-headless@0.18.4(react@19.2.4)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4)))(@openuidev/react-lang@1.1.0(@modelcontextprotocol/sdk@1.30.1(zod@4.6.5))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4))':
+  '@openuidev/react-ui@0.18.4(@openuidev/react-headless@0.18.4(react@19.2.4)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4)))(@openuidev/react-lang@1.1.0(@modelcontextprotocol/sdk@1.30.1(zod@4.6.5))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.6.5)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4))':
     dependencies:
       '@floating-ui/react-dom': 2.1.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@openuidev/react-headless': 0.18.4(react@19.2.4)(zustand@4.5.7(@types/react@19.3.0)(react@19.2.4))
