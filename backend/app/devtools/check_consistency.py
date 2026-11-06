@@ -10,6 +10,8 @@ Checks:
   pins      tool versions agree between the Dockerfile, .nvmrc, package.json, CI and init.sh
   paths     repository paths cited in backticks in the documents exist
   claude    the CLAUDE.md template references every file config.yaml requires
+  privacy   telemetry is switched off where dependencies are installed, and the one
+            dependency install script that only sends telemetry is not allowed to run
 """
 
 import json
@@ -71,8 +73,13 @@ MOVED_TO_REFERENCE = ("packages/", "examples/", "spec/")
 # `templates/` was removed; the erratum in adr.md must give its upstream location.
 REMOVED_UPSTREAM = ("templates/",)
 UPSTREAM_TEMPLATES_URL = "https://github.com/thesysdev/openui/tree/main/templates"
-# Paths created at runtime or by a later Work Item, or that are examples.
-RUNTIME_PATHS = ("backend/data/", "frontend/src/generated")
+# Paths created at runtime, by a later Work Item, or by the owners (the evaluation question set
+# is prepared by gamug and dova before TASK-018), or that are examples.
+RUNTIME_PATHS = (
+    "backend/data/",
+    "frontend/src/generated",
+    "backend/tests/evaluation/questions.json",
+)
 
 
 def _read(root: Path, relative: str) -> str:
@@ -161,6 +168,18 @@ def check_pins(root: Path = REPO) -> list[str]:
     if f"gitleaks {gitleaks}" not in init:
         issues.append(f"scripts/init.sh does not mention gitleaks {gitleaks}")
 
+    shellcheck = _arg(dockerfile, "SHELLCHECK_VERSION")
+    workflow_shellcheck = re.search(r'SHELLCHECK_VERSION: "([^"]+)"', workflow)
+    if not workflow_shellcheck or workflow_shellcheck.group(1) != shellcheck:
+        issues.append(f"validators.yml SHELLCHECK_VERSION does not match Dockerfile ({shellcheck})")
+    workflow_sha = re.search(r'SHELLCHECK_SHA256: "([0-9a-f]{64})"', workflow)
+    if not workflow_sha or workflow_sha.group(1) != _arg(dockerfile, "SHELLCHECK_SHA256_X64"):
+        issues.append(
+            "validators.yml SHELLCHECK_SHA256 differs from the Dockerfile x86_64 checksum"
+        )
+    if f"shellcheck {shellcheck}" not in init:
+        issues.append(f"scripts/init.sh does not mention shellcheck {shellcheck}")
+
     python = _read(root, ".python-version").strip()
     if f"python:{python}" not in dockerfile:
         issues.append(f".python-version ({python}) is not the Dockerfile base image")
@@ -212,11 +231,42 @@ def check_claude_template(root: Path = REPO) -> list[str]:
     ]
 
 
+TELEMETRY_OFF = {"DO_NOT_TRACK": "1", "OPENUI_TELEMETRY_DISABLED": "1"}
+# Package whose install script only sends installation telemetry; it must not be allowed to run.
+TELEMETRY_PACKAGE = "@openuidev/lang-core"
+
+
+def check_privacy(root: Path = REPO) -> list[str]:
+    """The project states that data leaves the machine only to GraphDB and DeepSeek."""
+    issues: list[str] = []
+    devcontainer = json.loads(_read(root, ".devcontainer/devcontainer.json"))
+    container_env = devcontainer.get("containerEnv", {})
+    workflow = _read(root, ".github/workflows/validators.yml")
+    init = _read(root, "scripts/init.sh")
+    for name, value in TELEMETRY_OFF.items():
+        if container_env.get(name) != value:
+            issues.append(f"devcontainer.json containerEnv does not set {name}={value}")
+        if f'{name}: "{value}"' not in workflow:
+            issues.append(f".github/workflows/validators.yml does not set {name}={value}")
+        if f"export {name}={value}" not in init:
+            issues.append(f"scripts/init.sh does not export {name}={value}")
+    for relative in ("frontend/pnpm-workspace.yaml", "frontend/package.json"):
+        allowed = [
+            line
+            for line in _read(root, relative).splitlines()
+            if TELEMETRY_PACKAGE in line and not line.lstrip().startswith("#")
+        ]
+        if allowed:
+            issues.append(f"{relative} allows the install script of {TELEMETRY_PACKAGE}")
+    return issues
+
+
 CHECKS: dict[str, Callable[[Path], list[str]]] = {
     "commands": check_commands,
     "pins": check_pins,
     "paths": check_paths,
     "claude": check_claude_template,
+    "privacy": check_privacy,
 }
 
 

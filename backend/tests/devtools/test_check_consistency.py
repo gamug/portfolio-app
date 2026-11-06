@@ -14,6 +14,8 @@ COPIED = sorted(
         ".nvmrc",
         ".python-version",
         ".devcontainer/Dockerfile",
+        ".devcontainer/devcontainer.json",
+        "frontend/pnpm-workspace.yaml",
         ".github/workflows/validators.yml",
         ".pre-commit-config.yaml",
         "scripts/init.sh",
@@ -42,6 +44,19 @@ PIN_DRIFTS = [
     ("scripts/init.sh", "pnpm@10.33.0", "pnpm@9.0.0", "pnpm@"),
     ("scripts/init.sh", "uv==0.12.1", "uv==0.0.1", "uv=="),
     ("scripts/init.sh", "gitleaks 8.30.1", "gitleaks 8.0.0", "gitleaks 8.30.1"),
+    (
+        ".github/workflows/validators.yml",
+        'SHELLCHECK_VERSION: "0.11.0"',
+        'SHELLCHECK_VERSION: "0.9.0"',
+        "SHELLCHECK_VERSION",
+    ),
+    (
+        ".github/workflows/validators.yml",
+        'SHELLCHECK_SHA256: "8c3be12b',
+        'SHELLCHECK_SHA256: "00000000',
+        "SHELLCHECK_SHA256",
+    ),
+    ("scripts/init.sh", "shellcheck 0.11.0", "shellcheck 0.9.0", "shellcheck 0.11.0"),
     (".python-version", "3.12", "3.13", ".python-version"),
     (
         "backend/pyproject.toml",
@@ -107,6 +122,45 @@ def test_a_renamed_file_cited_by_history_resolves_to_its_new_path() -> None:
     for old, new in check_consistency.RENAMED.items():
         assert not (REPO / old).exists()
         assert (REPO / new).exists()
+
+
+PRIVACY_BREAKS = [
+    (
+        ".devcontainer/devcontainer.json",
+        '"DO_NOT_TRACK": "1"',
+        '"DO_NOT_TRACK": "0"',
+        "containerEnv",
+    ),
+    (
+        ".devcontainer/devcontainer.json",
+        '"OPENUI_TELEMETRY_DISABLED": "1"',
+        '"OPENUI_TELEMETRY_DISABLED": "0"',
+        "containerEnv",
+    ),
+    (
+        ".github/workflows/validators.yml",
+        'DO_NOT_TRACK: "1"',
+        'DO_NOT_TRACK: "0"',
+        "validators.yml",
+    ),
+    ("scripts/init.sh", "export OPENUI_TELEMETRY_DISABLED=1", "echo skipped", "init.sh"),
+    (
+        "frontend/pnpm-workspace.yaml",
+        "allowBuilds:\n",
+        'allowBuilds:\n  "@openuidev/lang-core": true\n',
+        "pnpm-workspace.yaml allows",
+    ),
+]
+
+
+@pytest.mark.parametrize(("relative", "old", "new", "expected"), PRIVACY_BREAKS)
+def test_detects_a_privacy_regression(
+    tmp_path: Path, relative: str, old: str, new: str, expected: str
+) -> None:
+    root = _copy(tmp_path)
+    _edit(root, relative, old, new)
+    issues = check_consistency.check_privacy(root)
+    assert any(expected in issue for issue in issues), issues
 
 
 def test_detects_a_claude_template_missing_a_required_reference(tmp_path: Path) -> None:

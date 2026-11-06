@@ -12,6 +12,12 @@ permissions:
 env:
   GITLEAKS_VERSION: "8.30.1"
   PNPM_VERSION: "10.33.0"
+  SHELLCHECK_VERSION: "0.11.0"
+  SHELLCHECK_SHA256: "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198" # linux x86_64
+  # The project states that data leaves the machine only to GraphDB and DeepSeek: no dependency
+  # or CLI telemetry (see README, "Privacy").
+  DO_NOT_TRACK: "1"
+  OPENUI_TELEMETRY_DISABLED: "1"
 
 jobs:
   validate:
@@ -77,10 +83,19 @@ jobs:
           git log --format=%s "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
             | python3 backend/app/devtools/check_commit_msg.py --stdin
 
-  # Shell scripts are not covered by ruff or mypy; ShellCheck is preinstalled on GitHub-hosted runners.
+  # Shell scripts are not covered by ruff or mypy. ShellCheck is pinned like the other tools
+  # (same version and checksum as the devcontainer image), not taken from the runner image.
   shellcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install ShellCheck
+        run: |
+          set -euo pipefail
+          file="shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          curl -fsSLO "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/${file}"
+          echo "${SHELLCHECK_SHA256}  ${file}" | sha256sum -c -
+          tar -xJf "${file}"
+          sudo install -m 0755 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
       - name: ShellCheck
         run: shellcheck scripts/*.sh

@@ -10,6 +10,10 @@
     5173,
     8000
   ],
+  "containerEnv": {
+    "DO_NOT_TRACK": "1",
+    "OPENUI_TELEMETRY_DISABLED": "1"
+  },
   "postCreateCommand": "bash scripts/init.sh",
   "customizations": {
     "vscode": {

@@ -5,6 +5,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# The project states that data leaves the machine only to GraphDB and DeepSeek: turn off the
+# telemetry of the dependencies and the OpenUI CLI (see README, "Privacy").
+export DO_NOT_TRACK=1
+export OPENUI_TELEMETRY_DISABLED=1
+
 fail() {
   echo "ERROR: $1" >&2
   echo "  Fix: $2" >&2
@@ -20,7 +25,7 @@ need python3 "install Python 3 (it runs the commit-message hook); the project it
 need uv "install uv 0.12.1, for example: pip install uv==0.12.1"
 need node "install Node.js $(cat .nvmrc) or newer, for example with fnm or nvm (the version is pinned in .nvmrc)."
 need pnpm "install pnpm 10.33.0, for example: npm install -g pnpm@10.33.0"
-need shellcheck "install shellcheck (the devcontainer image includes it): https://github.com/koalaman/shellcheck#installing"
+need shellcheck "install shellcheck 0.11.0 (the devcontainer image includes it): https://github.com/koalaman/shellcheck#installing"
 need gitleaks "install gitleaks 8.30.1 (the devcontainer image includes it): https://github.com/gitleaks/gitleaks/releases"
 
 node_version="$(node -p 'process.versions.node')"

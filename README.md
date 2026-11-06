@@ -1,6 +1,6 @@
 # portfolio-app-new
 
-A chat interface to a GraphDB knowledge graph, with a report panel beside it. The analyst chats with the graph, marks the useful question-answer pairs, presses **Generate Report**, and downloads the result as one self-contained HTML file. The report view is built on [OpenUI](https://github.com/thesysdev/openui); this repository is a fork of `thesysdev/openui` (MIT, see `LICENSE`).
+A chat interface to a GraphDB knowledge graph, with a report panel beside it. The analyst chats with the graph, marks the useful question-answer pairs, presses **Generate Report**, and downloads the result as one self-contained HTML file. The report view is built on [OpenUI](https://github.com/thesysdev/openui); this repository is a fork of `thesysdev/openui` (MIT: `LICENSE` keeps the upstream notice and adds this project's copyright).
 
 The project follows specification-driven development:
 
@@ -26,7 +26,7 @@ bash scripts/init.sh
 
 The script is safe to re-run. It checks the prerequisites, creates `.env` from `.env.example` if it is missing (it never overwrites it), installs the locked dependencies, installs the git hooks, and runs the baseline checks. Then fill `.env`: `LLM_API_KEY` (DeepSeek) and a **read-only** GraphDB user in `KG_USER` and `KG_PASSWORD`. `.env` is never committed.
 
-Prerequisites outside the container: git, python3, uv 0.12.1, Node.js 22.12 or newer (`.nvmrc`), pnpm 10.33.0, gitleaks 8.30.1, shellcheck. GraphDB 11.5 runs separately; the container reaches it at `KG_HOST` (default `http://host.docker.internal:7200`).
+Prerequisites outside the container: git, python3, uv 0.12.1, Node.js 22.12 or newer (`.nvmrc`), pnpm 10.33.0, gitleaks 8.30.1, shellcheck 0.11.0. GraphDB 11.5 runs separately; the container reaches it at `KG_HOST` (default `http://host.docker.internal:7200`).
 
 ## Commands
 
@@ -49,9 +49,17 @@ Run from the repository root (they are fixed in `config.yaml`):
 feat(chat): stream the answer [FR-002][WI-008][TASK-020]
 ```
 
-CI (`.github/workflows/validators.yml`) runs gitleaks, ruff, mypy, ESLint and Prettier, tsc, pytest and Vitest, in that order. A separate job checks every commit subject of the pull request with the same rule as the hook, because the hook only runs where `scripts/init.sh` installed it. Pull requests are merged with a merge commit, so the PR title is not used as a commit subject. The pytest gate also runs two repository checks from `backend/app/devtools/`: `check_consistency.py` (fails when `config.yaml` commands, tool versions, cited repository paths or the `CLAUDE.md` template drift apart) and `check_sdd.py` (traceability of `.sdd/SPEC.md`, `PLAN.md` and `TASKS.md`). A `shellcheck` job lints `scripts/*.sh`.
+CI (`.github/workflows/validators.yml`) runs gitleaks, ruff, mypy, ESLint and Prettier, tsc, pytest and Vitest, in that order. A separate job checks every commit subject of the pull request with the same rule as the hook, because the hook only runs where `scripts/init.sh` installed it. Pull requests are merged with a merge commit (squash and rebase merging are disabled in the repository settings), so the PR title is not used as a commit subject. The pytest gate also runs two repository checks from `backend/app/devtools/`: `check_consistency.py` (fails when `config.yaml` commands, tool versions, cited repository paths or the `CLAUDE.md` template drift apart) and `check_sdd.py` (traceability of `.sdd/SPEC.md`, `PLAN.md` and `TASKS.md`). A `shellcheck` job lints `scripts/*.sh`.
 
 The GitHub ruleset `main protection` blocks deleting `main` and force-pushes; it does not require pull requests or the CI checks (accepted by the owners), so the pull-request-only rule holds by convention.
+
+## Privacy
+
+The project states that data leaves the machine only to GraphDB and DeepSeek. The OpenUI packages and CLI can send telemetry to a third party, so `DO_NOT_TRACK=1` and `OPENUI_TELEMETRY_DISABLED=1` are set in the devcontainer, in CI and in `scripts/init.sh`, and the install script of `@openuidev/lang-core` (it only sends installation telemetry) is not allowed to run. Set the same variables in your shell if you run `pnpm install` or the `openui` CLI outside the container. `check_consistency.py` fails if any of this is removed.
+
+## Evaluation question set
+
+The curated question set behind the 90% accuracy target lives in `backend/tests/evaluation/` (format and rules in its README). The repository is public, so it may contain only facts the owners approve for publication.
 
 ## SDD artifacts
 

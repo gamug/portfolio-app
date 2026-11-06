@@ -1,13 +1,14 @@
 # The frontend is its own pnpm workspace root. reference/ has a separate OpenUI workspace that this
 # project never installs.
 packages: ["."]
+# "@openuidev/lang-core" is deliberately not allowed to run its install script: that script only
+# sends installation telemetry to a third party, and the project states that data leaves the
+# machine only to GraphDB and DeepSeek (see README, "Privacy").
 onlyBuiltDependencies:
-  - "@openuidev/lang-core"
   - esbuild
   - sharp
   - unrs-resolver
 allowBuilds:
-  "@openuidev/lang-core": true
   esbuild: true
   sharp: true
   unrs-resolver: true

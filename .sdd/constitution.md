@@ -33,6 +33,7 @@ Governing principles for **portfolio-app-new** under a specification-driven deve
   - backend: backend/tests mirroring backend/app 
   - frontend: tests beside the code in frontend/src 
   - fixtures: backend/tests/fixtures; small, committed, hermetic, with no real graph data or secrets 
+  - evaluation: backend/tests/evaluation holds the curated question set prepared by gamug and dova; it is committed to this public repository so it holds only facts the owners approve for publication 
 - Each tool has one canonical configuration: 
   - python tools: backend/pyproject.toml (ruff, mypy, pytest) 
   - frontend tools: the ESLint flat config and the Prettier config in frontend/ 

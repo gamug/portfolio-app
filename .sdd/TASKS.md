@@ -4,7 +4,7 @@ Task register for the hierarchy `FR-001 > WI > Task` defined in [`PLAN.md`](./PL
 
 `$SKILL_DIR` is `.sdd-tooling/skills/sdd-init`, a checkout of [gamug/sdd-template](https://github.com/gamug/sdd-template) at the commit pinned in `scripts/sdd-verify.sh` (it is gitignored). `bash scripts/sdd-verify.sh` fetches it and runs the validators; commands run from the project root.
 
-Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x]` means done. A Work Item is checked only when every task under it is checked, in the same change as its last task. Progress is tracked in this file: TASK-001 through TASK-010 and WI-001 through WI-003 were checked when initialization reached TASK-010. Work Items and tasks added to `.sdd/TASKS.md` carry the same boxes and follow the same rule.
+Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x]` means done. A Work Item is checked only when every task under it is checked, in the same change as its last task. Progress is tracked in this file: the checkboxes are the current state, and `backend/app/devtools/check_sdd.py` checks them against `PLAN.md` and `SPEC.md`. Work Items and tasks added to `.sdd/TASKS.md` carry the same boxes and follow the same rule.
 
 ## WI-001 — Run the discovery skill and create PRODUCT.md
 
@@ -182,7 +182,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Work Item:** WI-007
 - **Depends on:** TASK-017
 - **Acceptance criteria:** AC-SPIKE-02
-- **Action:** Run a DeepSeek tool loop over the GraphDB tools against the curated question set and record accuracy and failure modes (RSK-001).
+- **Action:** Prerequisite: `backend/tests/evaluation/questions.json` prepared by gamug and dova (format in its README). Run a DeepSeek tool loop over the GraphDB tools against the curated question set and record accuracy and failure modes (RSK-001).
 
 ### TASK-019 — Spike OpenUI generation, chat layout and report export
 
@@ -330,7 +330,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Work Item:** WI-014
 - **Depends on:** TASK-032
 - **Acceptance criteria:** AC-ACC-01
-- **Action:** Run the curated question set prepared by the project owners and record the result against the 90% target.
+- **Action:** Run the curated question set in `backend/tests/evaluation/questions.json` (prepared by the project owners) and record the result against the 90% target.
 
 ### TASK-034 — Run end-to-end verification and fix defects
 

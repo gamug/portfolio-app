@@ -177,12 +177,15 @@ Test the MVP against the acceptance criteria and the curated question set (roadm
 | Section 6, Verification command | `uv run pytest`, the frontend suite and a check of `GET /api/health` | `uv run --directory backend pytest` and `pnpm --dir frontend test --run` (see `config.yaml`); the health check is **intentionally not implemented** (owners' decision, 2026-11-06: no functional requirement covers it, so `TASK-035` was removed) |
 | Sections 6 and 8, Coding agent | "There is no init command" for `CLAUDE.md` | `scripts/init.sh` creates it from a tracked template (decided by the owners, 2026-11-06) |
 | Section 8, Governance | amendments logged in `CHANGELOG.md` | `.sdd/CHANGELOG.md` (`config.yaml`) |
-| Section 8, CI | the inherited OpenUI workflows stay in the repository and are disabled | every job is guarded by `github.repository == 'thesysdev/openui'`, and they are disabled in GitHub settings |
+| Section 8, CI | the inherited OpenUI workflows stay in the repository and are disabled | every job is guarded by `github.repository == 'thesysdev/openui'`, and the four that had already run were also disabled in GitHub settings (the other five never registered) |
 | Sections 4 to 6 and ADRs | paths `packages/`, `examples/`, `spec/`, `templates/` | `packages/`, `examples/` and `spec/` moved to `reference/`; `templates/` removed (erratum in `adr.md`) |
 | Section 3, user stories | acceptance scenarios of `US-001` to `US-007` | derived criteria added in `SPEC.md`: `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01`, `AC-SPIKE-01` to `AC-SPIKE-06` |
 | Section 8, CI | seven ordered gates | the ordered gates are unchanged (`config.yaml` `ci_gate_order`), plus: a `commit-subjects` job on pull requests, a `shellcheck` job for `scripts/*.sh`, and two repository checks inside the pytest gate (`check_consistency.py`: commands, pins, cited paths, `CLAUDE.md` template; `check_sdd.py`: SPEC, PLAN and TASKS traceability) |
 | Section 8, Version control | `main` changes only through pull requests, and hooks and CI must pass before merge | the GitHub ruleset `main protection` only blocks deleting `main` and force-pushes; it does not require pull requests or the `validate` and `commit-subjects` checks (accepted by the owners, 2026-11-06); the PR-only rule holds by convention |
-| Section 8, Version control | merge method not specified | pull requests are merged with a merge commit (owners' decision, 2026-11-06), so the PR title is not used as a commit subject |
+| Section 8, Version control | merge method not specified | pull requests are merged with a merge commit (owners' decision, 2026-11-06); squash and rebase merging are disabled in the repository settings, so the PR title is not used as a commit subject |
+| Section 3, Security (NFR) | data leaves the machine only to the GraphDB agent endpoint and the LLM | dependency and CLI telemetry is switched off (`DO_NOT_TRACK=1`, `OPENUI_TELEMETRY_DISABLED=1` in the devcontainer, CI and `scripts/init.sh`) and the telemetry-only install script of `@openuidev/lang-core` is not allowed to run; found in review round 3 and enforced by `check_consistency.py` |
+| Sections 1 to 8, licensing | no licensing decision | MIT; `LICENSE` keeps the upstream notice and adds `Copyright (c) 2026 gamug and dova` (owners' decision, 2026-11-06) |
+| Section 3, Success metric | a curated question set prepared by the owners | it lives in `backend/tests/evaluation/` (public repository, publishable facts only; owners' decision, 2026-11-06); format in its README |
 
 ## Planning rules
 
