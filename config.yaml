@@ -39,7 +39,7 @@ agent:
   instruction_file: CLAUDE.md
   must_exist: yes, locally
   tracked: no, it is listed in .gitignore
-  init_command_if_missing: writing it by hand (there is no init command)
+  init_command_if_missing: bash scripts/init.sh
   must_reference:
   - docs/PRODUCT.md
   - adr.md

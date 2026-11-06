@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). They are unchecked: no product work has started.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). They are unchecked: no product work has started. Each task cites only the acceptance criteria it implements.
 
 ## WI-007 — Technical spike
 
@@ -173,7 +173,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-007
 - **Depends on:** TASK-016
-- **Acceptance criteria:** AC-FR002-01
+- **Acceptance criteria:** AC-SPIKE-01
 - **Action:** Ask the project owners to create a read-only GraphDB user for the application and set `KG_USER` and `KG_PASSWORD`; configure either a Talk to Your Graph agent or a YAML tool configuration, and verify the tool list through `GET /rest/llm/tool/{configType}/{configId}`.
 
 ### TASK-018 — Spike the DeepSeek tool loop on the live tools
@@ -181,7 +181,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-007
 - **Depends on:** TASK-017
-- **Acceptance criteria:** AC-FR002-01
+- **Acceptance criteria:** AC-SPIKE-02
 - **Action:** Run a DeepSeek tool loop over the GraphDB tools against the curated question set and record accuracy and failure modes (RSK-001).
 
 ### TASK-019 — Spike OpenUI generation, chat layout and report export
@@ -189,7 +189,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-007
 - **Depends on:** TASK-017
-- **Acceptance criteria:** AC-FR002-01
+- **Acceptance criteria:** AC-SPIKE-03, AC-SPIKE-04, AC-SPIKE-05, AC-SPIKE-06
 - **Action:** Verify valid OpenUI Lang from DeepSeek, per-pair controls in the react-ui chat, inlining of the browser bundle into one offline HTML file, and plot quality from answer text (RSK-002, RSK-003, RSK-004, RSK-006).
 
 
@@ -202,7 +202,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-008
 - **Depends on:** TASK-019
-- **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR035-01
+- **Acceptance criteria:** AC-FR002-01
 - **Action:** Build the connector tool loop with a bounded iteration count and stream the final answer to the chat.
 
 ### TASK-021 — Convert and store question-answer pairs
@@ -210,7 +210,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-008
 - **Depends on:** TASK-020
-- **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR035-01
+- **Acceptance criteria:** AC-FR002-01
 - **Action:** Convert the final answer to OpenUI Lang with a second DeepSeek call and store the question, the raw answer and the OpenUI Lang after the answer completes.
 
 ### TASK-022 — Handle errors and the analyst's language
@@ -218,7 +218,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-008
 - **Depends on:** TASK-021
-- **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR035-01
+- **Acceptance criteria:** AC-FR002-02, AC-FR035-01
 - **Action:** Show an error for GraphDB, DeepSeek or tool-loop failures without storing the question; make interface text and answers follow the analyst's language.
 
 
@@ -231,7 +231,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-009
 - **Depends on:** TASK-019
-- **Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04
+- **Acceptance criteria:** AC-FR005-03
 - **Action:** Define the tables for sessions, question-answer pairs, relevance marks and reports with migrations (schema approval applies).
 
 ### TASK-024 — Implement the thread REST endpoints
@@ -239,7 +239,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-009
 - **Depends on:** TASK-023
-- **Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04
+- **Acceptance criteria:** AC-FR005-01, AC-FR005-02
 - **Action:** Implement get, create, update and delete thread endpoints over SQLite, plus the report and relevance endpoints.
 
 ### TASK-025 — Build the session list in the frontend
@@ -247,8 +247,16 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-009
 - **Depends on:** TASK-024
-- **Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04
+- **Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-04
 - **Action:** Create, select, rename and delete sessions, create a new empty session after deleting the active one, and show database errors.
+
+### TASK-035 — Add the backend health endpoint and the environment health check
+
+- [ ] **Done**
+- **Work Item:** WI-009
+- **Depends on:** TASK-024
+- **Acceptance criteria:** AC-ENV-01
+- **Action:** Add `GET /api/health` to the FastAPI app, and add the health check to `scripts/init.sh` and the README verification steps, as `docs/PRODUCT.md` section 6 specifies.
 
 
 ## WI-010 — Relevance marking and question-answer deletion
@@ -260,7 +268,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-010
 - **Depends on:** TASK-025
-- **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05
+- **Acceptance criteria:** AC-FR003-01, AC-FR003-02
 - **Action:** Store and show the relevance state of each pair; new pairs are marked.
 
 ### TASK-027 — Implement deletion of a single pair
@@ -268,7 +276,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-010
 - **Depends on:** TASK-026
-- **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05
+- **Acceptance criteria:** AC-FR028-03, AC-FR028-04
 - **Action:** Delete a pair after confirmation in the active session only, leaving the current report unchanged.
 
 
@@ -281,7 +289,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-011
 - **Depends on:** TASK-027
-- **Acceptance criteria:** AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01
+- **Acceptance criteria:** AC-FR013-01, AC-FR013-04, AC-FR013-05, AC-FR013-06
 - **Action:** Implement the two skills as sequential DeepSeek calls producing OpenUI Lang from the relevant pairs, with streaming and cancellation.
 
 ### TASK-029 — Build the report panel and the Generate Report flow
@@ -289,7 +297,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-011
 - **Depends on:** TASK-028
-- **Acceptance criteria:** AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01
+- **Acceptance criteria:** AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-06, AC-FR021-01
 - **Action:** Show the report beside the chat with progress, disable the chat during generation, store the result, and handle empty history, nothing marked and failure with a partial report flagged incomplete.
 
 
@@ -302,7 +310,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-012
 - **Depends on:** TASK-029
-- **Acceptance criteria:** AC-FR026-01, AC-FR026-02
+- **Acceptance criteria:** AC-FR026-01
 - **Action:** Inline the OpenUI browser bundle and the stored OpenUI Lang into one HTML file named from the session and the date.
 
 ### TASK-031 — Handle download with no report
@@ -310,7 +318,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-012
 - **Depends on:** TASK-030
-- **Acceptance criteria:** AC-FR026-01, AC-FR026-02
+- **Acceptance criteria:** AC-FR026-02
 - **Action:** Show a message telling the analyst to generate a report first and download nothing.
 
 
@@ -323,7 +331,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-013
 - **Depends on:** TASK-029
-- **Acceptance criteria:** AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05
+- **Acceptance criteria:** AC-FR028-01, AC-FR028-02, AC-FR028-04, AC-FR028-05
 - **Action:** Add both buttons with confirmation, session scoping and disabled states.
 
 
@@ -336,7 +344,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-014
 - **Depends on:** TASK-032
-- **Acceptance criteria:** AC-FR002-01, AC-FR002-02
+- **Acceptance criteria:** AC-ACC-01
 - **Action:** Run the curated question set prepared by the project owners and record the result against the 90% target.
 
 ### TASK-034 — Run end-to-end verification and fix defects
@@ -344,5 +352,5 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-014
 - **Depends on:** TASK-033
-- **Acceptance criteria:** AC-FR002-01, AC-FR002-02
+- **Acceptance criteria:** AC-ENV-01, AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01
 - **Action:** Verify the acceptance criteria of every Must Have requirement, run the full quality gates and fix defects.

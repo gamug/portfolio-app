@@ -82,7 +82,7 @@ Governing principles for **portfolio-app-new** under a specification-driven deve
 - Read this constitution and `.sdd/SPEC.md` before planning or editing.
 - Match existing placement, naming, imports, and bootstrap conventions before introducing structure.
 - Prefer the smallest complete change; avoid unrelated refactors and abstractions.
-- `CLAUDE.md` cannot override version-controlled SDD artifacts. Must exist: yes, locally; tracked in Git: no, it is listed in .gitignore; created with `writing it by hand (there is no init command)` when missing. It must reference: 
+- `CLAUDE.md` cannot override version-controlled SDD artifacts. Must exist: yes, locally; tracked in Git: no, it is listed in .gitignore; created with `bash scripts/init.sh` when missing. It must reference: 
   - `docs/PRODUCT.md` 
   - `adr.md` 
   - `config.yaml` 

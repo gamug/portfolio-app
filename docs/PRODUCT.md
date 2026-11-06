@@ -876,7 +876,7 @@ values the user decided or confirmed. Lists and maps are recorded as compact JSO
 | Key | Value | Source |
 | :--- | :--- | :--- |
 | `agent.destructive_history_boundary` | {"rebase":"needs approval","amend of pushed commits":"needs approval","force-push":"needs approval"} | user, 2026-11-05 |
-| `agent.init_command_if_missing` | writing it by hand (there is no init command) | user, 2026-11-05 |
+| `agent.init_command_if_missing` | bash scripts/init.sh | user, 2026-11-06 |
 | `agent.instruction_file` | CLAUDE.md | PRODUCT.md § 8 |
 | `agent.leave_on_pr_branch` | yes | user, 2026-11-05 |
 | `agent.must_exist` | yes, locally | user, 2026-11-05 |

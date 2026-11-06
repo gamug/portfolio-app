@@ -84,12 +84,12 @@ Create the automation needed to reproduce the environment setup from a clean che
 
 **Parent:** FR-002  
 **Depends on:** WI-006  
-**Acceptance criteria:** AC-FR002-01  
+**Acceptance criteria:** AC-SPIKE-01, AC-SPIKE-02, AC-SPIKE-03, AC-SPIKE-04, AC-SPIKE-05, AC-SPIKE-06  
 **Related requirements:** FR-002, FR-013, FR-021, FR-026
 
 Resolve the biggest unknowns before building (roadmap phase 0, days 1-2; risks RSK-001 to RSK-004, RSK-006 and RSK-007). Create the read-only GraphDB user and decide the tool source (`ttyg` or `yaml`) from the working one; verify DeepSeek tool calling over GraphDB's `/rest/llm/tool` API, valid OpenUI Lang generation with the locally generated prompt, that the react-ui chat layout can host per-pair controls, the offline inlining of the OpenUI browser bundle, and the report plot quality from stored answer text.
 
-**Exit criteria:** A recorded result for each spike item; any failed item has a proposed ADR in `adr.md` for the project owners.
+**Exit criteria:** A recorded result for each spike criterion `AC-SPIKE-01` to `AC-SPIKE-06`; any failed item has a proposed ADR in `adr.md` for the project owners.
 
 ### WI-008 — Chat with the knowledge graph
 
@@ -106,18 +106,18 @@ Implement the FastAPI connector: the DeepSeek tool loop over GraphDB's LLM tool 
 
 **Parent:** FR-005  
 **Depends on:** WI-007  
-**Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04  
+**Acceptance criteria:** AC-FR005-03, AC-FR005-01, AC-FR005-02, AC-FR005-04, AC-ENV-01  
 **Related requirements:** FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011
 
-Implement SQLite persistence and the sessions API that follows the OpenUI thread REST convention (`adr-004`, `adr-005`). The schema, the thread endpoints and the session list for `UC-002`; also covers `FR-006` to `FR-011`.
+Implement SQLite persistence, the sessions API that follows the OpenUI thread REST convention, and the backend health endpoint (`adr-004`, `adr-005`). The schema, the thread endpoints and the session list for `UC-002`; also covers `FR-006` to `FR-011`, and the environment verification of `docs/PRODUCT.md` section 6.
 
-**Exit criteria:** Sessions can be created, listed, switched, renamed and deleted, all data survives a restart, and database errors are shown without changing the visible state.
+**Exit criteria:** Sessions can be created, listed, switched, renamed and deleted, all data survives a restart, database errors are shown without changing the visible state, and `GET /api/health` answers.
 
 ### WI-010 — Relevance marking and question-answer deletion
 
 **Parent:** FR-012  
 **Depends on:** WI-009  
-**Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05  
+**Acceptance criteria:** AC-FR003-01, AC-FR003-02, AC-FR028-03, AC-FR028-04  
 **Related requirements:** FR-003, FR-012, FR-032, FR-033, FR-034
 
 Implement the relevance toggle and the deletion of a single pair. The per-pair controls for `UC-008` and `UC-009`; also covers `FR-032`, `FR-033` and `FR-034`.
@@ -128,7 +128,7 @@ Implement the relevance toggle and the deletion of a single pair. The per-pair c
 
 **Parent:** FR-013  
 **Depends on:** WI-008  
-**Acceptance criteria:** AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01  
+**Acceptance criteria:** AC-FR013-01, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR013-02, AC-FR013-03, AC-FR021-01  
 **Related requirements:** FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-021, FR-022
 
 Implement the report agent as two sequential DeepSeek calls and the report panel beside the chat (`adr-008`, `adr-009`). The report agent and report panel for `UC-003`; also covers `FR-014` to `FR-019`, `FR-021` and `FR-022`.
@@ -150,7 +150,7 @@ Implement the download of the current report as one self-contained HTML file (`a
 
 **Parent:** FR-028  
 **Depends on:** WI-011  
-**Acceptance criteria:** AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05  
+**Acceptance criteria:** AC-FR028-01, AC-FR028-02, AC-FR028-04, AC-FR028-05  
 **Related requirements:** FR-028, FR-029, FR-030, FR-031
 
 Implement Erase History and Erase Report. The erase actions for `UC-006` and `UC-007`; also covers `FR-029` to `FR-031`.
@@ -161,12 +161,25 @@ Implement Erase History and Erase Report. The erase actions for `UC-006` and `UC
 
 **Parent:** FR-002  
 **Depends on:** WI-008, WI-009, WI-010, WI-011, WI-012, WI-013  
-**Acceptance criteria:** AC-FR002-01, AC-FR002-02  
+**Acceptance criteria:** AC-ACC-01, AC-ENV-01, AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01  
 **Related requirements:** FR-002
 
 Test the MVP against the acceptance criteria and the curated question set (roadmap phase 2, days 6-7). End-to-end verification of every Must Have acceptance criterion and the 90% accuracy target.
 
 **Exit criteria:** All Must Have acceptance criteria pass and the curated question set reaches 90% correct answers.
+
+## Recorded deviations from the approved docs/PRODUCT.md
+
+`docs/PRODUCT.md` is approved and frozen. The differences below were found in review (PR #1) and are recorded here; the project owners confirm them, or correct the text, at the next re-approval of `docs/PRODUCT.md`.
+
+| Where in `docs/PRODUCT.md` | Approved text | Implemented |
+| :--- | :--- | :--- |
+| Section 6, Verification command | `uv run pytest`, the frontend suite and a health check | `uv run --directory backend pytest` and `pnpm --dir frontend test --run` (see `config.yaml`); the health check is TASK-035 |
+| Sections 6 and 8, Coding agent | "There is no init command" for `CLAUDE.md` | `scripts/init.sh` creates it from a tracked template (decided by the owners, 2026-11-06) |
+| Section 8, Governance | amendments logged in `CHANGELOG.md` | `.sdd/CHANGELOG.md` (`config.yaml`) |
+| Section 8, CI | the inherited OpenUI workflows stay in the repository and are disabled | every job is guarded by `github.repository == 'thesysdev/openui'`, and they are disabled in GitHub settings |
+| Sections 4 to 6 and ADRs | paths `packages/`, `examples/`, `spec/`, `templates/` | `packages/`, `examples/` and `spec/` moved to `reference/`; `templates/` removed (erratum in `adr.md`) |
+| Section 3, user stories | acceptance scenarios of `US-001` to `US-007` | derived criteria added in `SPEC.md`: `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01`, `AC-ENV-01`, `AC-SPIKE-01` to `AC-SPIKE-06` |
 
 ## Planning rules
 
