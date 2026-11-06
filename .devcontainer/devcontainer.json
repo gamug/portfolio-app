@@ -10,7 +10,7 @@
     5173,
     8000
   ],
-  "postCreateCommand": "uv sync --locked --directory backend && pnpm --dir frontend install --frozen-lockfile",
+  "postCreateCommand": "bash scripts/init.sh",
   "customizations": {
     "vscode": {
       "extensions": [

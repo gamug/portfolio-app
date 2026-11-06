@@ -28,6 +28,7 @@ project_structure:
     git hooks: .pre-commit-config.yaml
     environment: .env.example (committed) and .env (local, untracked)
     devcontainer: .devcontainer/devcontainer.json
+    secret scanner: .gitleaks.toml
 naming:
   mappings:
     report generation action: Generate Report

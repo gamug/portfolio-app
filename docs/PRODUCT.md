@@ -905,7 +905,7 @@ values the user decided or confirmed. Lists and maps are recorded as compact JSO
 | `project.name` | portfolio-app-new | PRODUCT.md § 6 |
 | `project.source_dir` | backend/app and frontend/src | user, 2026-11-05 |
 | `project.tests_dir` | backend/tests and frontend/src | user, 2026-11-05 |
-| `project_structure.config` | {"python tools":"backend/pyproject.toml (ruff, mypy, pytest)","frontend tools":"the ESLint flat config and the Prettier config in frontend/","git hooks":".pre-commit-config.yaml","environment":".env.example (committed) and .env (local, untracked)","devcontainer":".devcontainer/devcontainer.json"} | user, 2026-11-05 |
+| `project_structure.config` | {"python tools":"backend/pyproject.toml (ruff, mypy, pytest)","frontend tools":"the ESLint flat config and the Prettier config in frontend/","git hooks":".pre-commit-config.yaml","environment":".env.example (committed) and .env (local, untracked)","devcontainer":".devcontainer/devcontainer.json","secret scanner":".gitleaks.toml"} | user, 2026-11-05 |
 | `project_structure.tests` | {"backend":"backend/tests mirroring backend/app","frontend":"tests beside the code in frontend/src","fixtures":"backend/tests/fixtures; small, committed, hermetic, with no real graph data or secrets"} | user, 2026-11-05 |
 | `quality.ci_file` | .github/workflows/validators.yml | PRODUCT.md § 8 |
 | `quality.ci_gate_order` | ["gitleaks","ruff","mypy","ESLint and Prettier","tsc","pytest","Vitest"] | PRODUCT.md § 8 |

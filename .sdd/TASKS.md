@@ -140,11 +140,11 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## WI-006 — Automate environment reproduction
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-015 — Create initialization automation
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-006
 - **Depends on:** TASK-014
 - **Acceptance criteria:** AC-FR001-06
@@ -152,7 +152,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ### TASK-016 — Verify reproducibility and document recovery
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-006
 - **Depends on:** TASK-015
 - **Acceptance criteria:** AC-FR001-06

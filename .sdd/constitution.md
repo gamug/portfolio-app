@@ -39,6 +39,7 @@ Governing principles for **portfolio-app-new** under a specification-driven deve
   - git hooks: .pre-commit-config.yaml 
   - environment: .env.example (committed) and .env (local, untracked) 
   - devcontainer: .devcontainer/devcontainer.json 
+  - secret scanner: .gitleaks.toml 
 - Application settings must be injected through validated environment variables or the configured equivalent; secrets must never be hardcoded or committed to Git history.
 - Naming follows these mappings; do not create a new term for an established stage or storage concept: 
   - report generation action: Generate Report 
