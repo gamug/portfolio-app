@@ -20,6 +20,7 @@ need python3 "install Python 3 (it runs the commit-message hook); the project it
 need uv "install uv 0.12.1, for example: pip install uv==0.12.1"
 need node "install Node.js $(cat .nvmrc) or newer, for example with fnm or nvm (the version is pinned in .nvmrc)."
 need pnpm "install pnpm 10.33.0, for example: npm install -g pnpm@10.33.0"
+need shellcheck "install shellcheck (the devcontainer image includes it): https://github.com/koalaman/shellcheck#installing"
 need gitleaks "install gitleaks 8.30.1 (the devcontainer image includes it): https://github.com/gitleaks/gitleaks/releases"
 
 node_version="$(node -p 'process.versions.node')"

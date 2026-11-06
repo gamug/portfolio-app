@@ -59,6 +59,14 @@ def test_main_stdin_mode_reports_every_invalid_subject(
     assert main(["prog", "--stdin"]) == 0
 
 
+def test_main_stdin_mode_fails_on_empty_input(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+    assert main(["prog", "--stdin"]) == 1
+    assert "nothing was checked" in capsys.readouterr().err
+
+
 def test_main_rejects_bad_usage() -> None:
     assert main(["prog"]) == 2
     assert check_commit_msg.PATTERN.pattern

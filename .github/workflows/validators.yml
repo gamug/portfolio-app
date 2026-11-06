@@ -73,5 +73,14 @@ jobs:
           fetch-depth: 0
       - name: Check commit subjects ([FR][WI][TASK] suffix)
         run: |
-          git log --no-merges --format=%s "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
+          set -euo pipefail
+          git log --format=%s "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
             | python3 backend/app/devtools/check_commit_msg.py --stdin
+
+  # Shell scripts are not covered by ruff or mypy; ShellCheck is preinstalled on GitHub-hosted runners.
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: ShellCheck
+        run: shellcheck scripts/*.sh

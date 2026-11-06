@@ -26,4 +26,9 @@ RUN set -eux; \
     tar -xzf "gitleaks_${GITLEAKS_VERSION}_linux_${gl_arch}.tar.gz" -C /usr/local/bin gitleaks; \
     rm -f /tmp/gitleaks_*
 
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends shellcheck; \
+    rm -rf /var/lib/apt/lists/*
+
 USER vscode

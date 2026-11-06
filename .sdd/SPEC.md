@@ -378,7 +378,7 @@ Each criterion uses the constitution's executable GIVEN-WHEN-THEN form. A criter
 
 ### Product acceptance criteria
 
-Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3 (identifier `AC-FR<primary requirement>-NN`, numbered per story); the user story `US-005` (manual report editing) is Won't Have and has none. The criteria `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01`, `AC-ENV-01` and `AC-SPIKE-01` to `AC-SPIKE-06` are **derived** by the SDD team from requirements, the success metric, the verification command and the risks; they are not user story scenarios and are listed in `PLAN.md` among the deviations to confirm at the next re-approval of `docs/PRODUCT.md`.
+Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3 (identifier `AC-FR<primary requirement>-NN`, numbered per story); the user story `US-005` (manual report editing) is Won't Have and has none. The criteria `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01` and `AC-SPIKE-01` to `AC-SPIKE-06` are **derived** by the SDD team from requirements, the success metric and the risks; they are not user story scenarios and are listed in `PLAN.md` among the deviations to confirm at the next re-approval of `docs/PRODUCT.md`.
 
 - **AC-FR002-01:** from US-001 (Chat with the knowledge graph)
 
@@ -585,7 +585,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     THEN "Erase History" and "Erase Report" are disabled
   ```
 
-- **AC-FR021-01:** from derived from FR-021 (not a user story scenario)
+- **AC-FR021-01:** derived from FR-021 (not a user story scenario)
 
   ```gherkin
   SCENARIO: Report content
@@ -595,7 +595,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     AND together they tell a story with the data
   ```
 
-- **AC-FR035-01:** from derived from FR-035 (not a user story scenario)
+- **AC-FR035-01:** derived from FR-035 (not a user story scenario)
 
   ```gherkin
   SCENARIO: Language follows the analyst
@@ -604,7 +604,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     THEN the interface text and the report are written in that language
   ```
 
-- **AC-ACC-01:** from derived from the success metric in `docs/PRODUCT.md` section 1
+- **AC-ACC-01:** derived from the success metric in `docs/PRODUCT.md` section 1
 
   ```gherkin
   SCENARIO: Answer accuracy
@@ -613,16 +613,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     THEN at least 90% of the questions are answered correctly
   ```
 
-- **AC-ENV-01:** from derived from the verification command in `docs/PRODUCT.md` section 6
-
-  ```gherkin
-  SCENARIO: Environment verification
-    GIVEN the development environment is set up
-    WHEN the verification command runs
-    THEN the backend tests, the frontend tests and the check of `GET /api/health` succeed
-  ```
-
-- **AC-SPIKE-01:** from derived from RSK-007 (spike exit criterion)
+- **AC-SPIKE-01:** derived from RSK-007 (spike exit criterion)
 
   ```gherkin
   SCENARIO: Read-only application user and tool source
@@ -632,7 +623,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     AND the application user has no write rights on the repository
   ```
 
-- **AC-SPIKE-02:** from derived from RSK-001 (spike exit criterion)
+- **AC-SPIKE-02:** derived from RSK-001 (spike exit criterion)
 
   ```gherkin
   SCENARIO: DeepSeek tool loop
@@ -642,7 +633,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     AND an ADR change is proposed if the 90% target looks out of reach
   ```
 
-- **AC-SPIKE-03:** from derived from RSK-002 (spike exit criterion)
+- **AC-SPIKE-03:** derived from RSK-002 (spike exit criterion)
 
   ```gherkin
   SCENARIO: Valid OpenUI Lang
@@ -651,7 +642,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     THEN the share of output that parses without errors is recorded
   ```
 
-- **AC-SPIKE-04:** from derived from RSK-003 (spike exit criterion)
+- **AC-SPIKE-04:** derived from RSK-003 (spike exit criterion)
 
   ```gherkin
   SCENARIO: Per-pair controls in the chat
@@ -660,7 +651,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     THEN either they work, or a superseding ADR proposes `@openuidev/react-headless` with a custom UI
   ```
 
-- **AC-SPIKE-05:** from derived from RSK-004 (spike exit criterion)
+- **AC-SPIKE-05:** derived from RSK-004 (spike exit criterion)
 
   ```gherkin
   SCENARIO: Self-contained export
@@ -670,7 +661,7 @@ Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3
     AND its size is recorded
   ```
 
-- **AC-SPIKE-06:** from derived from RSK-006 (spike exit criterion)
+- **AC-SPIKE-06:** derived from RSK-006 (spike exit criterion)
 
   ```gherkin
   SCENARIO: Plot quality from answer text

@@ -5,7 +5,8 @@ Development tooling (standard library only); the application never imports it.
 
 Usage:
     check_commit_msg.py <commit message file>   commit-msg hook: checks the first subject line
-    check_commit_msg.py --stdin                 CI: checks every line of stdin as a subject
+    check_commit_msg.py --stdin                 CI: checks every line of stdin as a subject;
+                                                empty input fails, so a failed `git log` cannot pass
 
 Example subject: feat(chat): stream the answer [FR-002][WI-008][TASK-020]
 """
@@ -42,6 +43,9 @@ def first_subject(message: str) -> str:
 def main(argv: list[str]) -> int:
     if len(argv) == 2 and argv[1] == "--stdin":
         subjects = [line for line in sys.stdin.read().splitlines() if line.strip()]
+        if not subjects:
+            print("No commit subjects received: nothing was checked.", file=sys.stderr)
+            return 1
         invalid = [subject for subject in subjects if not check(subject)]
         for subject in invalid:
             print(f"Invalid commit subject: {subject!r}", file=sys.stderr)

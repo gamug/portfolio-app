@@ -3,24 +3,52 @@
 import shutil
 from pathlib import Path
 
-from app.devtools import check_consistency
-from app.devtools.check_consistency import REPO, run_all
+import pytest
 
-COPIED = [
-    "config.yaml",
-    "README.md",
-    "adr.md",
-    "docs/PRODUCT.md",
-    "reference/README.md",
-    ".nvmrc",
-    ".python-version",
-    ".devcontainer/Dockerfile",
-    ".github/workflows/validators.yml",
-    ".pre-commit-config.yaml",
-    "scripts/init.sh",
-    "scripts/templates/CLAUDE.md.template",
-    "backend/pyproject.toml",
-    "frontend/package.json",
+from app.devtools import check_consistency
+from app.devtools.check_consistency import DOCUMENTS, REPO, run_all
+
+COPIED = sorted(
+    {
+        *DOCUMENTS,
+        ".nvmrc",
+        ".python-version",
+        ".devcontainer/Dockerfile",
+        ".github/workflows/validators.yml",
+        ".pre-commit-config.yaml",
+        "scripts/init.sh",
+        "backend/pyproject.toml",
+        "frontend/package.json",
+    }
+)
+
+# (file, text to replace, replacement, text expected in an issue)
+PIN_DRIFTS = [
+    (".nvmrc", "22.12", "20.19", "NODE_VERSION"),
+    ("frontend/package.json", '">=22.12.0"', '">=20.19.0"', "engines.node"),
+    ("frontend/package.json", '"pnpm@10.33.0"', '"pnpm@9.0.0"', "packageManager"),
+    (
+        ".github/workflows/validators.yml",
+        'PNPM_VERSION: "10.33.0"',
+        'PNPM_VERSION: "9.0.0"',
+        "PNPM_VERSION",
+    ),
+    (
+        ".github/workflows/validators.yml",
+        'GITLEAKS_VERSION: "8.30.1"',
+        'GITLEAKS_VERSION: "8.0.0"',
+        "GITLEAKS_VERSION",
+    ),
+    ("scripts/init.sh", "pnpm@10.33.0", "pnpm@9.0.0", "pnpm@"),
+    ("scripts/init.sh", "uv==0.12.1", "uv==0.0.1", "uv=="),
+    ("scripts/init.sh", "gitleaks 8.30.1", "gitleaks 8.0.0", "gitleaks 8.30.1"),
+    (".python-version", "3.12", "3.13", ".python-version"),
+    (
+        "backend/pyproject.toml",
+        'requires-python = "==3.12.*"',
+        'requires-python = ">=3.12"',
+        "requires-python",
+    ),
 ]
 
 
@@ -29,28 +57,33 @@ def _copy(tmp_path: Path) -> Path:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(REPO / relative, target)
-    for directory in ("backend", "frontend", "scripts", ".sdd", ".github", ".devcontainer"):
-        (tmp_path / directory).mkdir(exist_ok=True)
-    (tmp_path / "docs").mkdir(exist_ok=True)
     return tmp_path
+
+
+def _edit(root: Path, relative: str, old: str, new: str) -> None:
+    path = root / relative
+    text = path.read_text(encoding="utf-8")
+    assert old in text, f"{old!r} not found in {relative}"
+    path.write_text(text.replace(old, new), encoding="utf-8")
 
 
 def test_repository_is_consistent() -> None:
     assert run_all(REPO) == []
 
 
-def test_detects_a_version_pin_that_drifted(tmp_path: Path) -> None:
+@pytest.mark.parametrize(("relative", "old", "new", "expected"), PIN_DRIFTS)
+def test_detects_each_version_pin_that_drifted(
+    tmp_path: Path, relative: str, old: str, new: str, expected: str
+) -> None:
     root = _copy(tmp_path)
-    (root / ".nvmrc").write_text("20.19\n", encoding="utf-8")
-    assert any("NODE_VERSION" in issue for issue in check_consistency.check_pins(root))
+    _edit(root, relative, old, new)
+    issues = check_consistency.check_pins(root)
+    assert any(expected in issue for issue in issues), issues
 
 
 def test_detects_a_command_missing_from_a_copy(tmp_path: Path) -> None:
     root = _copy(tmp_path)
-    readme = (root / "README.md").read_text(encoding="utf-8")
-    (root / "README.md").write_text(
-        readme.replace("ruff check .", "ruff check src"), encoding="utf-8"
-    )
+    _edit(root, "README.md", "ruff check .", "ruff check src")
     assert any("ruff check ." in issue for issue in check_consistency.check_commands(root))
 
 
@@ -61,6 +94,19 @@ def test_detects_a_cited_path_that_does_not_exist(tmp_path: Path) -> None:
     )
     issues = check_consistency.check_paths(root)
     assert any("backend/missing.py" in issue for issue in issues)
+
+
+def test_path_check_covers_the_sdd_documents(tmp_path: Path) -> None:
+    root = _copy(tmp_path)
+    (root / ".sdd/CHANGELOG.md").write_text("Uses `backend/gone.py`.\n", encoding="utf-8")
+    issues = check_consistency.check_paths(root)
+    assert any(".sdd/CHANGELOG.md" in issue and "backend/gone.py" in issue for issue in issues)
+
+
+def test_a_renamed_file_cited_by_history_resolves_to_its_new_path() -> None:
+    for old, new in check_consistency.RENAMED.items():
+        assert not (REPO / old).exists()
+        assert (REPO / new).exists()
 
 
 def test_detects_a_claude_template_missing_a_required_reference(tmp_path: Path) -> None:

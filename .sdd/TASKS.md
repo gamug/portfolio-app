@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). They are unchecked: no product work has started. Each task cites only the acceptance criteria it implements.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). They are unchecked: no product work has started. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -192,7 +192,6 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Acceptance criteria:** AC-SPIKE-03, AC-SPIKE-04, AC-SPIKE-05, AC-SPIKE-06
 - **Action:** Verify valid OpenUI Lang from DeepSeek, per-pair controls in the react-ui chat, inlining of the browser bundle into one offline HTML file, and plot quality from answer text (RSK-002, RSK-003, RSK-004, RSK-006).
 
-
 ## WI-008 — Chat with the knowledge graph
 
 - [ ] **Done** (checked only when every task below is checked)
@@ -220,7 +219,6 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Depends on:** TASK-021
 - **Acceptance criteria:** AC-FR002-02, AC-FR035-01
 - **Action:** Show an error for GraphDB, DeepSeek or tool-loop failures without storing the question; make interface text and answers follow the analyst's language.
-
 
 ## WI-009 — Sessions and persistence
 
@@ -250,15 +248,6 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-04
 - **Action:** Create, select, rename and delete sessions, create a new empty session after deleting the active one, and show database errors.
 
-### TASK-035 — Add the backend health endpoint and the environment health check
-
-- [ ] **Done**
-- **Work Item:** WI-009
-- **Depends on:** TASK-024
-- **Acceptance criteria:** AC-ENV-01
-- **Action:** Add `GET /api/health` to the FastAPI app, and add the health check to `scripts/init.sh` and the README verification steps, as `docs/PRODUCT.md` section 6 specifies.
-
-
 ## WI-010 — Relevance marking and question-answer deletion
 
 - [ ] **Done** (checked only when every task below is checked)
@@ -278,7 +267,6 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Depends on:** TASK-026
 - **Acceptance criteria:** AC-FR028-03, AC-FR028-04
 - **Action:** Delete a pair after confirmation in the active session only, leaving the current report unchanged.
-
 
 ## WI-011 — Report generation
 
@@ -300,7 +288,6 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Acceptance criteria:** AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-06, AC-FR021-01
 - **Action:** Show the report beside the chat with progress, disable the chat during generation, store the result, and handle empty history, nothing marked and failure with a partial report flagged incomplete.
 
-
 ## WI-012 — Report download
 
 - [ ] **Done** (checked only when every task below is checked)
@@ -321,7 +308,6 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Acceptance criteria:** AC-FR026-02
 - **Action:** Show a message telling the analyst to generate a report first and download nothing.
 
-
 ## WI-013 — Erase actions
 
 - [ ] **Done** (checked only when every task below is checked)
@@ -333,7 +319,6 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Depends on:** TASK-029
 - **Acceptance criteria:** AC-FR028-01, AC-FR028-02, AC-FR028-04, AC-FR028-05
 - **Action:** Add both buttons with confirmation, session scoping and disabled states.
-
 
 ## WI-014 — Acceptance testing and fixes
 
@@ -352,5 +337,5 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - [ ] **Done**
 - **Work Item:** WI-014
 - **Depends on:** TASK-033
-- **Acceptance criteria:** AC-ENV-01, AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01
+- **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01
 - **Action:** Verify the acceptance criteria of every Must Have requirement, run the full quality gates and fix defects.

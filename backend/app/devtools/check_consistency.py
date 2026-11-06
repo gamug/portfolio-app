@@ -34,7 +34,24 @@ COMMAND_COPIES: dict[str, tuple[str, ...]] = {
     ".pre-commit-config.yaml": ("lint", "format_check", "type_check"),
 }
 
-DOCUMENTS = ("docs/PRODUCT.md", "adr.md", "README.md", "reference/README.md")
+DOCUMENTS = (
+    "docs/PRODUCT.md",
+    "adr.md",
+    "README.md",
+    "reference/README.md",
+    "config.yaml",
+    ".sdd/SPEC.md",
+    ".sdd/PLAN.md",
+    ".sdd/TASKS.md",
+    ".sdd/CHANGELOG.md",
+    ".github/pull_request_template.md",
+    "scripts/templates/CLAUDE.md.template",
+)
+# Files that were renamed or moved; history (the changelog) may still cite the old path.
+RENAMED = {
+    "scripts/check_commit_msg.py": "backend/app/devtools/check_commit_msg.py",
+    "backend/tests/test_commit_msg.py": "backend/tests/devtools/test_check_commit_msg.py",
+}
 PATH_PREFIXES = (
     "backend/",
     "frontend/",
@@ -175,7 +192,9 @@ def check_paths(root: Path = REPO) -> list[str]:
                 if not erratum_ok:
                     issues.append(f"{document}: `{token}` was removed and adr.md has no erratum")
                 continue
-            target = f"reference/{token}" if token.startswith(MOVED_TO_REFERENCE) else token
+            target = RENAMED.get(token, token)
+            if target.startswith(MOVED_TO_REFERENCE):
+                target = f"reference/{target}"
             if not (root / target).exists():
                 issues.append(f"{document}: `{token}` does not exist (looked for {target})")
     return issues

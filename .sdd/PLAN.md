@@ -106,12 +106,12 @@ Implement the FastAPI connector: the DeepSeek tool loop over GraphDB's LLM tool 
 
 **Parent:** FR-005  
 **Depends on:** WI-007  
-**Acceptance criteria:** AC-FR005-03, AC-FR005-01, AC-FR005-02, AC-FR005-04, AC-ENV-01  
+**Acceptance criteria:** AC-FR005-03, AC-FR005-01, AC-FR005-02, AC-FR005-04  
 **Related requirements:** FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011
 
-Implement SQLite persistence, the sessions API that follows the OpenUI thread REST convention, and the backend health endpoint (`adr-004`, `adr-005`). The schema, the thread endpoints and the session list for `UC-002`; also covers `FR-006` to `FR-011`, and the environment verification of `docs/PRODUCT.md` section 6.
+Implement SQLite persistence and the sessions API that follows the OpenUI thread REST convention (`adr-004`, `adr-005`). The schema, the thread endpoints and the session list for `UC-002`; also covers `FR-006` to `FR-011`.
 
-**Exit criteria:** Sessions can be created, listed, switched, renamed and deleted, all data survives a restart, database errors are shown without changing the visible state, and `GET /api/health` answers.
+**Exit criteria:** Sessions can be created, listed, switched, renamed and deleted, all data survives a restart, and database errors are shown without changing the visible state.
 
 ### WI-010 — Relevance marking and question-answer deletion
 
@@ -161,7 +161,7 @@ Implement Erase History and Erase Report. The erase actions for `UC-006` and `UC
 
 **Parent:** FR-002  
 **Depends on:** WI-008, WI-009, WI-010, WI-011, WI-012, WI-013  
-**Acceptance criteria:** AC-ACC-01, AC-ENV-01, AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01  
+**Acceptance criteria:** AC-ACC-01, AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01  
 **Related requirements:** FR-002
 
 Test the MVP against the acceptance criteria and the curated question set (roadmap phase 2, days 6-7). End-to-end verification of every Must Have acceptance criterion and the 90% accuracy target.
@@ -174,12 +174,15 @@ Test the MVP against the acceptance criteria and the curated question set (roadm
 
 | Where in `docs/PRODUCT.md` | Approved text | Implemented |
 | :--- | :--- | :--- |
-| Section 6, Verification command | `uv run pytest`, the frontend suite and a health check | `uv run --directory backend pytest` and `pnpm --dir frontend test --run` (see `config.yaml`); the health check is TASK-035 |
+| Section 6, Verification command | `uv run pytest`, the frontend suite and a check of `GET /api/health` | `uv run --directory backend pytest` and `pnpm --dir frontend test --run` (see `config.yaml`); the health check is **intentionally not implemented** (owners' decision, 2026-11-06: no functional requirement covers it, so `TASK-035` was removed) |
 | Sections 6 and 8, Coding agent | "There is no init command" for `CLAUDE.md` | `scripts/init.sh` creates it from a tracked template (decided by the owners, 2026-11-06) |
 | Section 8, Governance | amendments logged in `CHANGELOG.md` | `.sdd/CHANGELOG.md` (`config.yaml`) |
 | Section 8, CI | the inherited OpenUI workflows stay in the repository and are disabled | every job is guarded by `github.repository == 'thesysdev/openui'`, and they are disabled in GitHub settings |
 | Sections 4 to 6 and ADRs | paths `packages/`, `examples/`, `spec/`, `templates/` | `packages/`, `examples/` and `spec/` moved to `reference/`; `templates/` removed (erratum in `adr.md`) |
-| Section 3, user stories | acceptance scenarios of `US-001` to `US-007` | derived criteria added in `SPEC.md`: `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01`, `AC-ENV-01`, `AC-SPIKE-01` to `AC-SPIKE-06` |
+| Section 3, user stories | acceptance scenarios of `US-001` to `US-007` | derived criteria added in `SPEC.md`: `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01`, `AC-SPIKE-01` to `AC-SPIKE-06` |
+| Section 8, CI | seven ordered gates | the ordered gates are unchanged (`config.yaml` `ci_gate_order`), plus: a `commit-subjects` job on pull requests, a `shellcheck` job for `scripts/*.sh`, and two repository checks inside the pytest gate (`check_consistency.py`: commands, pins, cited paths, `CLAUDE.md` template; `check_sdd.py`: SPEC, PLAN and TASKS traceability) |
+| Section 8, Version control | `main` changes only through pull requests, and hooks and CI must pass before merge | the GitHub ruleset `main protection` only blocks deleting `main` and force-pushes; it does not require pull requests or the `validate` and `commit-subjects` checks (accepted by the owners, 2026-11-06); the PR-only rule holds by convention |
+| Section 8, Version control | merge method not specified | pull requests are merged with a merge commit (owners' decision, 2026-11-06), so the PR title is not used as a commit subject |
 
 ## Planning rules
 

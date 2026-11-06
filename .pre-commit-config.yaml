@@ -36,6 +36,11 @@ repos:
         language: system
         pass_filenames: false
         files: ^backend/
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        files: ^scripts/.*\.sh$
       - id: eslint
         name: eslint
         entry: pnpm --dir frontend lint
