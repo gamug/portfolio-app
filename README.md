@@ -12,7 +12,7 @@ The project follows specification-driven development:
 | `.sdd/` | Constitution, specification, plan, tasks and changelog |
 | `backend/` | FastAPI backend (`app/`, `tests/`) |
 | `frontend/` | Vite + React frontend |
-| `packages/`, `examples/`, `spec/` | OpenUI source, examples and language specification, kept for reference |
+| `reference/` | OpenUI source, examples and language specification, for reading only (see `reference/README.md`) |
 
 ## Setup
 

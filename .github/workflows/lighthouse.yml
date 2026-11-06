@@ -1,3 +1,4 @@
+# Inherited from thesysdev/openui. Every job is guarded so that it never runs on this fork.
 name: Lighthouse
 
 on:
@@ -17,6 +18,7 @@ concurrency:
 
 jobs:
   lighthouse:
+    if: github.repository == 'thesysdev/openui'
     # Mobile and desktop run as separate jobs so the two passes over every page
     # happen in parallel; each job builds the site itself.
     name: Lighthouse (${{ matrix.form-factor }})

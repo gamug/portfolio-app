@@ -6,14 +6,8 @@
   "description": "A full-stack, framework-agnostic Generative UI framework with a streaming-first language and first-party runtimes for React, Vue, Svelte, and Angular",
   "main": "index.js",
   "scripts": {
-    "examples:install": "node scripts/manage-starters.mjs examples install",
-    "examples:update": "node scripts/manage-starters.mjs examples update",
-    "examples:verify": "node scripts/manage-starters.mjs examples verify",
-    "templates:update": "node scripts/manage-starters.mjs templates update",
     "test": "pnpm -r run test",
-    "build:packages": "pnpm --filter \"./packages/**\" --workspace-concurrency=1 run build",
-    "version:ci": "changeset version && node scripts/verify-peer-windows.mjs && pnpm install --lockfile-only",
-    "release:publish": "node scripts/verify-peer-windows.mjs && pnpm run build:packages && pnpm changeset publish"
+    "build:packages": "pnpm --filter \"./packages/**\" --workspace-concurrency=1 run build"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

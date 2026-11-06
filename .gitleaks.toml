@@ -3,5 +3,5 @@
 useDefault = true
 
 [[allowlists]]
-description = "OpenUI upstream reference code (packages/ is kept for reference only and is not modified): an embedded PostHog project key."
-paths = ['''^packages/lang-core/src/telemetry/shared\.ts$''']
+description = "OpenUI upstream reference code (reference/ is kept for reading only and is not modified): an embedded PostHog project key."
+paths = ['''^reference/packages/lang-core/src/telemetry/shared\.ts$''']

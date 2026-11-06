@@ -2,6 +2,8 @@
 
 Live ADR log. Rules: the constitution's Architecture decisions section. Discovery snapshot: `docs/PRODUCT.md` § 5.
 
+> **Erratum (2026-11-06).** Repository paths cited by the ADRs below, and by the frozen snapshot `docs/PRODUCT.md` § 5, have moved: `packages/`, `examples/` and `spec/` are now under `reference/` (for example `reference/examples/app-frameworks/fastapi`). `templates/` was removed in WI-004; the template cited by `adr-008` is at https://github.com/thesysdev/openui/tree/main/templates/openui-self-hosted. The decisions themselves are unchanged.
+
 ### `adr-001`: Use Python with FastAPI for the backend
 
 - **Status**: Accepted
