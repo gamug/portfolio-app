@@ -1,20 +1,24 @@
-## What
+## Summary
 
-Describe the change and why it is needed.
+What changes and why.
 
-## Changes
+## Traceability
 
-- 
+- FR: FR-0xx
+- Work Item: WI-0xx
+- Tasks: TASK-0xx
 
-## Test Plan
+## Verification
 
-Describe how you validated this change.
+Commands run and their result:
 
-- [ ] Not applicable (explain why)
-- [ ] Verified locally
+- [ ] `uv run --directory backend pre-commit run --all-files`
+- [ ] Tests added or updated for the change
 
 ## Checklist
 
-- [ ] I linked a related issue, if applicable
-- [ ] I updated docs/README when needed
-- [ ] I considered backwards compatibility
+- [ ] Commit subjects follow `type(scope): summary [FR-xxx][WI-xxx][TASK-xxx]`
+- [ ] No secrets committed; `.env` stays local and `KG_USER` is a read-only GraphDB user
+- [ ] A change to `config.yaml` updates its row in `docs/PRODUCT.md` and re-renders `.sdd/constitution.md`
+- [ ] An architecture change has a `Proposed` ADR in `adr.md` approved before it is implemented
+- [ ] `.sdd/TASKS.md` and `.sdd/CHANGELOG.md` are updated

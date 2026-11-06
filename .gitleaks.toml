@@ -1,0 +1,7 @@
+# gitleaks configuration: the default rules plus one documented exception.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "OpenUI upstream reference code (reference/ is kept for reading only and is not modified): an embedded PostHog project key."
+paths = ['''^reference/packages/lang-core/src/telemetry/shared\.ts$''']

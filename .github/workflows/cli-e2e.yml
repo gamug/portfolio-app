@@ -1,3 +1,4 @@
+# Inherited from thesysdev/openui. Every job is guarded so that it never runs on this fork.
 name: CLI End to End
 
 on:
@@ -27,6 +28,7 @@ permissions:
 
 jobs:
   package-cli:
+    if: github.repository == 'thesysdev/openui'
     name: Package CLI
     runs-on: ubuntu-latest
     steps:
@@ -58,6 +60,7 @@ jobs:
           retention-days: 1
 
   cli-e2e:
+    if: github.repository == 'thesysdev/openui'
     name: langgraph (${{ matrix.package-manager }}@${{ matrix.package-manager-version }}, ${{ matrix.os }}, Node ${{ matrix.node-version }})
     needs: package-cli
     runs-on: ${{ matrix.os }}
@@ -162,6 +165,7 @@ jobs:
   # manager majors; overlays only change dependencies and app code, so one
   # current Linux configuration per package manager is enough.
   cli-e2e-overlays:
+    if: github.repository == 'thesysdev/openui'
     name: ${{ matrix.overlay }} (${{ matrix.package-manager }}@11, ubuntu, Node 24)
     needs: package-cli
     runs-on: ubuntu-latest

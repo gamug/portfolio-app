@@ -1,0 +1,111 @@
+# Project configuration. Every value's source is recorded in the 'Configuration Decisions' table of docs/PRODUCT.md.
+project:
+  name: portfolio-app-new
+  kind: Local single-user web application (FastAPI backend, Vite + React frontend)
+  excluded_components:
+  - manual report editing
+  - chart property editing
+  - report tweaks through the chat
+  - report formats other than HTML
+  - multi-user support and authentication
+  source_dir: backend/app and frontend/src
+  tests_dir: backend/tests and frontend/src
+  integration_branch: main
+runtime:
+  language: Python (backend) and Node.js (frontend)
+  version: 3.12 and 22.12
+  package_manager: uv and pnpm
+  lockfile: backend/uv.lock and frontend/pnpm-lock.yaml
+  dependency_manifest: backend/pyproject.toml and frontend/package.json
+project_structure:
+  tests:
+    backend: backend/tests mirroring backend/app
+    frontend: tests beside the code in frontend/src
+    fixtures: backend/tests/fixtures; small, committed, hermetic, with no real graph data or secrets
+    evaluation: backend/tests/evaluation holds the curated question set prepared by gamug and dova; it is committed to this public repository so it holds only facts the owners approve for publication
+  config:
+    python tools: backend/pyproject.toml (ruff, mypy, pytest)
+    frontend tools: the ESLint flat config and the Prettier config in frontend/
+    git hooks: .pre-commit-config.yaml
+    environment: .env.example (committed) and .env (local, untracked)
+    devcontainer: .devcontainer/devcontainer.json
+    secret scanner: .gitleaks.toml
+naming:
+  mappings:
+    report generation action: Generate Report
+    report download action: Download Report
+    history erase action: Erase History
+    report erase action: Erase Report
+agent:
+  instruction_file: CLAUDE.md
+  must_exist: yes, locally
+  tracked: no, it is listed in .gitignore
+  init_command_if_missing: bash scripts/init.sh
+  must_reference:
+  - docs/PRODUCT.md
+  - adr.md
+  - config.yaml
+  - .sdd/constitution.md
+  destructive_history_boundary:
+    rebase: needs approval
+    amend of pushed commits: needs approval
+    force-push: needs approval
+  scope_expansion_requires_approval:
+  - adding or upgrading a dependency
+  - changing the database schema
+  - expanding scope beyond the requirements
+  leave_on_pr_branch: 'yes'
+commands:
+  dependency_install: uv sync --locked --directory backend && pnpm --dir frontend install --frozen-lockfile
+  test: uv run --directory backend pytest && pnpm --dir frontend test --run
+  ci_test: uv run --directory backend pytest && pnpm --dir frontend test --run
+  lint: uv run --directory backend ruff check . && pnpm --dir frontend lint
+  format_check: uv run --directory backend ruff format --check . && pnpm --dir frontend exec prettier --check .
+  type_check: uv run --directory backend mypy app && pnpm --dir frontend exec tsc --noEmit
+  pre_commit: uv run --directory backend pre-commit run --all-files
+quality:
+  ci_file: .github/workflows/validators.yml
+  ci_gate_order:
+  - gitleaks
+  - ruff
+  - mypy
+  - ESLint and Prettier
+  - tsc
+  - pytest
+  - Vitest
+  commit_hook: a `commit-msg` hook in the `pre-commit` framework (Python)
+  secret_scanner: gitleaks
+code_git:
+  direct_commits_to_integration_branch: 'no'
+  unrelated_work_on_inflight_pr: not allowed; each concern gets its own branch and pull request
+domain_sections:
+- title: Chat and knowledge-graph access
+  rules:
+  - The chat reaches GraphDB only through the backend connector; the browser never holds GraphDB or DeepSeek credentials.
+  - The connector uses a read-only GraphDB user, never a write-enabled or admin user (RSK-007).
+  - The tool loop has a bounded number of iterations; a failed question is shown as an error and never stored (FR-004).
+- title: Sessions and persistence
+  rules:
+  - SQLite is the only store; sessions follow the OpenUI thread REST convention (adr-005).
+  - Erase and delete actions ask for confirmation and apply to the active session only (FR-033, FR-034).
+  - A database error is shown and leaves the visible state unchanged (FR-011); schema changes are migration-driven and need approval.
+- title: Report generation and export
+  rules:
+  - Only question-answer pairs marked as relevant feed a report; generation streams, can be cancelled, and disables the chat (FR-013 to FR-019).
+  - The report is stored as OpenUI Lang, one current report per session (adr-009).
+  - Download is one self-contained HTML file named <session-name>-<YYYY-MM-DD>.html with no external resources.
+- title: LLM usage and accuracy
+  rules:
+  - DeepSeek is the only LLM; its key lives in .env and the OpenUI prompt is generated locally (adr-006).
+  - The interface and reports follow the analyst's language (FR-035).
+  - The curated question set must reach 90% correct answers.
+known_constraints:
+- The MVP is built in 1 week; the spike runs on days 1-2.
+- Data leaves the machine only to GraphDB and DeepSeek; secrets live in .env and are never committed.
+- 'Out of the MVP: manual report editing, chart property editing, report tweaks through the chat, formats other than HTML, multi-user support and authentication.'
+- Chat per-pair controls, DeepSeek tool calling, OpenUI Lang validity and bundle inlining are verified in the first spike (RSK-001 to RSK-004).
+governance:
+  version: 1.0.0
+  ratified: '2026-11-05'
+  last_amended: '2026-11-05'
+  amendment_log_source: .sdd/CHANGELOG.md

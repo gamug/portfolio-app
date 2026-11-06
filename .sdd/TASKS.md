@@ -1,0 +1,341 @@
+# SDD Tasks
+
+Task register for the hierarchy `FR-001 > WI > Task` defined in [`PLAN.md`](./PLAN.md). Every task has exactly one parent Work Item.
+
+`$SKILL_DIR` is `.sdd-tooling/skills/sdd-init`, a checkout of [gamug/sdd-template](https://github.com/gamug/sdd-template) at the commit pinned in `scripts/sdd-verify.sh` (it is gitignored). `bash scripts/sdd-verify.sh` fetches it and runs the validators; commands run from the project root.
+
+Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x]` means done. A Work Item is checked only when every task under it is checked, in the same change as its last task. Progress is tracked in this file: the checkboxes are the current state, and `backend/app/devtools/check_sdd.py` checks them against `PLAN.md` and `SPEC.md`. Work Items and tasks added to `.sdd/TASKS.md` carry the same boxes and follow the same rule.
+
+## WI-001 — Run the discovery skill and create PRODUCT.md
+
+- [x] **Done** (checked only when every task below is checked)
+
+### TASK-001 — Execute the discovery workflow
+
+- [x] **Done**
+- **Work Item:** WI-001
+- **Depends on:** none
+- **Acceptance criteria:** AC-FR001-01
+- **Action:** Run all six phases of `$SKILL_DIR/SKILL.md`, including the Governance & Workflow checklist, except that writing `docs/PRODUCT.md` and seeding `adr.md` are TASK-003, and approving PRODUCT.md and accepting the seeded ADRs are TASK-004. Nothing else in FR-001 may start before this task.
+
+### TASK-002 — Collect discovery outputs
+
+- [x] **Done**
+- **Work Item:** WI-001
+- **Depends on:** TASK-001
+- **Acceptance criteria:** AC-FR001-01
+- **Action:** Assemble use cases, requirements, user stories, stack evaluation, ADRs (seeded into the root `adr.md` in TASK-003), environment and governance decisions, risks, and roadmap.
+
+### TASK-003 — Write PRODUCT.md
+
+- [x] **Done**
+- **Work Item:** WI-001
+- **Depends on:** TASK-002
+- **Acceptance criteria:** AC-FR001-01
+- **Action:** Write `docs/PRODUCT.md` from `$SKILL_DIR/templates/product-template.md`, filling each numbered section from its phase fragment. Seed the root `adr.md` from the ADRs in section 5 as Phase 4 step 5 of `$SKILL_DIR/SKILL.md` describes, and keep it in sync while iterating. Use three-digit IDs, each defined once and every reference resolving; give each FR an EARS pattern that matches its statement and one MoSCoW priority; score risks as Impact × Probability. Mark every open decision with `UNRESOLVED:`, and run `python "$SKILL_DIR/scripts/validate_discovery.py" --draft docs/PRODUCT.md` until it passes. Draft mode lists the template placeholders still to replace; approval fails while any remain.
+
+### TASK-004 — Resolve open decisions and record approval
+
+- [x] **Done**
+- **Work Item:** WI-001
+- **Depends on:** TASK-003
+- **Acceptance criteria:** AC-FR001-01
+- **Action:** Ask the user about every `UNRESOLVED:` item and update `docs/PRODUCT.md`, applying any change to a section 5 ADR to its `adr.md` block in the same step. Present the document for approval and record it in its `## Approval` section (`Approved by:`, `First approved on: YYYY-MM-DD`, `Approved on: YYYY-MM-DD`, and `Approved content:` with the hash printed by `validate_discovery.py --hash docs/PRODUCT.md` once the user has approved). Run the validator without `--draft`; it must pass. Any later edit outside the Approval and Configuration Decisions sections invalidates the approval until the user approves again. This is the entry gate of WI-002, enforced by `validate_config.py`. Then accept the seeded ADRs as Phase 6 step 5 of `$SKILL_DIR/SKILL.md` describes (reconcile with section 5, accept, re-read). `validate_config.py` does not check the ADR acceptance; it is a manual gate. This task is not done, and TASK-005 does not start, until every seeded ADR in `adr.md` is `Accepted` with `Approved by` and `Approved on` filled.
+
+## WI-002 — Create config.yaml
+
+- [x] **Done** (checked only when every task below is checked)
+
+### TASK-005 — Scaffold config.yaml and fill stated values
+
+- [x] **Done**
+- **Work Item:** WI-002
+- **Depends on:** TASK-004
+- **Acceptance criteria:** AC-FR001-02
+- **Action:** Run `validate_config.py scaffold`. It writes the `config.yaml` skeleton, with the PRODUCT.md section each key usually comes from, and appends the `Configuration Decisions` table to `docs/PRODUCT.md`. Fill only values that `docs/PRODUCT.md` states explicitly, and record each one in the table with source `PRODUCT.md § <section>`; `check` verifies that the section exists, has no subsections, and contains the value (every item, for lists and maps) as a whole token, so `3.1` is not evidence for "3.12.2". The Approval and Configuration Decisions sections are never evidence. Record lists and maps as compact JSON and escape `|` in values as `\|`.
+
+### TASK-006 — Define domain sections
+
+- [x] **Done**
+- **Work Item:** WI-002
+- **Depends on:** TASK-005
+- **Acceptance criteria:** AC-FR001-02
+- **Action:** From the use cases, functional requirements, ADRs, and risks in `docs/PRODUCT.md`, propose the domain-specific constitution sections (for example models, services, storage, AI behavior, evaluation) as `domain_sections` entries with a `title` and `rules`. Confirm them with the user, write them to `config.yaml`, and record the `domain_sections` row as compact JSON with source `user, YYYY-MM-DD` (`check` rejects a `PRODUCT.md §` source here) so `check` detects any later change. An empty list is valid only when the user confirms the project needs none.
+
+### TASK-007 — Ask the user for every remaining value
+
+- [x] **Done**
+- **Work Item:** WI-002
+- **Depends on:** TASK-006
+- **Acceptance criteria:** AC-FR001-02
+- **Action:** This task is the only place configuration questions are asked. For every value `docs/PRODUCT.md` does not state, ask a context-rich question. A value the document only implies is proposed to the user and confirmed, never written silently. Record each answer in the table with source `user, YYYY-MM-DD`. Propose `.github/workflows/validators.yml` as `quality.ci_file`: the project's quality gates replace the template's maintenance steps in that workflow, so it stays the single CI file.
+
+### TASK-008 — Validate config.yaml
+
+- [x] **Done**
+- **Work Item:** WI-002
+- **Depends on:** TASK-007
+- **Acceptance criteria:** AC-FR001-02
+- **Action:** Run `validate_config.py check`. It fails on missing or empty keys, keys without a valid recorded source, and recorded values that differ from `config.yaml`. Return to TASK-007 for every reported key.
+
+## WI-003 — Render constitution.md and synchronize SDD objects
+
+- [x] **Done** (checked only when every task below is checked)
+
+### TASK-009 — Render constitution.md
+
+- [x] **Done**
+- **Work Item:** WI-003
+- **Depends on:** TASK-008
+- **Acceptance criteria:** AC-FR001-03
+- **Action:** Run `validate_config.py render` to create `.sdd/constitution.md` from root `config.yaml` and the immutable `$SKILL_DIR/memory/constitution.md`. Rendering re-runs `check` and fails on any missing value or leftover placeholder. Do not edit the rendered file by hand; re-run `render` after any `config.yaml` change.
+
+### TASK-010 — Synchronize all SDD objects
+
+- [x] **Done**
+- **Work Item:** WI-003
+- **Depends on:** TASK-009
+- **Acceptance criteria:** AC-FR001-03
+- **Action:** Create or update `.sdd/SPEC.md`, `.sdd/PLAN.md`, `.sdd/TASKS.md`, and `.sdd/CHANGELOG.md` to match the approved `docs/PRODUCT.md` and preserve traceability. Keep `FR-001` and its Work Items as the initialization requirement and add the product requirements from `docs/PRODUCT.md`, which are numbered from `FR-002`. Carry this task register into `.sdd/TASKS.md` with TASK-001 through TASK-009, WI-001, and WI-002 checked; progress is tracked there from now on. Finish with `validate_config.py render --verify`.
+
+## WI-004 — Create folders and non-programmatic dependencies
+
+- [x] **Done** (checked only when every task below is checked)
+
+### TASK-011 — Create the approved project structure
+
+- [x] **Done**
+- **Work Item:** WI-004
+- **Depends on:** TASK-010
+- **Acceptance criteria:** AC-FR001-04
+- **Action:** Create approved folders, configuration locations, documentation paths, environment templates, and other non-programmatic dependencies.
+
+### TASK-012 — Verify non-programmatic dependencies
+
+- [x] **Done**
+- **Work Item:** WI-004
+- **Depends on:** TASK-011
+- **Acceptance criteria:** AC-FR001-04
+- **Action:** Check that the structure matches PRODUCT.md and constitution.md without adding application source code.
+
+## WI-005 — Set up the system environment
+
+- [x] **Done** (checked only when every task below is checked)
+
+### TASK-013 — Implement the selected environment setup
+
+- [x] **Done**
+- **Work Item:** WI-005
+- **Depends on:** TASK-012
+- **Acceptance criteria:** AC-FR001-05
+- **Action:** Configure the approved devcontainer, Docker, host-only, or explicitly no-container environment.
+
+### TASK-014 — Run baseline environment checks
+
+- [x] **Done**
+- **Work Item:** WI-005
+- **Depends on:** TASK-013
+- **Acceptance criteria:** AC-FR001-05
+- **Action:** Create the environment and run the documented baseline checks without committing secrets.
+
+## WI-006 — Automate environment reproduction
+
+- [x] **Done** (checked only when every task below is checked)
+
+### TASK-015 — Create initialization automation
+
+- [x] **Done**
+- **Work Item:** WI-006
+- **Depends on:** TASK-014
+- **Acceptance criteria:** AC-FR001-06
+- **Action:** Create `scripts/init.sh` or the approved equivalent to reproduce the environment from a clean checkout. Configure the project's pre-commit hook (the configured `quality.commit_hook`, which also enforces the commit convention) and its CI workflow with the project's own quality gates. The discovery and configuration validators serve initialization only; they are run during WI-001 to WI-003 and are not part of the project's hook or CI.
+
+### TASK-016 — Verify reproducibility and document recovery
+
+- [x] **Done**
+- **Work Item:** WI-006
+- **Depends on:** TASK-015
+- **Acceptance criteria:** AC-FR001-06
+- **Action:** Re-run initialization, verify actionable failures, and document the recovery/reproduction procedure for contributors.
+
+---
+
+## Product Work Items
+
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). They are unchecked: no product work has started. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+
+## WI-007 — Technical spike
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-017 — Create the read-only GraphDB user and settle the tool source
+
+- [ ] **Done**
+- **Work Item:** WI-007
+- **Depends on:** TASK-016
+- **Acceptance criteria:** AC-SPIKE-01
+- **Action:** Ask the project owners to create a read-only GraphDB user for the application and set `KG_USER` and `KG_PASSWORD`; configure either a Talk to Your Graph agent or a YAML tool configuration, and verify the tool list through `GET /rest/llm/tool/{configType}/{configId}`.
+
+### TASK-018 — Spike the DeepSeek tool loop on the live tools
+
+- [ ] **Done**
+- **Work Item:** WI-007
+- **Depends on:** TASK-017
+- **Acceptance criteria:** AC-SPIKE-02
+- **Action:** Prerequisite: `backend/tests/evaluation/questions.json` prepared by gamug and dova (format in its README). Run a DeepSeek tool loop over the GraphDB tools against the curated question set and record accuracy and failure modes (RSK-001).
+
+### TASK-019 — Spike OpenUI generation, chat layout and report export
+
+- [ ] **Done**
+- **Work Item:** WI-007
+- **Depends on:** TASK-017
+- **Acceptance criteria:** AC-SPIKE-03, AC-SPIKE-04, AC-SPIKE-05, AC-SPIKE-06
+- **Action:** Verify valid OpenUI Lang from DeepSeek, per-pair controls in the react-ui chat, inlining of the browser bundle into one offline HTML file, and plot quality from answer text (RSK-002, RSK-003, RSK-004, RSK-006).
+
+## WI-008 — Chat with the knowledge graph
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-020 — Implement the tool loop and answer streaming
+
+- [ ] **Done**
+- **Work Item:** WI-008
+- **Depends on:** TASK-019
+- **Acceptance criteria:** AC-FR002-01
+- **Action:** Build the connector tool loop with a bounded iteration count and stream the final answer to the chat.
+
+### TASK-021 — Convert and store question-answer pairs
+
+- [ ] **Done**
+- **Work Item:** WI-008
+- **Depends on:** TASK-020
+- **Acceptance criteria:** AC-FR002-01
+- **Action:** Convert the final answer to OpenUI Lang with a second DeepSeek call and store the question, the raw answer and the OpenUI Lang after the answer completes.
+
+### TASK-022 — Handle errors and the analyst's language
+
+- [ ] **Done**
+- **Work Item:** WI-008
+- **Depends on:** TASK-021
+- **Acceptance criteria:** AC-FR002-02, AC-FR035-01
+- **Action:** Show an error for GraphDB, DeepSeek or tool-loop failures without storing the question; make interface text and answers follow the analyst's language.
+
+## WI-009 — Sessions and persistence
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-023 — Create the SQLite schema and migrations
+
+- [ ] **Done**
+- **Work Item:** WI-009
+- **Depends on:** TASK-019
+- **Acceptance criteria:** AC-FR005-03
+- **Action:** Define the tables for sessions, question-answer pairs, relevance marks and reports with migrations (schema approval applies).
+
+### TASK-024 — Implement the thread REST endpoints
+
+- [ ] **Done**
+- **Work Item:** WI-009
+- **Depends on:** TASK-023
+- **Acceptance criteria:** AC-FR005-01, AC-FR005-02
+- **Action:** Implement get, create, update and delete thread endpoints over SQLite, plus the report and relevance endpoints.
+
+### TASK-025 — Build the session list in the frontend
+
+- [ ] **Done**
+- **Work Item:** WI-009
+- **Depends on:** TASK-024
+- **Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-04
+- **Action:** Create, select, rename and delete sessions, create a new empty session after deleting the active one, and show database errors.
+
+## WI-010 — Relevance marking and question-answer deletion
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-026 — Implement the relevance toggle
+
+- [ ] **Done**
+- **Work Item:** WI-010
+- **Depends on:** TASK-025
+- **Acceptance criteria:** AC-FR003-01, AC-FR003-02
+- **Action:** Store and show the relevance state of each pair; new pairs are marked.
+
+### TASK-027 — Implement deletion of a single pair
+
+- [ ] **Done**
+- **Work Item:** WI-010
+- **Depends on:** TASK-026
+- **Acceptance criteria:** AC-FR028-03, AC-FR028-04
+- **Action:** Delete a pair after confirmation in the active session only, leaving the current report unchanged.
+
+## WI-011 — Report generation
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-028 — Implement the report agent
+
+- [ ] **Done**
+- **Work Item:** WI-011
+- **Depends on:** TASK-027
+- **Acceptance criteria:** AC-FR013-01, AC-FR013-04, AC-FR013-05, AC-FR013-06
+- **Action:** Implement the two skills as sequential DeepSeek calls producing OpenUI Lang from the relevant pairs, with streaming and cancellation.
+
+### TASK-029 — Build the report panel and the Generate Report flow
+
+- [ ] **Done**
+- **Work Item:** WI-011
+- **Depends on:** TASK-028
+- **Acceptance criteria:** AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-06, AC-FR021-01
+- **Action:** Show the report beside the chat with progress, disable the chat during generation, store the result, and handle empty history, nothing marked and failure with a partial report flagged incomplete.
+
+## WI-012 — Report download
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-030 — Implement the HTML export
+
+- [ ] **Done**
+- **Work Item:** WI-012
+- **Depends on:** TASK-029
+- **Acceptance criteria:** AC-FR026-01
+- **Action:** Inline the OpenUI browser bundle and the stored OpenUI Lang into one HTML file named from the session and the date.
+
+### TASK-031 — Handle download with no report
+
+- [ ] **Done**
+- **Work Item:** WI-012
+- **Depends on:** TASK-030
+- **Acceptance criteria:** AC-FR026-02
+- **Action:** Show a message telling the analyst to generate a report first and download nothing.
+
+## WI-013 — Erase actions
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-032 — Implement Erase History and Erase Report
+
+- [ ] **Done**
+- **Work Item:** WI-013
+- **Depends on:** TASK-029
+- **Acceptance criteria:** AC-FR028-01, AC-FR028-02, AC-FR028-04, AC-FR028-05
+- **Action:** Add both buttons with confirmation, session scoping and disabled states.
+
+## WI-014 — Acceptance testing and fixes
+
+- [ ] **Done** (checked only when every task below is checked)
+
+### TASK-033 — Evaluate the curated question set
+
+- [ ] **Done**
+- **Work Item:** WI-014
+- **Depends on:** TASK-032
+- **Acceptance criteria:** AC-ACC-01
+- **Action:** Run the curated question set in `backend/tests/evaluation/questions.json` (prepared by the project owners) and record the result against the 90% target.
+
+### TASK-034 — Run end-to-end verification and fix defects
+
+- [ ] **Done**
+- **Work Item:** WI-014
+- **Depends on:** TASK-033
+- **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01
+- **Action:** Verify the acceptance criteria of every Must Have requirement, run the full quality gates and fix defects.

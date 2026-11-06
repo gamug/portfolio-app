@@ -1,0 +1,61 @@
+{
+  "name": "OpenUI",
+  "version": "1.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "description": "A full-stack, framework-agnostic Generative UI framework with a streaming-first language and first-party runtimes for React, Vue, Svelte, and Angular",
+  "main": "index.js",
+  "scripts": {
+    "test": "pnpm -r run test",
+    "build:packages": "pnpm --filter \"./packages/**\" --workspace-concurrency=1 run build"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.1",
+    "@typescript-eslint/eslint-plugin": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "eslint-plugin-storybook": "catalog:",
+    "eslint-plugin-unused-imports": "catalog:",
+    "prettier": "^3.2.5",
+    "prettier-plugin-organize-imports": "^3.2.4",
+    "publint": "^0.3.18",
+    "tsdown": "^0.21.7",
+    "typescript": "catalog:"
+  },
+  "keywords": [
+    "openui",
+    "generative-ui",
+    "react",
+    "ai",
+    "llm",
+    "streaming",
+    "chat",
+    "copilot",
+    "components",
+    "ui-framework"
+  ],
+  "homepage": "https://openui.com",
+  "author": "engineering@openui.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thesysdev/openui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thesysdev/openui/issues"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss@<8.5.10": ">=8.5.10",
+      "uuid@<11.1.1": "^11.1.1"
+    }
+  }
+}

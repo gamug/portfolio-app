@@ -1,257 +1,86 @@
-<div align="center">
+# portfolio-app-new
 
-<a href="https://www.openui.com" target="_blank" rel="noopener noreferrer">
-  <img 
-    src="./assets/banner.png" 
-    alt="OpenUI - The Open Standard for Generative UI" 
-    width="100%" 
-    style="cursor: pointer;"
-  >
-</a>
+A chat interface to a GraphDB knowledge graph, with a report panel beside it. The analyst chats with the graph, marks the useful question-answer pairs, presses **Generate Report**, and downloads the result as one self-contained HTML file. The report view is built on [OpenUI](https://github.com/thesysdev/openui); this repository is a fork of `thesysdev/openui` (MIT: `LICENSE` keeps the upstream notice and adds this project's copyright).
 
-# OpenUI - The Open Standard for Generative UI
+The project follows specification-driven development:
 
-<p align="center">
-  <a href="https://github.com/thesysdev/openui/actions/workflows/build-js.yml"><img alt="Build" src="https://github.com/thesysdev/openui/actions/workflows/build-js.yml/badge.svg"></a>
-  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
-  <a href="https://discord.com/invite/Pbv5PsqUSv"><img alt="Discord" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscord.com%2Fapi%2Fv10%2Finvites%2FPbv5PsqUSv%3Fwith_counts%3Dtrue&query=%24.approximate_presence_count&label=Discord&suffix=%20online&logo=discord&logoColor=white&color=5865F2"></a>
-</p>
+| Path | Content |
+| :--- | :--- |
+| `docs/PRODUCT.md` | Approved discovery: use cases, requirements, stack, risks and roadmap |
+| `adr.md` | Architecture decision records (live) |
+| `config.yaml` | Project configuration, with sources in `docs/PRODUCT.md` |
+| `.sdd/` | Constitution, specification, plan, tasks and changelog |
+| `backend/` | FastAPI backend (`app/`, `tests/`) |
+| `frontend/` | Vite + React frontend |
+| `reference/` | OpenUI source, examples and language specification, for reading only (see `reference/README.md`) |
 
-<a href="https://trendshift.io/repositories/22357" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22357" alt="thesysdev%2Fopenui | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+## Setup
 
-</div>
+The supported environment is the VS Code devcontainer (`.devcontainer/`): Python 3.12, Node.js 22.12, pnpm 10.33.0, uv 0.12.1 and gitleaks 8.30.1. Opening the folder in the container runs `scripts/init.sh`.
 
-OpenUI is a full-stack, framework-agnostic Generative UI framework built around a compact, streaming-first language. A framework-agnostic core powers first-party runtimes for React, Vue, Svelte, and Angular, and React additionally ships built-in component libraries and ready-to-use chat interfaces. OpenUI Lang uses up to 67% fewer tokens than JSON.
-
-<div align="center">
-
-[Docs](https://openui.com) · [Playground](https://www.openui.com/playground) · [Discord](https://discord.com/invite/Pbv5PsqUSv) · [Contributing](./CONTRIBUTING.md)
-
-</div>
-
-> **Important:** OpenUI has no official cryptocurrency, token, or coin. Any asset using the OpenUI name is unaffiliated with this project and is not endorsed by its maintainers.
-
----
-
-## What is OpenUI
-
-<div align="center">
-
-<img src="./assets/demo.gif" alt="OpenUI Demo" width="100%">
-</div>
-
-At the center of OpenUI is **OpenUI Lang**: a compact, streaming-first language for model-generated UI. Instead of treating model output as only text, OpenUI lets you define components, generate prompt instructions from that component library, and render structured UI as the model streams.
-
-**Core capabilities:**
-
-- **OpenUI Lang** - A compact language for structured UI generation designed for streaming output.
-- **Built-in component libraries** - Charts, forms, tables, layouts, and more, ready to use or extend.
-- **Prompt generation from your component library** - Generate model instructions directly from the components you allow.
-- **Streaming renderer** - Parse and render model output progressively in React, Vue, Svelte, or Angular as tokens arrive.
-- **Chat and app surfaces** - Use the same foundation for assistants, copilots, and broader interactive product flows.
-
-## Quick Start
+Without the container, install the prerequisites listed below and run the script from the repository root:
 
 ```bash
-npx @openuidev/cli@latest create --name genui-chat-app
+bash scripts/init.sh
 ```
 
-This is the fastest way to start with OpenUI. The scaffolded app gives you an end-to-end starting point with streaming, built-in UI, and OpenUI Lang support.
+The script is safe to re-run. It checks the prerequisites, creates `.env` from `.env.example` if it is missing (it never overwrites it), installs the locked dependencies, installs the git hooks, and runs the baseline checks. Then fill `.env`: `LLM_API_KEY` (DeepSeek) and a **read-only** GraphDB user in `KG_USER` and `KG_PASSWORD`. `.env` is never committed.
 
-What this gives you:
+Prerequisites outside the container: git, python3, uv 0.12.1, Node.js 22.12 or newer (`.nvmrc`), pnpm 10.33.0, gitleaks 8.30.1, shellcheck 0.11.0. GraphDB 11.5 runs separately; the container reaches it at `KG_HOST` (default `http://host.docker.internal:7200`).
 
-- **OpenUI Lang support** - Start with structured UI generation built into the app flow.
-- **Library-driven prompts** - Generate instructions from your allowed component set.
-- **Streaming support** - Update the UI progressively as output arrives.
-- **Working app foundation** - Start from a ready-to-run example instead of wiring everything manually.
+## Commands
 
-## How it works
+Run from the repository root (they are fixed in `config.yaml`):
 
-Your components define what the model can generate.
+| Purpose | Command |
+| :--- | :--- |
+| Install | `uv sync --locked --directory backend && pnpm --dir frontend install --frozen-lockfile` |
+| Test | `uv run --directory backend pytest && pnpm --dir frontend test --run` |
+| Lint | `uv run --directory backend ruff check . && pnpm --dir frontend lint` |
+| Format check | `uv run --directory backend ruff format --check . && pnpm --dir frontend exec prettier --check .` |
+| Type check | `uv run --directory backend mypy app && pnpm --dir frontend exec tsc --noEmit` |
+| All local gates | `uv run --directory backend pre-commit run --all-files` |
 
-```mermaid
-flowchart LR
-    A["Component Library"] --> B["System Prompt"]
-    B --> C["LLM"]
-    C --> D["OpenUI Lang Stream"]
-    D --> E["Renderer"]
-    E --> F["Live UI"]
+## Commits and pull requests
+
+`main` changes only through pull requests. Commit subjects follow Conventional Commits with the traceability suffix, enforced by the `commit-msg` hook:
+
+```text
+feat(chat): stream the answer [FR-002][WI-008][TASK-020]
 ```
 
-1. Define or reuse a component library.
-2. Generate a system prompt from that library.
-3. Send that prompt to your model.
-4. Stream OpenUI Lang output back to the client.
-5. Render the output progressively with Renderer.
+CI (`.github/workflows/validators.yml`) runs gitleaks, ruff, mypy, ESLint and Prettier, tsc, pytest and Vitest, in that order. A separate job checks every commit subject of the pull request with the same rule as the hook, because the hook only runs where `scripts/init.sh` installed it. Pull requests are merged with a merge commit (squash and rebase merging are disabled in the repository settings), so the PR title is not used as a commit subject. The pytest gate also runs two repository checks from `backend/app/devtools/`: `check_consistency.py` (fails when `config.yaml` commands, tool versions, cited repository paths or the `CLAUDE.md` template drift apart) and `check_sdd.py` (traceability of `.sdd/SPEC.md`, `PLAN.md` and `TASKS.md`). A `shellcheck` job lints `scripts/*.sh`.
 
-Try it yourself in the [Playground](https://www.openui.com/playground): generate UI live with the default component library.
+The GitHub ruleset `main protection` blocks deleting `main` and force-pushes; it does not require pull requests or the CI checks (accepted by the owners), so the pull-request-only rule holds by convention.
 
-## Packages
+## Privacy
 
-| Package                                                                                                    | Best for                                         | Description                                                                                                  |
-| :--------------------------------------------------------------------------------------------------------- | :----------------------------------------------- | :----------------------------------------------------------------------------------------------------------- |
-| [`@openuidev/lang-core`](./packages/lang-core)                                                             | Framework-agnostic parsing and prompt generation | Core parser, prompt-generation, runtime-evaluation, and type layer with no React, Angular, Vue, or Svelte dependency  |
-| [`@openuidev/langchain`](./packages/langchain)                                                             | LangChain and LangGraph agents                   | Agent transformer and server helpers that stream OpenUI through AG-UI                                        |
-| [`@openuidev/react-lang`](./packages/react-lang)                                                           | React rendering runtimes                         | Define component libraries, generate prompts, and render streamed OpenUI Lang in React                       |
-| [`@openuidev/react-headless`](./packages/react-headless)                                                   | Bring-your-own React chat UI                     | Headless chat state, streaming adapters, and message format converters                                       |
-| [`@openuidev/react-ui`](./packages/react-ui)                                                               | Fastest path to a full React chat experience     | Prebuilt chat layouts, standalone UI primitives, and two built-in component libraries                        |
-| [`@openuidev/react-email`](./packages/react-email)                                                         | Email generation and HTML export                 | React Email component definitions plus prompt options for model-generated emails                             |
-| [`@openuidev/assistant-ui`](./packages/assistant-ui)                                                       | assistant-ui apps                                | Tool UI renderers and instruction wiring for streaming OpenUI Lang inside assistant-ui                       |
-| [`@openuidev/vue-lang`](./packages/vue-lang)                                                               | Vue integrations                                 | Vue 3 bindings for defining model-renderable components and rendering streamed OpenUI Lang                   |
-| [`@openuidev/svelte-lang`](./packages/svelte-lang)                                                         | Svelte integrations                              | Svelte 5 bindings for defining model-renderable components and rendering streamed OpenUI Lang                |
-| [`@openuidev/angular-lang`](./packages/angular-lang)                                                       | Angular integrations                             | Angular bindings for defining component libraries and rendering streamed OpenUI Lang                         |
-| [`@openuidev/browser-bundle`](./packages/browser-bundle)                                                   | CDN, iframe, and no-build embeds                 | Prebuilt browser bundle that ships the renderer, UI library, React, and styles as script + stylesheet assets |
-| [`@openuidev/a2ui`](./packages/a2ui)                                                                       | A2UI with OpenUI Lang component payloads         | Framework-agnostic A2UI v1.0 protocol client with an optional React renderer                                 |
-| [`@openuidev/server`](./packages/server)                                                                   | Server side utilities                            | Server utilities for OpenUI and OpenUI Gateway                                                               |
-| [`@openuidev/observability-cloud`](./packages/observability-cloud)                                         | Hosted observability in the Thesys console       | Cloud sink that batches OpenUI events and ships them to OpenUI Gateway                                       |
-| [`@openuidev/cli`](./packages/openui-cli)                                                                  | Project scaffolding and prompt generation        | CLI for creating new apps and generating system prompts or JSON schema from a library definition             |
-| [`@openuidev/openclaw-os-plugin`](https://github.com/thesysdev/openclaw-os/tree/main/packages/claw-plugin) | OpenClaw workspaces                              | OpenClaw OS plugin for serving OpenUI-powered OpenClaw workspaces                                            |
+The project states that data leaves the machine only to GraphDB and DeepSeek. The OpenUI packages and CLI can send telemetry to a third party, so `DO_NOT_TRACK=1` and `OPENUI_TELEMETRY_DISABLED=1` are set in the devcontainer, in CI and in `scripts/init.sh`, and the install script of `@openuidev/lang-core` (it only sends installation telemetry) is not allowed to run. Set the same variables in your shell if you run `pnpm install` or the `openui` CLI outside the container. `check_consistency.py` fails if any of this is removed.
 
-Common starting points:
+## Evaluation question set
+
+The curated question set behind the 90% accuracy target lives in `backend/tests/evaluation/` (format and rules in its README). The repository is public, so it may contain only facts the owners approve for publication.
+
+## SDD artifacts
+
+`docs/PRODUCT.md`, `config.yaml` and `.sdd/constitution.md` are checked by the validators of [gamug/sdd-template](https://github.com/gamug/sdd-template), pinned to a commit in `scripts/sdd-verify.sh`:
 
 ```bash
-# React app with OpenUI rendering and prebuilt components
-npm install @openuidev/react-lang @openuidev/react-ui
-
-# Framework-agnostic backend or Edge prompt generation
-npm install @openuidev/lang-core
-
-# LangChain/LangGraph agent and server integration
-npm install @openuidev/langchain @langchain/langgraph
-
-# Vue, Svelte, or Angular runtime
-npm install @openuidev/vue-lang
-npm install @openuidev/svelte-lang
-npm install @openuidev/angular-lang
-
-# A2UI protocol with OpenUI Lang component payloads
-npm install @openuidev/a2ui zod
+bash scripts/sdd-verify.sh          # discovery approval hash, config sources, constitution up to date
+bash scripts/sdd-verify.sh render   # after editing config.yaml: re-render the constitution, then verify
 ```
 
-## Why OpenUI Lang
+These validators serve the SDD process and are not part of the hooks or CI. The script keeps a gitignored checkout in `.sdd-tooling/`. `.sdd/constitution.md` is generated: change `config.yaml` (and its row in `docs/PRODUCT.md`), then render.
 
-OpenUI Lang is designed for model-generated UI that needs to be both structured and streamable.
+`CLAUDE.md` is local and not tracked; `scripts/init.sh` creates it from `scripts/templates/CLAUDE.md.template` when it is missing.
 
-- **Streaming output** - Emit UI incrementally as tokens arrive.
-- **Token efficiency** - Up to 67% fewer tokens than equivalent JSON (see [benchmarks](./benchmarks)).
-- **Controlled rendering** - Restrict output to the components you define and register.
-- **Typed component contracts** - Define component props and structure up front with Zod schemas.
+## Recovery
 
-### Token efficiency benchmarks
-
-Measured with `tiktoken` (GPT-5 encoder). OpenUI Lang vs two JSON-based streaming formats across seven UI scenarios:
-
-| Scenario           | Vercel JSON-Render | Thesys C1 JSON | OpenUI Lang |  vs Vercel |      vs C1 |
-| ------------------ | -----------------: | -------------: | ----------: | ---------: | ---------: |
-| simple-table       |                340 |            357 |         148 |     -56.5% |     -58.5% |
-| chart-with-data    |                520 |            516 |         231 |     -55.6% |     -55.2% |
-| contact-form       |                893 |            849 |         294 |     -67.1% |     -65.4% |
-| dashboard          |               2247 |           2261 |        1226 |     -45.4% |     -45.8% |
-| pricing-page       |               2487 |           2379 |        1195 |     -52.0% |     -49.8% |
-| settings-panel     |               1244 |           1205 |         540 |     -56.6% |     -55.2% |
-| e-commerce-product |               2449 |           2381 |        1166 |     -52.4% |     -51.0% |
-| **TOTAL**          |          **10180** |       **9948** |    **4800** | **-52.8%** | **-51.7%** |
-
-Full methodology and reproduction steps in [`benchmarks/`](./benchmarks).
-
-## Documentation
-
-Detailed documentation is available at [openui.com](https://openui.com).
-
-## Repository structure
-
-```
-openui/
-├── packages/
-│   ├── react-lang/       # Core runtime (parser, renderer, prompt generation)
-│   ├── react-headless/   # Headless chat state & streaming adapters
-│   ├── react-ui/         # Prebuilt chat layouts & component libraries
-│   ├── react-email/      # React Email component library for generated emails
-│   ├── assistant-ui/     # assistant-ui Tool UI renderers for OpenUI Lang
-│   ├── lang-core/        # Framework-agnostic parser, prompt, and runtime layer
-│   ├── langchain/        # LangChain/LangGraph streaming integration
-│   ├── vue-lang/         # Vue runtime bindings for OpenUI Lang
-│   ├── svelte-lang/      # Svelte runtime bindings for OpenUI Lang
-│   ├── angular-lang/     # Angular runtime bindings for OpenUI Lang
-│   ├── browser-bundle/   # Script-tag bundle for CDN / iframe / no-build embeds
-│   ├── a2ui/             # A2UI protocol with OpenUI Lang component payloads
-│   ├── server/           # Server utilities for OpenUI & OpenUI Gateway
-│   ├── observability/    # Framework-free observability event bus
-│   ├── observability-cloud/ # Cloud sink shipping OpenUI events to Thesys
-│   ├── devtools/         # Dev-only OpenUI Inspect widget
-│   └── openui-cli/       # CLI for scaffolding & prompt generation
-├── examples/             # Cookbooks and integration reference implementations
-│   ├── agent-frameworks/
-│   ├── app-frameworks/
-│   ├── cookbooks/
-│   ├── design-systems/
-│   ├── harnesses/
-│   └── miscellaneous/
-├── docs/                 # Documentation site (openui.com)
-└── benchmarks/           # Token efficiency benchmarks
-```
-
-Good places to start:
-
-- [openui.com](https://openui.com) for the full docs
-- [Quickstart](https://www.openui.com/docs/agent/getting-started/quickstart) to scaffold a working app
-- [`examples/README.md`](./examples/README.md) to find a focused reference implementation
-- [Cookbooks](https://www.openui.com/cookbooks) for complete walkthroughs with [runnable code](./examples/cookbooks)
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) if you want to contribute
-
-## Community
-
-- [Discord](https://discord.com/invite/Pbv5PsqUSv) - Ask questions, share what you're building
-- [GitHub Issues](https://github.com/thesysdev/openui/issues) - Report bugs or request features
-
-## How OpenUI compares
-
-| Feature                |             OpenUI |           json-render (Vercel) |     A2UI (Google) | CopilotKit OpenGenUI |
-| ---------------------- | -----------------: | -----------------------------: | ----------------: | -------------------: |
-| Tokens                 |                 1x |                             3x |                3x |                   4x |
-| Latency (60 tok/s)     |               4.9s |                          14.2s |             14.2s |                 ~20s |
-| Streaming              |                Yes |                            Yes |               Yes |              Partial |
-| Consistent output      |                Yes |                            Yes |               Yes |                   No |
-| Components             |   Library + custom |               Library + custom |       Custom only |                 None |
-| Multi-platform         | Web, mobile, email | Web, mobile, PDF, email, video | Web, iOS, Android |                  Web |
-| Built-in data fetching |                Yes |                             No |                No |                   No |
-| Chat UI included       |                Yes |                             No |                No |                  Yes |
-
-For more details, refer to the official [OpenUI Lang comparison documentation](https://www.openui.com/docs/openui-lang/comparison).
-
-## Adopters
-
-A list of organizations and projects using OpenUI is maintained in [`ADOPTERS.md`](./ADOPTERS.md). If you're using OpenUI, please consider adding your organization; it helps the project gain momentum and helps other adopters find peers using OpenUI in similar contexts.
-
-## Contributing
-
-Contributions are welcome. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for contribution guidelines and ways to get involved.
-
-## Agent Skill
-
-OpenUI ships an [Agent Skill](https://agentskills.io) so AI coding assistants (Claude Code, Codex, Cursor, Copilot, etc.) can help you scaffold, build, and debug Generative UI apps using OpenUI Lang.
-
-The skill is maintained in the [`thesysdev/skills`](https://github.com/thesysdev/skills/tree/main/skills/openui) repository.
-
-### Install
-
-```bash
-# With the skills CLI (works across all agents)
-npx skills add thesysdev/skills --skill openui
-```
-
-The skill covers component library design, OpenUI Lang syntax, system prompt generation, the Renderer, SDK packages, and debugging malformed LLM output.
-
-## Feedback
-
-Found a bug or have an idea? [Open an issue](https://github.com/thesysdev/openui/issues), or send anonymous feedback from your terminal:
-
-```bash
-npx @openuidev/cli feedback "Describe the problem or idea"
-```
-
-Coding agents using the [OpenUI skill](#agent-skill) can send feedback for you. They remove personal details and code from the message and ask for your approval before sending it.
-
-## License
-
-This project is available under the terms described in [`LICENSE`](./LICENSE).
+| Symptom | Fix |
+| :--- | :--- |
+| `ERROR: <tool> is not installed or not on PATH` | Install the tool named in the message, then re-run `bash scripts/init.sh`. |
+| Node.js is older than 22.12.0 | Switch to the version in `.nvmrc` (`fnm use` or `nvm use`). |
+| Dependency install fails | Check network access; if a lockfile is out of sync, run `uv lock --directory backend` or `pnpm --dir frontend install` and commit the result. |
+| A hook blocks a commit | Fix the reported problem (never bypass hooks). A gitleaks finding means a secret is staged: remove it, and rotate it if it was ever pushed. |
+| GraphDB is unreachable from the container | Check that GraphDB runs on the host and that `KG_HOST` is correct; the container maps `host.docker.internal` to the host. |
+| Broken environment | Re-run `bash scripts/init.sh`; if that fails, rebuild the devcontainer image and run it again. |

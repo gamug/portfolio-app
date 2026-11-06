@@ -66,3 +66,16 @@ draft/
 
 # Accidental CLI template checkouts
 packages/openui-cli/src/templates/
+
+# portfolio-app-new
+CLAUDE.md
+backend/data/
+backend/.venv/
+.venv/
+__pycache__/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+*.sqlite3
+frontend/dist
+.sdd-tooling/

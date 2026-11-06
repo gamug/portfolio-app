@@ -2,3 +2,10 @@
 # merge result of package.json files. After merging, run `pnpm install` to
 # reconcile the lockfile.
 pnpm-lock.yaml merge=binary
+
+# Files read by Linux tooling in the devcontainer must keep LF line endings.
+*.sh text eol=lf
+.nvmrc text eol=lf
+.python-version text eol=lf
+.pre-commit-config.yaml text eol=lf
+.devcontainer/* text eol=lf
