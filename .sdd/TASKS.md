@@ -120,11 +120,11 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## WI-005 — Set up the system environment
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-013 — Implement the selected environment setup
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-005
 - **Depends on:** TASK-012
 - **Acceptance criteria:** AC-FR001-05
@@ -132,7 +132,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ### TASK-014 — Run baseline environment checks
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-005
 - **Depends on:** TASK-013
 - **Acceptance criteria:** AC-FR001-05

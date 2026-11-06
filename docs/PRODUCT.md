@@ -885,13 +885,13 @@ values the user decided or confirmed. Lists and maps are recorded as compact JSO
 | `agent.tracked` | no, it is listed in .gitignore | user, 2026-11-05 |
 | `code_git.direct_commits_to_integration_branch` | no | user, 2026-11-05 |
 | `code_git.unrelated_work_on_inflight_pr` | not allowed; each concern gets its own branch and pull request | user, 2026-11-05 |
-| `commands.ci_test` | uv run --project backend pytest && pnpm --dir frontend test --run | user, 2026-11-05 |
-| `commands.dependency_install` | uv sync --locked --project backend && pnpm --dir frontend install --frozen-lockfile | user, 2026-11-05 |
-| `commands.format_check` | uv run --project backend ruff format --check backend && pnpm --dir frontend exec prettier --check . | user, 2026-11-05 |
-| `commands.lint` | uv run --project backend ruff check backend && pnpm --dir frontend lint | user, 2026-11-05 |
-| `commands.pre_commit` | uv run --project backend pre-commit run --all-files | user, 2026-11-05 |
-| `commands.test` | uv run --project backend pytest && pnpm --dir frontend test --run | user, 2026-11-05 |
-| `commands.type_check` | uv run --project backend mypy backend/app && pnpm --dir frontend exec tsc --noEmit | user, 2026-11-05 |
+| `commands.ci_test` | uv run --directory backend pytest && pnpm --dir frontend test --run | user, 2026-11-05 |
+| `commands.dependency_install` | uv sync --locked --directory backend && pnpm --dir frontend install --frozen-lockfile | user, 2026-11-05 |
+| `commands.format_check` | uv run --directory backend ruff format --check . && pnpm --dir frontend exec prettier --check . | user, 2026-11-05 |
+| `commands.lint` | uv run --directory backend ruff check . && pnpm --dir frontend lint | user, 2026-11-05 |
+| `commands.pre_commit` | uv run --directory backend pre-commit run --all-files | user, 2026-11-05 |
+| `commands.test` | uv run --directory backend pytest && pnpm --dir frontend test --run | user, 2026-11-05 |
+| `commands.type_check` | uv run --directory backend mypy app && pnpm --dir frontend exec tsc --noEmit | user, 2026-11-05 |
 | `domain_sections` | [{"title":"Chat and knowledge-graph access","rules":["The chat reaches GraphDB only through the backend connector; the browser never holds GraphDB or DeepSeek credentials.","The connector uses a read-only GraphDB user, never a write-enabled or admin user (RSK-007).","The tool loop has a bounded number of iterations; a failed question is shown as an error and never stored (FR-004)."]},{"title":"Sessions and persistence","rules":["SQLite is the only store; sessions follow the OpenUI thread REST convention (adr-005).","Erase and delete actions ask for confirmation and apply to the active session only (FR-033, FR-034).","A database error is shown and leaves the visible state unchanged (FR-011); schema changes are migration-driven and need approval."]},{"title":"Report generation and export","rules":["Only question-answer pairs marked as relevant feed a report; generation streams, can be cancelled, and disables the chat (FR-013 to FR-019).","The report is stored as OpenUI Lang, one current report per session (adr-009).","Download is one self-contained HTML file named <session-name>-<YYYY-MM-DD>.html with no external resources."]},{"title":"LLM usage and accuracy","rules":["DeepSeek is the only LLM; its key lives in .env and the OpenUI prompt is generated locally (adr-006).","The interface and reports follow the analyst's language (FR-035).","The curated question set must reach 90% correct answers."]}] | user, 2026-11-05 |
 | `governance.amendment_log_source` | .sdd/CHANGELOG.md | user, 2026-11-05 |
 | `governance.last_amended` | 2026-11-05 | user, 2026-11-05 |

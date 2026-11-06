@@ -54,13 +54,13 @@ agent:
   - expanding scope beyond the requirements
   leave_on_pr_branch: 'yes'
 commands:
-  dependency_install: uv sync --locked --project backend && pnpm --dir frontend install --frozen-lockfile
-  test: uv run --project backend pytest && pnpm --dir frontend test --run
-  ci_test: uv run --project backend pytest && pnpm --dir frontend test --run
-  lint: uv run --project backend ruff check backend && pnpm --dir frontend lint
-  format_check: uv run --project backend ruff format --check backend && pnpm --dir frontend exec prettier --check .
-  type_check: uv run --project backend mypy backend/app && pnpm --dir frontend exec tsc --noEmit
-  pre_commit: uv run --project backend pre-commit run --all-files
+  dependency_install: uv sync --locked --directory backend && pnpm --dir frontend install --frozen-lockfile
+  test: uv run --directory backend pytest && pnpm --dir frontend test --run
+  ci_test: uv run --directory backend pytest && pnpm --dir frontend test --run
+  lint: uv run --directory backend ruff check . && pnpm --dir frontend lint
+  format_check: uv run --directory backend ruff format --check . && pnpm --dir frontend exec prettier --check .
+  type_check: uv run --directory backend mypy app && pnpm --dir frontend exec tsc --noEmit
+  pre_commit: uv run --directory backend pre-commit run --all-files
 quality:
   ci_file: .github/workflows/validators.yml
   ci_gate_order:

@@ -1,0 +1,15 @@
+# The frontend is its own pnpm workspace root, so it never joins the OpenUI workspace in the
+# repository root (packages/ is kept only as reference).
+packages: ["."]
+onlyBuiltDependencies:
+  - "@openuidev/lang-core"
+  - esbuild
+  - sharp
+  - unrs-resolver
+allowBuilds:
+  "@openuidev/lang-core": true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - "@openuidev/*"

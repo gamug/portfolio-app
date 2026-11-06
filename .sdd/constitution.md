@@ -112,13 +112,13 @@ Governing principles for **portfolio-app-new** under a specification-driven deve
 ## Executable commands
 
 ```text
-uv sync --locked --project backend && pnpm --dir frontend install --frozen-lockfile     # base dependencies
-uv run --project backend pytest && pnpm --dir frontend test --run                   # full test suite
-uv run --project backend pytest && pnpm --dir frontend test --run                # CI tests
-uv run --project backend ruff check backend && pnpm --dir frontend lint                   # lint
-uv run --project backend ruff format --check backend && pnpm --dir frontend exec prettier --check .           # format verification
-uv run --project backend mypy backend/app && pnpm --dir frontend exec tsc --noEmit             # type analysis
-uv run --project backend pre-commit run --all-files             # all local gates
+uv sync --locked --directory backend && pnpm --dir frontend install --frozen-lockfile     # base dependencies
+uv run --directory backend pytest && pnpm --dir frontend test --run                   # full test suite
+uv run --directory backend pytest && pnpm --dir frontend test --run                # CI tests
+uv run --directory backend ruff check . && pnpm --dir frontend lint                   # lint
+uv run --directory backend ruff format --check . && pnpm --dir frontend exec prettier --check .           # format verification
+uv run --directory backend mypy app && pnpm --dir frontend exec tsc --noEmit             # type analysis
+uv run --directory backend pre-commit run --all-files             # all local gates
 ```
 
 - CI configuration: `.github/workflows/validators.yml`; ordered gates: 
