@@ -100,11 +100,11 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## WI-004 — Create folders and non-programmatic dependencies
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-011 — Create the approved project structure
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-004
 - **Depends on:** TASK-010
 - **Acceptance criteria:** AC-FR001-04
@@ -112,7 +112,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ### TASK-012 — Verify non-programmatic dependencies
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-004
 - **Depends on:** TASK-011
 - **Acceptance criteria:** AC-FR001-04

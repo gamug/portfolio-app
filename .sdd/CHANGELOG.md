@@ -21,3 +21,8 @@ Record completed Work Items and their associated tasks here after verification. 
 - Rendered `.sdd/constitution.md` and created `.sdd/SPEC.md`, `.sdd/PLAN.md`, `.sdd/TASKS.md` and this file from the approved `docs/PRODUCT.md`.
 - Verification: `validate_config.py render --verify` passes.
 
+### WI-004 — Create folders and non-programmatic dependencies (TASK-011, TASK-012)
+
+- Removed OpenUI content the project does not use (`docs/` site, `templates/`, `benchmarks/`, `scripts/`, `shared/`, `assets/`, `.changeset/` and project meta files); kept `packages/`, `examples/`, `spec/`, `LICENSE` and the workspace files as reference. Created `backend/app`, `backend/tests/fixtures`, `frontend/src`, `.env.example`, `.python-version`, `.nvmrc`, `.vscode/`, a project `README.md`, and `.gitignore` and `.gitattributes` rules.
+- Verification: the structure matches `docs/PRODUCT.md` section 6 and `config.yaml`; no application source code was added.
+
