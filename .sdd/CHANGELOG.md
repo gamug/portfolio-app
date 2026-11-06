@@ -68,3 +68,10 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added `backend/tests/evaluation/GUIDE.md`: a guide for gamug and dova to prepare the evaluation questions, with the question-count estimate (about 100 recommended, 60 minimum) and the decisions they still have to agree.
 - Verification: `scripts/sdd-verify.sh` passes (the discovery validator without `--draft`, `validate_config.py check`, `render --verify`).
 
+## 2026-11-06 (spike)
+
+### TASK-017 — Read-only GraphDB user and tool source (WI-007, AC-SPIKE-01)
+
+- Decided the tool source is `ttyg`, using the existing Talk to Your Graph agent `reportes-piloto` (`d832d4d0-5ec3-4953-bd39-cb2f0691b7d7`) on the `portfolio_test` repository (the knowledge graph is not final). No YAML tool configuration was needed, and neither `config.yaml` nor a dependency was changed.
+- Verified against GraphDB 11.5.1 at `KG_HOST`: `GET /rest/repositories` lists `portfolio_test` as `RUNNING`; `GET /rest/llm/tool/ttyg/d832d4d0-5ec3-4953-bd39-cb2f0691b7d7` returns `/now` and `/sparql_query`. As `KG_USER`, login authorities are `READ_REPO_portfolio_test` and `ROLE_USER`; a SPARQL read succeeds; empty and isolated-graph writes return `403`; without credentials, reads and writes return `401`; the isolated probe graph is absent.
+- Verification: `check_sdd.py` passes after recording the result; WI-007 remains open for TASK-018 and TASK-019.

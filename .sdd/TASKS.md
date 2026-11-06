@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). They are unchecked: no product work has started. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017` is done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -170,11 +170,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-017 — Create the read-only GraphDB user and settle the tool source
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-007
 - **Depends on:** TASK-016
 - **Acceptance criteria:** AC-SPIKE-01
 - **Action:** Ask the project owners to create a read-only GraphDB user for the application and set `KG_USER` and `KG_PASSWORD`; configure either a Talk to Your Graph agent or a YAML tool configuration, and verify the tool list through `GET /rest/llm/tool/{configType}/{configId}`.
+- **Result (2026-11-06):** Tool source is `ttyg`, using the existing Talk to Your Graph agent `reportes-piloto` (`d832d4d0-5ec3-4953-bd39-cb2f0691b7d7`) on `portfolio_test` (the knowledge graph is not final). GraphDB 11.5.1 answers at `KG_HOST`; `GET /rest/repositories` lists `portfolio_test` as `RUNNING`; `GET /rest/llm/tool/ttyg/d832d4d0-5ec3-4953-bd39-cb2f0691b7d7` returns `/now` and `/sparql_query`. As `KG_USER`, login authorities are `READ_REPO_portfolio_test` and `ROLE_USER`; a SPARQL read succeeds; empty and isolated-graph writes return `403`; without credentials, reads and writes return `401`; the isolated probe graph is absent. No YAML configuration was needed, and neither `config.yaml` nor a dependency was changed.
 
 ### TASK-018 — Spike the DeepSeek tool loop on the live tools
 
