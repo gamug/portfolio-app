@@ -168,11 +168,11 @@ Test the MVP against the acceptance criteria and the curated question set (roadm
 
 **Exit criteria:** All Must Have acceptance criteria pass and the curated question set reaches 90% correct answers.
 
-## Recorded deviations from the approved docs/PRODUCT.md
+## Deviations absorbed by the 2026-11-06 re-approval of docs/PRODUCT.md
 
-`docs/PRODUCT.md` is approved and frozen. The differences below were found in review (PR #1) and are recorded here; the project owners confirm them, or correct the text, at the next re-approval of `docs/PRODUCT.md`.
+`docs/PRODUCT.md` was re-approved on 2026-11-06 by Gabriel Múnera (gamug) as version 1.1.0, and its sections now state each difference below, except the ADR blocks of section 5, which stay a frozen snapshot (`adr.md` carries the erratum for moved paths). The table is kept as the record of what changed; nothing is pending. The first approval was on 2026-11-05 (version 1.0.0).
 
-| Where in `docs/PRODUCT.md` | Approved text | Implemented |
+| Where in `docs/PRODUCT.md` | Text approved on 2026-11-05 | Implemented, and stated in version 1.1.0 |
 | :--- | :--- | :--- |
 | Section 6, Verification command | `uv run pytest`, the frontend suite and a check of `GET /api/health` | `uv run --directory backend pytest` and `pnpm --dir frontend test --run` (see `config.yaml`); the health check is **intentionally not implemented** (owners' decision, 2026-11-06: no functional requirement covers it, so `TASK-035` was removed) |
 | Sections 6 and 8, Coding agent | "There is no init command" for `CLAUDE.md` | `scripts/init.sh` creates it from a tracked template (decided by the owners, 2026-11-06) |

@@ -5,7 +5,7 @@
 ## Application: portfolio-app-new
 
 - **Project Name**: portfolio-app-new
-- **Document Version**: `1.0.0`
+- **Document Version**: `1.1.0`
 - **Author**: gamug and dova
 
 ---
@@ -14,7 +14,8 @@
 
 - **Problem Statement**: A knowledge graph (GraphDB, Docker container, version 11.5) holds real data, and GraphDB exposes LLM tools (SPARQL query, full-text search and others) through its API. There is no way to turn an exploratory conversation with the graph into a structured report.
 - **Vision**: A chat interface connected to the knowledge graph, decoupled from a report visualizer shown beside it. From the chat history, an agent builds an HTML report that tells a story with the data (plots, tables and narrative), which the analyst can regenerate and download. The visualizer is built on the OpenUI framework (this repository is a fork of `thesysdev/openui`).
-- **Success Metrics**: Answer accuracy against the graph: at least 90% of the questions in a curated question set with known correct answers are answered correctly. The project owners (gamug and dova) prepare the question set.
+- **Success Metrics**: Answer accuracy against the graph: at least 90% of the questions in a curated question set with known correct answers are answered correctly. The project owners (gamug and dova) prepare the question set. It lives in `backend/tests/evaluation/` in this public repository, so it holds only facts the owners approve for publication.
+- **License**: MIT. `LICENSE` keeps the upstream notice (Thesys Inc.) and adds `Copyright (c) 2026 gamug and dova`.
 - **Personas**:
   - **Business analyst / report author**: chats with the graph, selects the useful Q&As, generates, edits and downloads reports.
     - Goals: explore the graph in natural language and turn the findings into a report that tells a story with the data.
@@ -370,7 +371,7 @@
 
 - **Performance**: No hard targets. Chat answers stream, and report generation streams progressively with a progress indication.
 - **Reliability & Availability**: No availability target. Sessions, history, relevance marks and reports persist across application restarts.
-- **Security**: The application runs locally for one user, with no login. Data leaves the machine only to the GraphDB agent endpoint and the LLM. Secrets such as API keys are kept in environment variables and are not committed.
+- **Security**: The application runs locally for one user, with no login. Data leaves the machine only to GraphDB and the LLM. Dependency and CLI telemetry is switched off (`DO_NOT_TRACK=1` and `OPENUI_TELEMETRY_DISABLED=1`), and the install script of `@openuidev/lang-core`, which only sends installation telemetry, is not allowed to run. Secrets such as API keys are kept in environment variables and are not committed.
 - **Accuracy**: At least 90% of the questions in a curated question set with known correct answers, prepared by the project owners, are answered correctly.
 - **Maintainability**: Code is checked by ruff, mypy, ESLint, Prettier and tsc, and tested with pytest and Vitest, all enforced in the pre-commit hook and CI. There is no minimum test coverage threshold for the MVP.
 
@@ -582,6 +583,8 @@ SCENARIO 5: Nothing to erase
   THEN "Erase History" and "Erase Report" are disabled
 ```
 
+Acceptance criteria that are derived from requirements, the success metric and the risks, and are not user story scenarios (`AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01` and `AC-SPIKE-01` to `AC-SPIKE-06`), are defined in `.sdd/SPEC.md`.
+
 ---
 
 ## 4. Technology Stack Selection & MCDM Matrix
@@ -598,7 +601,7 @@ SCENARIO 5: Nothing to erase
 
 | Category | Decision | Reason given |
 | :--- | :--- | :--- |
-| Backend | Python with FastAPI | Team strength in Python; the repository has a FastAPI example (`examples/app-frameworks/fastapi`) that streams NDJSON to a React client. |
+| Backend | Python with FastAPI | Team strength in Python; the repository has a FastAPI example (`reference/examples/app-frameworks/fastapi`) that streams NDJSON to a React client. |
 | LLM | DeepSeek, API key in `.env` | Same provider as GraphDB's Talk to Your Graph configuration; the key stays in an environment variable and is not committed. |
 | Persistence | SQLite | Requested for sessions, history and reports. |
 
@@ -817,7 +820,7 @@ Open technical choices carried to Phase 4 (ADRs): how the report agent is orches
 - **Editor configuration**: VS Code with shared workspace settings and recommended extensions committed: Dev Containers, Python, Ruff and Claude Code. The devcontainer installs `uv` and Node.js and the project's dependencies. ESLint and Prettier extensions were not selected.
 - **Configuration variables**: `.env.example` is committed and lists `LLM_API_KEY`, `LLM_MODEL`, `LLM_URL`, `KG_HOST`, `KG_REPOSITORY`, `KG_USER`, `KG_PASSWORD` and `SQLITE_PATH`. All except `SQLITE_PATH` match the existing local, gitignored `.env` (`LLM_MODEL=deepseek-chat`, `LLM_URL=https://api.deepseek.com`, `KG_HOST=http://host.docker.internal:7200`, `KG_REPOSITORY=portfolio`). `KG_USER` must be a read-only GraphDB user (see `RSK-007`), and the admin credentials in `.env` (`KG_ADMIN_*`) are not used by the application. The tool configuration type and ID are added once the tool source is decided. Local values live in `.env`, which stays out of Git.
 - **Code quality**: Python: `ruff` (lint and format) and `mypy`. Frontend: ESLint, Prettier and `tsc`. All run through the pre-commit hook and CI. Tests: `pytest` for the backend and Vitest for the frontend.
-- **Verification command**: `uv run pytest` for the backend, the Vitest suite for the frontend, then a check of the backend health endpoint `GET /api/health`. The frontend uses `pnpm`, so its test command is `pnpm test`.
+- **Verification command**: `uv run --directory backend pytest` for the backend and `pnpm --dir frontend test --run` for the frontend, both from the repository root; `scripts/init.sh` runs them with the other baseline checks. The frontend uses `pnpm`. A backend health endpoint is not part of the scope.
 
 ---
 
@@ -849,23 +852,23 @@ Impact and Probability use 1 (Low) to 3 (High); Score = Impact × Probability. A
 
 ## 8. Governance & Workflow
 
-- **Version control**: `main` is the integration branch, and all changes reach it through pull requests, with no direct commits. Unrelated work never goes on an in-flight pull request; each concern gets its own branch and pull request.
+- **Version control**: `main` is the integration branch, and all changes reach it through pull requests, with no direct commits. Unrelated work never goes on an in-flight pull request; each concern gets its own branch and pull request. Pull requests are merged with a merge commit; squash and rebase merging are disabled in the repository settings. The GitHub ruleset `main protection` only blocks deleting `main` and force-pushes: it does not require pull requests or the CI checks, which the owners accepted on 2026-11-06, so the pull-request-only rule holds by convention.
 - **Commits**: Conventional Commits with the `[FR][WI][TASK]` suffix, enforced by a `commit-msg` hook in the `pre-commit` framework (Python). `gitleaks` is the secret scanner run by hooks and CI.
-- **CI**: Gates run in this order in `.github/workflows/validators.yml`: gitleaks, ruff, mypy, ESLint and Prettier, tsc, pytest, Vitest. The fork has no `validators.yml` yet, so one is added. The existing OpenUI workflows in `.github/workflows/` stay in the repository and are disabled on the fork in GitHub.
+- **CI**: Gates run in this order in `.github/workflows/validators.yml`: gitleaks, ruff, mypy, ESLint and Prettier, tsc, pytest, Vitest. The fork has no `validators.yml` yet, so one is added. The existing OpenUI workflows in `.github/workflows/` stay in the repository with every job guarded by `github.repository == 'thesysdev/openui'`, so they never run on the fork; the four that had already run are also disabled in GitHub. Besides the ordered gates, CI runs a `commit-subjects` job on pull requests, a `shellcheck` job for the shell scripts, and two repository checks inside the pytest gate: one for commands, tool versions, cited paths, privacy settings and the `CLAUDE.md` template, and one for the traceability of the SDD artifacts.
 - **Tool configuration**: Canonical configuration files are `pyproject.toml` for ruff, mypy and pytest, the ESLint flat config, and the Prettier config for the frontend. Backend tests live in `tests/` mirroring `app/`. Frontend tests sit beside the code. Fixtures live in `tests/fixtures`.
-- **Coding agent**: Claude Code. Its `CLAUDE.md` exists locally and is listed in `.gitignore`, so it is not tracked in Git. There is no init command. `CLAUDE.md` references `docs/PRODUCT.md`, `adr.md`, `config.yaml` and `.sdd/constitution.md`.
+- **Coding agent**: Claude Code. Its `CLAUDE.md` exists locally and is listed in `.gitignore`, so it is not tracked in Git. `scripts/init.sh` creates it from the tracked template `scripts/templates/CLAUDE.md.template` when it is missing. `CLAUDE.md` references `docs/PRODUCT.md`, `adr.md`, `config.yaml` and `.sdd/constitution.md`.
 - **Agent limits**: An agent needs approval before adding or upgrading a dependency, changing the database schema, or expanding scope beyond the requirements. It does not rebase, amend pushed commits or force-push without approval. After pushing, an agent leaves the working tree on the pushed pull request branch.
 - **Naming**: The button labels "Generate Report", "Download Report", "Erase History" and "Erase Report" must not be renamed.
-- **Governance**: Initial constitution version `1.0.0`, ratified on the date `docs/PRODUCT.md` is approved. Amendments are logged in `CHANGELOG.md`.
+- **Governance**: Initial constitution version `1.0.0`, ratified on the date `docs/PRODUCT.md` is approved. Amendments are logged in `.sdd/CHANGELOG.md`.
 
 ---
 
 ## 9. Approval
 
-- **Approved by**: Gabriel Munera (gamug)
+- **Approved by**: Gabriel Múnera (gamug)
 - **First approved on**: 2026-11-05
-- **Approved on**: 2026-11-05
-- **Approved content**: sha256:71ebbff4a0c59f2c0dd987063d345577cd84288e3690893b1ff15fe7676fc75b
+- **Approved on**: 2026-11-06
+- **Approved content**: sha256:726da27986300e4a44ceddc9c2dcab7d610aad207fa0f82abb836d58b91deffe
 
 ## Configuration Decisions
 

@@ -1,5 +1,7 @@
 # Evaluation question set
 
+Step-by-step guide for the people preparing it, with the question-count estimate: [GUIDE.md](./GUIDE.md).
+
 The curated question set behind the success metric of `docs/PRODUCT.md` (at least 90% of the questions answered correctly) and the spike criteria `AC-SPIKE-02` and `AC-ACC-01` in `.sdd/SPEC.md`.
 
 - **Owners:** gamug and dova prepare it. It must exist before `TASK-018` (the DeepSeek tool-loop spike) starts.

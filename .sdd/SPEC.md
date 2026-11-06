@@ -378,7 +378,7 @@ Each criterion uses the constitution's executable GIVEN-WHEN-THEN form. A criter
 
 ### Product acceptance criteria
 
-Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3 (identifier `AC-FR<primary requirement>-NN`, numbered per story); the user story `US-005` (manual report editing) is Won't Have and has none. The criteria `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01` and `AC-SPIKE-01` to `AC-SPIKE-06` are **derived** by the SDD team from requirements, the success metric and the risks; they are not user story scenarios and are listed in `PLAN.md` among the deviations to confirm at the next re-approval of `docs/PRODUCT.md`.
+Most criteria below are scenarios of a user story in `docs/PRODUCT.md` section 3 (identifier `AC-FR<primary requirement>-NN`, numbered per story); the user story `US-005` (manual report editing) is Won't Have and has none. The criteria `AC-FR021-01`, `AC-FR035-01`, `AC-ACC-01` and `AC-SPIKE-01` to `AC-SPIKE-06` are **derived** by the SDD team from requirements, the success metric and the risks; they are not user story scenarios; `docs/PRODUCT.md` section 3 (version 1.1.0) says they are defined here, and `PLAN.md` lists them among the absorbed deviations.
 
 - **AC-FR002-01:** from US-001 (Chat with the knowledge graph)
 

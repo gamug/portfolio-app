@@ -60,3 +60,11 @@ Record completed Work Items and their associated tasks here after verification. 
 - Reworded the `TASKS.md` status sentence and the "disabled in GitHub" row (four of nine workflows were disabled; the other five never registered).
 - Verification (rebuilt devcontainer image, clean copy of the project): 51 backend tests pass and 1 is skipped (the evaluation format test); `pre-commit run --all-files` passes all eight hooks with ShellCheck 0.11.0; `check_sdd.py`, `check_consistency.py` and `scripts/sdd-verify.sh` pass. Install with the telemetry script allowed printed the payload (before); with the fix, 0 telemetry lines and pnpm reports `Ignored build scripts: @openuidev/lang-core@1.1.0` (after); `scripts/init.sh` leaves no OpenUI state in the home directory.
 
+## 2026-11-06 (re-approval)
+
+### docs/PRODUCT.md 1.1.0 (FR-001, WI-001)
+
+- Re-approved by Gabriel Múnera (gamug) on 2026-11-06 (first approval 2026-11-05, hash `sha256:726da27986300e4a44ceddc9c2dcab7d610aad207fa0f82abb836d58b91deffe`). The sections now state what the implementation and the owners' decisions made true: the verification commands (no health endpoint), `scripts/init.sh` creating `CLAUDE.md`, the `.sdd/CHANGELOG.md` amendment log, the guarded and disabled OpenUI workflows, the additional CI jobs and repository checks, merge commit with squash and rebase disabled, the ruleset that blocks only deletion and force-pushes (accepted), the telemetry switch-off, the MIT license with the project's copyright line, the location of the evaluation question set, the derived acceptance criteria, and the `reference/` path of the FastAPI example in the stack table. The ADR blocks in section 5 were not changed.
+- Added `backend/tests/evaluation/GUIDE.md`: a guide for gamug and dova to prepare the evaluation questions, with the question-count estimate (about 100 recommended, 60 minimum) and the decisions they still have to agree.
+- Verification: `scripts/sdd-verify.sh` passes (the discovery validator without `--draft`, `validate_config.py check`, `render --verify`).
+
