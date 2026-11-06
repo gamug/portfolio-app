@@ -16,7 +16,7 @@ The acceptance criteria `AC-FR001-01` through `AC-FR001-06`, and the product cri
 **Depends on:** none  
 **Acceptance criteria:** AC-FR001-01
 
-Run [`SKILL.md`](../SKILL.md) through all six phases. Collect the user's problem definition, actors, workflows, requirements, user stories, stack evaluation, ADRs, environment and governance decisions, risks, and roadmap in `docs/PRODUCT.md`, built from the skill's `templates/product-template.md`, and seed the root `adr.md` from its ADRs. Discovery runs first: no other FR-001 work starts before it, and `validate_config.py` refuses to run until `docs/PRODUCT.md` is approved; it does not check `adr.md`, so the acceptance of the seeded ADRs is a manual exit criterion below.
+Run the `sdd-init` skill (`SKILL.md` in [gamug/sdd-template](https://github.com/gamug/sdd-template), pinned in `scripts/sdd-verify.sh`) through all six phases. Collect the user's problem definition, actors, workflows, requirements, user stories, stack evaluation, ADRs, environment and governance decisions, risks, and roadmap in `docs/PRODUCT.md`, built from the skill's `templates/product-template.md`, and seed the root `adr.md` from its ADRs. Discovery runs first: no other FR-001 work starts before it, and `validate_config.py` refuses to run until `docs/PRODUCT.md` is approved; it does not check `adr.md`, so the acceptance of the seeded ADRs is a manual exit criterion below.
 
 The skill must ask focused questions interactively. It must not guess missing inputs. When an answer is required, the question must state what decision is needed, why it affects the project, and what concrete options or examples the user should consider.
 

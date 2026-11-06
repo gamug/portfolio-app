@@ -33,6 +33,11 @@ if [ ! -f .env ]; then
   echo "Created .env from .env.example. Fill LLM_API_KEY, KG_USER and KG_PASSWORD (a read-only GraphDB user)."
 fi
 
+if [ ! -f CLAUDE.md ]; then
+  cp scripts/templates/CLAUDE.md.template CLAUDE.md
+  echo "Created CLAUDE.md (local, not tracked in Git) from scripts/templates/CLAUDE.md.template."
+fi
+
 echo "==> Installing dependencies"
 uv sync --locked --directory backend || fail "the backend dependencies could not be installed." "check network access, and that backend/uv.lock is in sync (uv lock --directory backend)."
 pnpm --dir frontend install --frozen-lockfile || fail "the frontend dependencies could not be installed." "check network access, and that frontend/pnpm-lock.yaml is in sync (pnpm --dir frontend install)."

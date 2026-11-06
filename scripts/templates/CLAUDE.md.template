@@ -1,0 +1,20 @@
+# CLAUDE.md
+
+Local instructions for coding agents on portfolio-app-new. `scripts/init.sh` creates this file from `scripts/templates/CLAUDE.md.template` when it is missing. It is listed in `.gitignore` and is not tracked in Git. `.sdd/constitution.md` takes precedence over this file.
+
+## Read before planning or editing
+
+- `.sdd/constitution.md` (governing rules, generated from `config.yaml`; never edit it by hand)
+- `docs/PRODUCT.md` (approved discovery: use cases, requirements, stack, risks and roadmap; the decision source)
+- `adr.md` (live architecture decision records)
+- `config.yaml` (normalized configuration; every value and its source is in the Configuration Decisions table of `docs/PRODUCT.md`)
+- `.sdd/SPEC.md`, `.sdd/PLAN.md` and `.sdd/TASKS.md` (requirements, Work Items and tasks)
+
+## Rules that matter most
+
+- Work follows `FR > WI > Task`. Do the next unchecked task in dependency order, and update `.sdd/TASKS.md` and `.sdd/CHANGELOG.md` in the same change.
+- Commit subjects: `type(scope): imperative summary [FR-xxx][WI-xxx][TASK-xxx]`. Never bypass the hooks.
+- Ask for approval before adding or upgrading a dependency, changing the database schema, or expanding scope beyond the requirements.
+- An architecture change needs a `Proposed` ADR in `adr.md` that the user accepts before it is implemented.
+- No rebase, amend of pushed commits or force-push without approval. After pushing, leave the working tree on the pushed PR branch and give the PR URL.
+- Never commit secrets. `.env` stays local, and `KG_USER` must be a read-only GraphDB user.

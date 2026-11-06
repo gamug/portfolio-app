@@ -56,6 +56,6 @@ repos:
         files: ^frontend/
       - id: commit-message
         name: conventional commit with [FR][WI][TASK] suffix
-        entry: python3 scripts/check_commit_msg.py
+        entry: python3 backend/app/devtools/check_commit_msg.py
         language: system
         stages: [commit-msg]

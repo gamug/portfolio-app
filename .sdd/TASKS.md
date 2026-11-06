@@ -2,7 +2,7 @@
 
 Task register for the hierarchy `FR-001 > WI > Task` defined in [`PLAN.md`](./PLAN.md). Every task has exactly one parent Work Item.
 
-`$SKILL_DIR` is the directory containing the `sdd-init` skill's `SKILL.md` (see "Running the tooling" there); commands run from the project root.
+`$SKILL_DIR` is `.sdd-tooling/skills/sdd-init`, a checkout of [gamug/sdd-template](https://github.com/gamug/sdd-template) at the commit pinned in `scripts/sdd-verify.sh` (it is gitignored). `bash scripts/sdd-verify.sh` fetches it and runs the validators; commands run from the project root.
 
 Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x]` means done. A Work Item is checked only when every task under it is checked, in the same change as its last task. Progress is tracked in this file: TASK-001 through TASK-010 and WI-001 through WI-003 were checked when initialization reached TASK-010. Work Items and tasks added to `.sdd/TASKS.md` carry the same boxes and follow the same rule.
 

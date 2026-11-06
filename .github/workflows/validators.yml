@@ -60,3 +60,18 @@ jobs:
         run: uv run --directory backend pytest
       - name: Vitest
         run: pnpm --dir frontend test --run
+
+  # The commit-msg hook only runs where scripts/init.sh installed the git hooks (the devcontainer),
+  # so CI checks every commit subject of the pull request as well. A squash merge uses the PR title:
+  # give it the same format.
+  commit-subjects:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Check commit subjects ([FR][WI][TASK] suffix)
+        run: |
+          git log --no-merges --format=%s "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
+            | python3 backend/app/devtools/check_commit_msg.py --stdin

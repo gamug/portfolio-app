@@ -49,7 +49,20 @@ Run from the repository root (they are fixed in `config.yaml`):
 feat(chat): stream the answer [FR-002][WI-008][TASK-020]
 ```
 
-CI (`.github/workflows/validators.yml`) runs gitleaks, ruff, mypy, ESLint and Prettier, tsc, pytest and Vitest, in that order.
+CI (`.github/workflows/validators.yml`) runs gitleaks, ruff, mypy, ESLint and Prettier, tsc, pytest and Vitest, in that order. A separate job checks every commit subject of the pull request with the same rule as the hook, because the hook only runs where `scripts/init.sh` installed it. With a squash merge, give the PR title the same format. The pytest gate also runs `backend/app/devtools/check_consistency.py`, which fails when `config.yaml` commands, tool versions, cited repository paths or the `CLAUDE.md` template drift apart.
+
+## SDD artifacts
+
+`docs/PRODUCT.md`, `config.yaml` and `.sdd/constitution.md` are checked by the validators of [gamug/sdd-template](https://github.com/gamug/sdd-template), pinned to a commit in `scripts/sdd-verify.sh`:
+
+```bash
+bash scripts/sdd-verify.sh          # discovery approval hash, config sources, constitution up to date
+bash scripts/sdd-verify.sh render   # after editing config.yaml: re-render the constitution, then verify
+```
+
+These validators serve the SDD process and are not part of the hooks or CI. The script keeps a gitignored checkout in `.sdd-tooling/`. `.sdd/constitution.md` is generated: change `config.yaml` (and its row in `docs/PRODUCT.md`), then render.
+
+`CLAUDE.md` is local and not tracked; `scripts/init.sh` creates it from `scripts/templates/CLAUDE.md.template` when it is missing.
 
 ## Recovery
 
