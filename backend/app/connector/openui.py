@@ -6,6 +6,7 @@ from typing import Any
 
 from openai import APITimeoutError, AsyncOpenAI
 
+from .language import Language, conversion_instruction
 from .models import ConnectorError, ConnectorTimeout, ConversionResult, total_tokens
 from .settings import Settings
 
@@ -33,19 +34,26 @@ class OpenUIConverter:
             max_retries=0,
         )
 
-    async def convert(self, answer: str) -> ConversionResult:
+    async def convert(self, answer: str, language: Language = "en") -> ConversionResult:
         started = time.monotonic()
         try:
             prompt = self.prompt_path.read_text(encoding="utf-8")
         except OSError as error:
             raise ConnectorError(
-                "The OpenUI conversion prompt is missing.", status_code=502
+                "The OpenUI conversion prompt is missing.",
+                status_code=502,
+                kind="conversion",
             ) from error
         try:
             response = await self.llm.chat.completions.create(
                 model=self.settings.llm_model,
                 messages=[
-                    {"role": "system", "content": f"{prompt}\n\n{CONVERSION_TASK}"},
+                    {
+                        "role": "system",
+                        "content": (
+                            f"{prompt}\n\n{CONVERSION_TASK}\n\n{conversion_instruction(language)}"
+                        ),
+                    },
                     {"role": "user", "content": answer},
                 ],
                 temperature=0,
@@ -57,13 +65,17 @@ class OpenUIConverter:
                 f"The OpenUI conversion timed out after {self.settings.chat_timeout_seconds:g} s."
             ) from error
         except Exception as error:  # noqa: BLE001 - convert provider failures
-            raise ConnectorError("The OpenUI conversion failed.", status_code=502) from error
+            raise ConnectorError(
+                "The OpenUI conversion failed.", status_code=502, kind="deepseek"
+            ) from error
 
         content = response.choices[0].message.content or ""
         converted = _strip_fences(content)
         if not converted:
             raise ConnectorError(
-                "The OpenUI conversion returned an empty response.", status_code=502
+                "The OpenUI conversion returned an empty response.",
+                status_code=502,
+                kind="conversion",
             )
         usage = response.usage.model_dump() if response.usage else None
         return ConversionResult(

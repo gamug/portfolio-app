@@ -13,12 +13,14 @@ from app.connector.storage import QuestionAnswerPair
 class FakeChatAPI:
     events: list[str]
     error: ConnectorError | None = None
+    languages: list[str] = field(default_factory=list)
 
     async def check_startup(self) -> None:
         self.events.append("startup")
 
-    async def answer(self, question: str) -> AnswerResult:
+    async def answer(self, question: str, language: str = "en") -> AnswerResult:
         self.events.append("answer")
+        self.languages.append(language)
         if self.error is not None:
             raise self.error
         return AnswerResult(text="raw answer", mode="chat", latency_seconds=1.0)
@@ -28,9 +30,11 @@ class FakeChatAPI:
 class FakeConverter:
     events: list[str]
     error: ConnectorError | None = None
+    languages: list[str] = field(default_factory=list)
 
-    async def convert(self, answer: str) -> ConversionResult:
+    async def convert(self, answer: str, language: str = "en") -> ConversionResult:
         self.events.append("convert")
+        self.languages.append(language)
         if self.error is not None:
             raise self.error
         return ConversionResult(text="root = Card([])", latency_seconds=0.1)
@@ -112,4 +116,41 @@ def test_answer_failure_does_not_convert_or_store() -> None:
     with pytest.raises(ConnectorError, match="answer failed"):
         asyncio.run(connector.answer_and_store("question"))
     assert events == ["answer"]
+    assert store.pairs == []
+
+
+def test_spanish_question_uses_spanish_instructions_for_answer_and_conversion() -> None:
+    events: list[str] = []
+    chat = FakeChatAPI(events)
+    converter = FakeConverter(events)
+    connector = KnowledgeGraphConnector(
+        _settings(),
+        chat_api=chat,  # type: ignore[arg-type]
+        tool_loop=object(),  # type: ignore[arg-type]
+        converter=converter,  # type: ignore[arg-type]
+        store=FakeStore(events),
+    )
+    asyncio.run(connector.answer_and_store("¿Qué datos contiene el grafo?"))
+    assert chat.languages == ["es"]
+    assert converter.languages == ["es"]
+
+
+def test_storage_failure_is_reported_without_a_pair() -> None:
+    class FailingStore(FakeStore):
+        async def save(self, pair: QuestionAnswerPair) -> None:
+            self.events.append("store")
+            raise RuntimeError("database unavailable")
+
+    events: list[str] = []
+    store = FailingStore(events)
+    connector = KnowledgeGraphConnector(
+        _settings(),
+        chat_api=FakeChatAPI(events),  # type: ignore[arg-type]
+        tool_loop=object(),  # type: ignore[arg-type]
+        converter=FakeConverter(events),  # type: ignore[arg-type]
+        store=store,
+    )
+    with pytest.raises(ConnectorError) as raised:
+        asyncio.run(connector.answer_and_store("question"))
+    assert raised.value.kind == "storage"
     assert store.pairs == []

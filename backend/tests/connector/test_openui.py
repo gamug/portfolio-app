@@ -16,9 +16,11 @@ class FakeCompletions:
         self.content = content
         self.error = error
         self.calls = 0
+        self.calls_args: list[dict[str, Any]] = []
 
     async def create(self, **kwargs: Any) -> Any:
         self.calls += 1
+        self.calls_args.append(kwargs)
         if self.error is not None:
             raise self.error
         message = SimpleNamespace(content=self.content)
@@ -68,6 +70,13 @@ def test_converts_and_strips_fences(tmp_path: Path) -> None:
     assert result.text == "root = Card([])"
     assert result.total_tokens == 7
     assert completions.calls == 1
+
+
+def test_spanish_conversion_instruction_is_passed(tmp_path: Path) -> None:
+    completions = FakeCompletions("root = Card([])")
+    asyncio.run(_converter(tmp_path, completions).convert("respuesta", "es"))
+    system = str(completions.calls_args[0]["messages"][0]["content"])
+    assert "español" in system
 
 
 def test_empty_conversion_is_an_error(tmp_path: Path) -> None:

@@ -71,9 +71,11 @@ class FakeCompletions:
         self.responses = responses or []
         self.error = error
         self.calls = 0
+        self.calls_args: list[dict[str, Any]] = []
 
     async def create(self, **kwargs: Any) -> Any:
         self.calls += 1
+        self.calls_args.append(kwargs)
         if self.error is not None:
             raise self.error
         if not self.responses:
@@ -132,6 +134,15 @@ def test_tool_loop_returns_final_answer() -> None:
     assert result.mode == "tool_loop"
     assert result.total_tokens == 12
     assert any(method == "POST" for method, _ in http.calls)
+
+
+def test_spanish_question_adds_spanish_instruction() -> None:
+    http = FakeHttp()
+    completions = FakeCompletions([_response("Respuesta final")])
+    llm = FakeLLM(completions)
+    asyncio.run(ToolLoop(_settings(), http=http, llm=llm).answer("pregunta", "es"))
+    system = str(completions.calls_args[0]["messages"][0]["content"])
+    assert "Responde en español" in system
 
 
 def test_tool_loop_stops_at_iteration_limit() -> None:

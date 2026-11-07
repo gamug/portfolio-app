@@ -9,6 +9,7 @@ import yaml  # type: ignore[import-untyped]
 from openai import APITimeoutError, AsyncOpenAI
 
 from .http import GraphDBHttp, GraphDBTimeout, GraphDBUnavailable
+from .language import Language, answer_instruction
 from .models import AnswerResult, ConnectorError, ConnectorTimeout, total_tokens
 from .settings import Settings
 
@@ -52,12 +53,15 @@ class ToolLoop:
     async def check_startup(self) -> None:
         await asyncio.to_thread(self._load_tools)
 
-    async def answer(self, question: str) -> AnswerResult:
+    async def answer(self, question: str, language: Language = "en") -> AnswerResult:
         started = time.monotonic()
         deadline = started + self.settings.chat_timeout_seconds
         tools, tool_paths = await asyncio.to_thread(self._load_tools)
         messages: list[dict[str, Any]] = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "system",
+                "content": f"{SYSTEM_PROMPT}\n\n{answer_instruction(language)}",
+            },
             {"role": "user", "content": question},
         ]
 
@@ -82,7 +86,9 @@ class ToolLoop:
                     f"The tool loop timed out after {self.settings.chat_timeout_seconds:g} s."
                 ) from error
             except Exception as error:  # noqa: BLE001 - convert provider failures
-                raise ConnectorError("The DeepSeek tool loop failed.", status_code=502) from error
+                raise ConnectorError(
+                    "The DeepSeek tool loop failed.", status_code=502, kind="deepseek"
+                ) from error
 
             choice = response.choices[0]
             message = choice.message
@@ -92,7 +98,9 @@ class ToolLoop:
                 answer = content.strip()
                 if not answer:
                     raise ConnectorError(
-                        "The DeepSeek tool loop returned an empty answer.", status_code=502
+                        "The DeepSeek tool loop returned an empty answer.",
+                        status_code=502,
+                        kind="deepseek",
                     )
                 usage = response.usage.model_dump() if response.usage else None
                 return AnswerResult(
@@ -134,6 +142,7 @@ class ToolLoop:
             "The DeepSeek tool loop did not finish within "
             f"{self.settings.tool_max_iterations} iterations.",
             status_code=502,
+            kind="deepseek",
         )
 
     async def _run_tool(self, call: Any, tool_paths: dict[str, str], deadline: float) -> str:
@@ -161,7 +170,9 @@ class ToolLoop:
                 f"The GraphDB tool {name} timed out after {self.settings.chat_timeout_seconds:g} s."
             ) from error
         except GraphDBUnavailable as error:
-            raise ConnectorError("GraphDB is unreachable.", status_code=502) from error
+            raise ConnectorError(
+                "GraphDB is unreachable.", status_code=502, kind="graphdb"
+            ) from error
         if response.status != 200:
             return json.dumps({"error": f"tool returned HTTP {response.status}"})
         return response.body[:MAX_MODEL_TOOL_CHARS]
@@ -178,17 +189,25 @@ class ToolLoop:
         except GraphDBTimeout as error:
             raise ConnectorTimeout("The GraphDB tool list timed out.") from error
         except GraphDBUnavailable as error:
-            raise ConnectorError("GraphDB is unreachable.", status_code=502) from error
+            raise ConnectorError(
+                "GraphDB is unreachable.", status_code=502, kind="graphdb"
+            ) from error
         if response.status != 200:
             raise ConnectorError(
-                f"The GraphDB tool list returned HTTP {response.status}.", status_code=502
+                f"The GraphDB tool list returned HTTP {response.status}.",
+                status_code=502,
+                kind="graphdb",
             )
         document = yaml.safe_load(response.body)
         if not isinstance(document, dict):
-            raise ConnectorError("The GraphDB tool list is invalid.", status_code=502)
+            raise ConnectorError(
+                "The GraphDB tool list is invalid.", status_code=502, kind="graphdb"
+            )
         paths = document.get("paths")
         if not isinstance(paths, dict) or not paths:
-            raise ConnectorError("The GraphDB tool list has no tools.", status_code=502)
+            raise ConnectorError(
+                "The GraphDB tool list has no tools.", status_code=502, kind="graphdb"
+            )
 
         tools: list[dict[str, Any]] = []
         tool_paths: dict[str, str] = {}
@@ -219,5 +238,7 @@ class ToolLoop:
             )
             tool_paths[name] = str(path)
         if not tools:
-            raise ConnectorError("The GraphDB tool list has no POST tools.", status_code=502)
+            raise ConnectorError(
+                "The GraphDB tool list has no POST tools.", status_code=502, kind="graphdb"
+            )
         return tools, tool_paths

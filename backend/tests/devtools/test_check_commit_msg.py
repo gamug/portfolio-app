@@ -12,6 +12,7 @@ VALID = [
     "feat(chat): stream the answer [FR-002][WI-008][TASK-020]",
     "docs: update the plan [FR-001][WI-003][TASK-010]",
     "fix(db)!: keep the session on error [FR-011][WI-009][TASK-025]",
+    "feat(backend): handle errors and follow language [FR-002][FR-035][WI-008][TASK-022]",
     "Merge branch 'main' into feature",
 ]
 INVALID = [

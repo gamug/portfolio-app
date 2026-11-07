@@ -5,15 +5,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.connector import ConnectorError, KnowledgeGraphConnector, Settings
+from app.connector.language import detect_language, error_message
 from app.connector.service import STREAM_CHUNK_SIZE
 
 
 class ChatRequest(BaseModel):
-    question: str = Field(min_length=1)
-    session_id: str = Field(default="default", min_length=1)
+    question: str = ""
+    session_id: str = "default"
 
 
 def create_app(connector: KnowledgeGraphConnector | None = None) -> FastAPI:
@@ -29,15 +30,19 @@ def create_app(connector: KnowledgeGraphConnector | None = None) -> FastAPI:
 
     @app.post("/api/chat", response_model=None)
     async def chat(request: ChatRequest) -> JSONResponse | StreamingResponse:
+        language = detect_language(request.question)
+        if not request.question.strip():
+            return JSONResponse({"error": error_message("validation", language)}, status_code=400)
         active: KnowledgeGraphConnector | None = app.state.connector
         if active is None:
-            return JSONResponse(
-                {"error": "The knowledge-graph connector is not ready."}, status_code=503
-            )
+            return JSONResponse({"error": error_message("unknown", language)}, status_code=503)
         try:
             result = await active.answer_and_store(request.question, request.session_id)
         except ConnectorError as error:
-            return JSONResponse({"error": str(error)}, status_code=error.status_code)
+            return JSONResponse(
+                {"error": error_message(error.kind, language)},
+                status_code=error.status_code,
+            )
 
         async def body() -> AsyncIterator[bytes]:
             for index in range(0, len(result.raw.text), STREAM_CHUNK_SIZE):

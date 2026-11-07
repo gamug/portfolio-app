@@ -6,6 +6,7 @@ import time
 from typing import Any
 
 from .http import GraphDBHttp, GraphDBTimeout, GraphDBUnavailable
+from .language import Language, answer_instruction
 from .models import AnswerResult, ConnectorError, ConnectorTimeout, total_tokens
 from .settings import Settings
 
@@ -39,35 +40,40 @@ class ChatAPIClient:
                 raise ConnectorError(
                     "The GraphDB chat API is unreachable during the startup check.",
                     status_code=502,
+                    kind="graphdb",
                 ) from error
             if response.status in (401, 403):
                 raise ConnectorError(
                     "The GraphDB chat API rejected the configured read-only user.",
                     status_code=502,
+                    kind="graphdb",
                 )
             if response.status == 404:
                 raise ConnectorError(
                     f"The GraphDB chat endpoint {path} was not found.",
                     status_code=502,
+                    kind="graphdb",
                 )
             if response.status >= 500:
                 raise ConnectorError(
                     f"The GraphDB chat endpoint {path} returned HTTP {response.status}.",
                     status_code=502,
+                    kind="graphdb",
                 )
 
-    async def answer(self, question: str) -> AnswerResult:
-        return await asyncio.to_thread(self._answer_sync, question)
+    async def answer(self, question: str, language: Language = "en") -> AnswerResult:
+        return await asyncio.to_thread(self._answer_sync, question, language)
 
-    def _answer_sync(self, question: str) -> AnswerResult:
+    def _answer_sync(self, question: str, language: Language) -> AnswerResult:
         started = time.monotonic()
         deadline = started + self.settings.chat_timeout_seconds
+        agent_question = f"{question}\n\n{answer_instruction(language)}"
         try:
             create = self._post_json(
                 CREATE_CHAT_PATH,
                 {
                     "agentId": self.settings.kg_agent_id,
-                    "question": question,
+                    "question": agent_question,
                     "tzOffset": TZ_OFFSET,
                 },
                 deadline,
@@ -75,14 +81,16 @@ class ChatAPIClient:
             conversation_id = create.get("conversationId")
             if not isinstance(conversation_id, str) or not conversation_id:
                 raise ConnectorError(
-                    "The GraphDB chat API returned no conversation id.", status_code=502
+                    "The GraphDB chat API returned no conversation id.",
+                    status_code=502,
+                    kind="graphdb",
                 )
             answer_response = self._post_json(
                 ASK_PATH,
                 {
                     "agentId": self.settings.kg_agent_id,
                     "conversationId": conversation_id,
-                    "question": question,
+                    "question": agent_question,
                     "tzOffset": TZ_OFFSET,
                 },
                 deadline,
@@ -92,11 +100,19 @@ class ChatAPIClient:
                 f"The GraphDB chat API timed out after {self.settings.chat_timeout_seconds:g} s."
             ) from error
         except GraphDBUnavailable as error:
-            raise ConnectorError("The GraphDB chat API is unreachable.", status_code=502) from error
+            raise ConnectorError(
+                "The GraphDB chat API is unreachable.",
+                status_code=502,
+                kind="graphdb",
+            ) from error
 
         answer = _extract_answer(answer_response)
         if answer is None:
-            raise ConnectorError("The GraphDB chat API returned no answer text.", status_code=502)
+            raise ConnectorError(
+                "The GraphDB chat API returned no answer text.",
+                status_code=502,
+                kind="graphdb",
+            )
         usage = _extract_usage(answer_response)
         return AnswerResult(
             text=answer.strip(),
@@ -113,17 +129,23 @@ class ChatAPIClient:
         )
         if response.status != 200:
             raise ConnectorError(
-                f"The GraphDB chat API returned HTTP {response.status}.", status_code=502
+                f"The GraphDB chat API returned HTTP {response.status}.",
+                status_code=502,
+                kind="graphdb",
             )
         try:
             document = json.loads(response.body)
         except json.JSONDecodeError as error:
             raise ConnectorError(
-                "The GraphDB chat API returned invalid JSON.", status_code=502
+                "The GraphDB chat API returned invalid JSON.",
+                status_code=502,
+                kind="graphdb",
             ) from error
         if not isinstance(document, dict):
             raise ConnectorError(
-                "The GraphDB chat API returned an invalid response.", status_code=502
+                "The GraphDB chat API returned an invalid response.",
+                status_code=502,
+                kind="graphdb",
             )
         return document
 

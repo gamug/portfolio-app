@@ -4,21 +4,37 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 ChatMode = Literal["chat", "tool_loop"]
+ErrorKind = Literal[
+    "validation",
+    "timeout",
+    "graphdb",
+    "deepseek",
+    "conversion",
+    "storage",
+    "unknown",
+]
 
 
 class ConnectorError(RuntimeError):
     """A connector failure that the HTTP layer can turn into a clear response."""
 
-    def __init__(self, message: str, *, status_code: int = 502) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int = 500,
+        kind: ErrorKind = "unknown",
+    ) -> None:
         super().__init__(message)
         self.status_code = status_code
+        self.kind = kind
 
 
 class ConnectorTimeout(ConnectorError):
     """The knowledge graph did not answer before the per-question deadline."""
 
     def __init__(self, message: str = "The knowledge graph did not answer before the timeout."):
-        super().__init__(message, status_code=504)
+        super().__init__(message, status_code=504, kind="timeout")
 
 
 @dataclass(frozen=True, slots=True)
