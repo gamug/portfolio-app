@@ -158,3 +158,17 @@ input {
     border-bottom: 1px solid #d9e2ec;
   }
 }
+
+.message__relevance {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #d9e2ec;
+}
+
+.message__relevance label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #52606d;
+  font-size: 0.9rem;
+}

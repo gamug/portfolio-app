@@ -13,11 +13,17 @@ export interface ReportClient {
   getReport(sessionId: string): Promise<SessionReport | null>;
 }
 
+export interface RelevanceClient {
+  getRelevance(sessionId: string, pairId: string): Promise<boolean>;
+  setRelevance(sessionId: string, pairId: string, relevant: boolean): Promise<boolean>;
+}
+
 export type SessionState = {
   sessions: Thread[];
   activeSessionId: string | null;
   messages: Message[];
   report: SessionReport | null;
+  relevance: Record<string, boolean>;
   isLoading: boolean;
   error: string | null;
 };
@@ -27,6 +33,7 @@ const CREATE_ERROR = "Could not create a session. Please try again.";
 const RENAME_ERROR = "Could not rename the session. Please try again.";
 const DELETE_ERROR = "Could not delete the session. Please try again.";
 const SELECT_ERROR = "Could not load the session. Please try again.";
+const RELEVANCE_ERROR = "Could not update the relevance. Please try again.";
 
 function newUserMessage(): UserMessage {
   const id =
@@ -42,6 +49,7 @@ export class SessionController {
     activeSessionId: null,
     messages: [],
     report: null,
+    relevance: {},
     isLoading: false,
     error: null,
   };
@@ -50,6 +58,7 @@ export class SessionController {
   constructor(
     private readonly storage: ThreadStorage,
     private readonly reports: ReportClient,
+    private readonly relevance: RelevanceClient,
   ) {}
 
   subscribe = (listener: () => void): (() => void) => {
@@ -77,6 +86,7 @@ export class SessionController {
           activeSessionId: session.id,
           messages: [],
           report: null,
+          relevance: {},
           isLoading: false,
         });
         return;
@@ -97,6 +107,7 @@ export class SessionController {
         activeSessionId: session.id,
         messages: [],
         report: null,
+        relevance: {},
         isLoading: false,
       });
     } catch {
@@ -118,10 +129,20 @@ export class SessionController {
         this.storage.getMessages(sessionId),
         this.reports.getReport(sessionId),
       ]);
+      const pairIds = messages
+        .filter((message) => message.role === "assistant")
+        .map((message) => message.id);
+      const relevanceEntries = await Promise.all(
+        pairIds.map(async (pairId) => {
+          const relevant = await this.relevance.getRelevance(sessionId, pairId);
+          return [pairId, relevant] as const;
+        }),
+      );
       this.setState({
         activeSessionId: sessionId,
         messages,
         report,
+        relevance: Object.fromEntries(relevanceEntries),
         isLoading: false,
       });
     } catch {
@@ -181,11 +202,30 @@ export class SessionController {
         activeSessionId: replacement.id,
         messages: [],
         report: null,
+        relevance: {},
         isLoading: false,
       });
       return;
     }
     this.setState({ sessions: remaining, isLoading: false });
+  }
+
+  async toggleRelevance(pairId: string): Promise<void> {
+    const sessionId = this.state.activeSessionId;
+    if (sessionId === null) {
+      return;
+    }
+    const current = this.state.relevance[pairId] ?? true;
+    this.setState({ isLoading: true, error: null });
+    try {
+      const relevant = await this.relevance.setRelevance(sessionId, pairId, !current);
+      this.setState({
+        relevance: { ...this.state.relevance, [pairId]: relevant },
+        isLoading: false,
+      });
+    } catch {
+      this.setState({ isLoading: false, error: RELEVANCE_ERROR });
+    }
   }
 
   dismissError(): void {

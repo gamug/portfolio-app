@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Message, Thread, UserMessage } from "@openuidev/react-ui";
 import {
   SessionController,
+  type RelevanceClient,
   type ReportClient,
   type SessionReport,
   type ThreadStorage,
@@ -67,6 +68,25 @@ class FakeReports implements ReportClient {
   }
 }
 
+class FakeRelevance implements RelevanceClient {
+  values = new Map<string, boolean>();
+  calls: Array<[string, string, boolean]> = [];
+  failGet = false;
+  failSet = false;
+
+  async getRelevance(_sessionId: string, pairId: string): Promise<boolean> {
+    if (this.failGet) throw new Error("relevance load failed");
+    return this.values.get(pairId) ?? true;
+  }
+
+  async setRelevance(sessionId: string, pairId: string, relevant: boolean): Promise<boolean> {
+    if (this.failSet) throw new Error("relevance update failed");
+    this.calls.push([sessionId, pairId, relevant]);
+    this.values.set(pairId, relevant);
+    return relevant;
+  }
+}
+
 function report(text: string): SessionReport {
   return {
     openui_lang: text,
@@ -79,7 +99,13 @@ function report(text: string): SessionReport {
 function makeController() {
   const storage = new FakeStorage();
   const reports = new FakeReports();
-  return { storage, reports, controller: new SessionController(storage, reports) };
+  const relevance = new FakeRelevance();
+  return {
+    storage,
+    reports,
+    relevance,
+    controller: new SessionController(storage, reports, relevance),
+  };
 }
 
 describe("SessionController", () => {
@@ -239,5 +265,61 @@ describe("SessionController", () => {
     expect(after.messages).toEqual(before.messages);
     expect(after.report).toEqual(before.report);
     expect(after.error).toBeTruthy();
+  });
+});
+
+describe("SessionController relevance", () => {
+  it("loads the stored relevance state for each assistant message", async () => {
+    const { storage, relevance, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [
+      message("q1", "user", "Question"),
+      message("p1", "assistant", "root = Card([])"),
+    ]);
+    relevance.values.set("p1", false);
+
+    await controller.initialize();
+
+    expect(controller.getSnapshot().relevance).toEqual({ p1: false });
+  });
+
+  it("toggles a pair and persists the new state", async () => {
+    const { storage, relevance, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    await controller.initialize();
+
+    await controller.toggleRelevance("p1");
+
+    expect(relevance.calls).toEqual([["s1", "p1", false]]);
+    expect(controller.getSnapshot().relevance["p1"]).toBe(false);
+  });
+
+  it("leaves the visible relevance unchanged when the update fails", async () => {
+    const { storage, relevance, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    await controller.initialize();
+    const before = controller.getSnapshot().relevance;
+    relevance.failSet = true;
+
+    await controller.toggleRelevance("p1");
+
+    const after = controller.getSnapshot();
+    expect(after.relevance).toEqual(before);
+    expect(after.error).toBeTruthy();
+  });
+
+  it("loads relevance again when switching sessions", async () => {
+    const { storage, relevance, controller } = makeController();
+    storage.threads = [session("s1"), session("s2")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    storage.messages.set("s2", [message("p2", "assistant", "root = Stack([])")]);
+    relevance.values.set("p2", false);
+    await controller.initialize();
+
+    await controller.selectSession("s2");
+
+    expect(controller.getSnapshot().relevance).toEqual({ p2: false });
   });
 });
