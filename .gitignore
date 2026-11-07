@@ -69,6 +69,7 @@ packages/openui-cli/src/templates/
 
 # portfolio-app-new
 CLAUDE.md
+AGENTS.md
 backend/data/
 backend/.venv/
 .venv/

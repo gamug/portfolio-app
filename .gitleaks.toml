@@ -5,3 +5,7 @@ useDefault = true
 [[allowlists]]
 description = "OpenUI upstream reference code (reference/ is kept for reading only and is not modified): an embedded PostHog project key."
 paths = ['''^reference/packages/lang-core/src/telemetry/shared\.ts$''']
+
+[[allowlists]]
+description = "Git-ignored local files read by the pre-push working-tree scan: .env and the pnpm cache."
+paths = ['''^\.env$''', '''^\.pnpm-store/''']

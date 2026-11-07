@@ -75,3 +75,12 @@ Record completed Work Items and their associated tasks here after verification. 
 - Decided the tool source is `ttyg`, using the existing Talk to Your Graph agent `reportes-piloto` (`d832d4d0-5ec3-4953-bd39-cb2f0691b7d7`) on the `portfolio_test` repository (the knowledge graph is not final). No YAML tool configuration was needed, and neither `config.yaml` nor a dependency was changed.
 - Verified against GraphDB 11.5.1 at `KG_HOST`: `GET /rest/repositories` lists `portfolio_test` as `RUNNING`; `GET /rest/llm/tool/ttyg/d832d4d0-5ec3-4953-bd39-cb2f0691b7d7` returns `/now` and `/sparql_query`. As `KG_USER`, login authorities are `READ_REPO_portfolio_test` and `ROLE_USER`; a SPARQL read succeeds; empty and isolated-graph writes return `403`; without credentials, reads and writes return `401`; the isolated probe graph is absent.
 - Verification: `check_sdd.py` passes after recording the result; WI-007 remains open for TASK-018 and TASK-019.
+
+## 2026-11-07 (follow-up to WI-006)
+
+### TASK-015 — AGENTS.md for OpenCode agents and the delivery rule (WI-006, AC-FR001-06)
+
+- `scripts/init.sh` now also creates a local, untracked `AGENTS.md` from `scripts/templates/CLAUDE.md.template` when it is missing, so OpenCode agents follow the same SDD instructions as `CLAUDE.md`; `.gitignore` lists it and the README documents it.
+- The template gains the delivery rule (branch `sdd/<WI>-<TASK-ids>`, traced commit, push, PR to `main`, no merge, stay inside the assigned task files) and the rule to never `source` `.env`. This is a process improvement requested by the project owners; no requirement or acceptance criterion changed.
+- Verification: `CLAUDE.md` and `AGENTS.md` are byte-identical to the template; `check_consistency.py` passes.
+- `.gitleaks.toml` allowlists the git-ignored local `.env` and `.pnpm-store/`, which the pre-push working-tree scan reads and which blocked every push once `.env` held real credentials. The staged-files scan (pre-commit) is unchanged and still blocks any secret that is staged.

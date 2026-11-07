@@ -17,4 +17,6 @@ Local instructions for coding agents on portfolio-app-new. `scripts/init.sh` cre
 - Ask for approval before adding or upgrading a dependency, changing the database schema, or expanding scope beyond the requirements.
 - An architecture change needs a `Proposed` ADR in `adr.md` that the user accepts before it is implemented.
 - No rebase, amend of pushed commits or force-push without approval. After pushing, leave the working tree on the pushed PR branch and give the PR URL.
+- Delivery: when the assigned task(s) are done and verified, create the branch `sdd/<WI>-<TASK-ids>` from `main`, commit with the traced subject, push, open the PR to `main` with `gh pr create`, leave the tree on that branch, give the PR URL and stop. Do not merge: the user and the reviewing agent review the PR. Several agents may work at once, so stay inside the assigned tasks and files, and commit only the files of your own task.
+- `.env` is a dotenv file whose values may contain shell metacharacters. Never `source` it in a shell and never print its secrets; parse it as a dotenv file.
 - Never commit secrets. `.env` stays local, and `KG_USER` must be a read-only GraphDB user.
