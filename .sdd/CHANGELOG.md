@@ -188,3 +188,14 @@ Record completed Work Items and their associated tasks here after verification. 
 - Database failures return a generic user-safe error. Tests use a temporary database through the FastAPI test client, with no network or API calls.
 - No schema change and no dependency was added.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (session list)
+
+### TASK-025 — Build the session list in the frontend (WI-009, AC-FR005-01, AC-FR005-02, AC-FR005-04)
+
+- Added the frontend session list over `restStorage({baseUrl: "/api/threads"})`: create, select, inline rename and delete after explicit confirmation.
+- Deleting the active session creates a new empty session and makes it active. Selecting a session loads its history and current report.
+- Failed create, rename, delete or select operations show a visible error and leave the visible session, history and report unchanged.
+- Tests mock the storage and report backend through the controller; no GraphDB or DeepSeek calls are made. `pnpm` lint, Prettier, `tsc --noEmit`, tests and the production build pass.
+- No dependency was added.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
