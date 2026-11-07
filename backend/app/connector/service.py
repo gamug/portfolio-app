@@ -2,12 +2,14 @@
 
 from collections.abc import AsyncIterator
 
+from app.storage import SQLiteQuestionAnswerStore
+
 from .chat_api import ChatAPIClient
 from .language import Language, detect_language
 from .models import AnswerResult, ChatAnswer, ConnectorError
 from .openui import OpenUIConverter
 from .settings import Settings
-from .storage import InMemoryQuestionAnswerStore, QuestionAnswerPair, QuestionAnswerStore
+from .storage import QuestionAnswerPair, QuestionAnswerStore
 from .tool_loop import ToolLoop
 
 STREAM_CHUNK_SIZE = 64
@@ -29,7 +31,7 @@ class KnowledgeGraphConnector:
         self.chat_api = chat_api or ChatAPIClient(settings)
         self.tool_loop = tool_loop or ToolLoop(settings)
         self.converter = converter or OpenUIConverter(settings)
-        self.store = store or InMemoryQuestionAnswerStore()
+        self.store = store or SQLiteQuestionAnswerStore(settings.sqlite_path)
 
     async def check_startup(self) -> None:
         await self.chat_api.check_startup()

@@ -61,6 +61,7 @@ class Settings:
     llm_api_key: str
     llm_model: str
     llm_url: str
+    sqlite_path: str = "backend/data/app.sqlite3"
     chat_timeout_seconds: float = 120.0
     tool_max_iterations: int = 8
 
@@ -86,6 +87,7 @@ class Settings:
             llm_api_key=_required(values, "LLM_API_KEY"),
             llm_model=_required(values, "LLM_MODEL"),
             llm_url=_required(values, "LLM_URL"),
+            sqlite_path=_required(values, "SQLITE_PATH"),
             chat_timeout_seconds=_optional_float(values, "KG_CHAT_TIMEOUT_SECONDS", 120.0),
             tool_max_iterations=_optional_int(values, "KG_TOOL_MAX_ITERATIONS", 8),
         )
