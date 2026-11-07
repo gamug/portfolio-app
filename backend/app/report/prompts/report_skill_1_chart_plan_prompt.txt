@@ -75,7 +75,8 @@ RULES
    and a non-empty "series" array; every series values array has the same length as labels.
    For "pie", include "labels" and "values" with the same length. For "table", include a
    non-empty "columns" array; every column has the same number of values, and at least one
-   column is numeric. The first table column is usually the row label.
+   column is numeric. The first table column is usually the row label. For a missing table
+   value use the string "–", never null.
 6. Labels and titles must describe what is in the answers. Do not add facts, entities, periods
    or categories that are not in the pairs. Keep proper names unchanged.
 7. Write the title, summary, chart titles, takeaways and conclusions in the analyst's language:

@@ -1,6 +1,7 @@
 """Orchestrate the two report skills behind one streamed generation."""
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 
 from app.connector.language import Language, detect_language
@@ -19,6 +20,8 @@ from .models import (
     ReportProgress,
 )
 from .openui import OpenUIReportSkill, strip_code_fences
+
+logger = logging.getLogger(__name__)
 
 
 class ReportAgent:
@@ -76,13 +79,28 @@ class ReportAgent:
             yield ReportDone(report=stored)
         except asyncio.CancelledError:
             raise
-        except Exception:  # noqa: BLE001 - one user-safe failure, partial kept if any
+        except Exception as error:  # noqa: BLE001 - one user-safe failure, partial kept if any
+            # exc_info is off on purpose: a chained provider error can include request
+            # details. The type and truncated, redacted message are enough to diagnose it.
+            logger.exception(
+                "Report generation failed (%s): %s",
+                type(error).__name__,
+                self._safe_error_message(error),
+                exc_info=False,
+            )
             text = strip_code_fences("".join(partial))
             stored_partial = await self._store_partial(context.session_id, text)
             yield ReportFailed(
                 error=report_error_message("generation", context.language, partial=stored_partial),
                 incomplete=stored_partial,
             )
+
+    def _safe_error_message(self, error: BaseException) -> str:
+        message = " ".join(str(error).split())
+        for secret in (self.settings.llm_api_key, self.settings.kg_password):
+            if secret:
+                message = message.replace(secret, "<redacted>")
+        return message[:300]
 
     async def _store_partial(self, session_id: str, text: str) -> bool:
         if not text.strip():
