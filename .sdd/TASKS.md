@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017` is done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017` and `TASK-018` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -179,12 +179,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-018 — Spike the DeepSeek tool loop on the live tools
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-007
 - **Depends on:** TASK-017
 - **Acceptance criteria:** AC-SPIKE-02
 - **Action:** Prerequisite: `backend/tests/evaluation/questions.json` prepared by gamug and dova (format in its README). Run a DeepSeek tool loop over the GraphDB tools against the curated question set and record accuracy and failure modes (RSK-001).
-- **Result (2026-11-07):** Re-ran the bounded loop with the DeepSeek-based agent `reportes-piloto-ds` on the provisional `portfolio_test` KG. Preflight `/now` and a one-row `sparql_query` succeeded, but 1 of the 8 development questions ran: the model-generated `sparql_query` exceeded the 60 s per-tool timeout, so the run aborted without sending further queries and produced no final answers. Failure mode: tool timeout. The loop and DeepSeek tool calling were confirmed earlier with a legacy-endpoint diagnostic. Detailed outputs are only in the git-excluded local-results directory under `backend/tests/evaluation/`. Owner grade: pending. The KG and question set are provisional; repeat on the final KG after query generation is fixed.
+- **Result (2026-11-07):** Ran the accepted `adr-010` path through the Workbench chat API with the DeepSeek-based agent `reportes-piloto-ds` on the provisional `portfolio_test` KG. All 8 development questions returned an answer; errors 0; median latency 25.808 s; total tokens 1,188,318 (median 136,779.5 per question). The `adr-007` tool loop remains the selectable fallback. Detailed outputs are only in the git-excluded local-results directory under `backend/tests/evaluation/`. Owner grade: pending. The KG and question set are provisional; repeat on the final KG.
 
 ### TASK-019 — Spike OpenUI generation, chat layout and report export
 
