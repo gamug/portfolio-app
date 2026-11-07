@@ -3,8 +3,9 @@
 
 This is spike code, not production code. It reads the tool definitions from
 ``GET /rest/llm/tool/ttyg/<agent>``, gives them to DeepSeek as function definitions,
-forwards tool calls to GraphDB as the read-only application user, and stops after a
-bounded number of iterations.
+forwards tool calls to GraphDB as the read-only application user, stops after a
+bounded number of iterations, and aborts the run if a tool call times out so that a
+stuck GraphDB query is not followed by more queries.
 
 Question text, answers, tool calls, tool results, errors and timings are written only
 to ``backend/tests/evaluation/local-results/`` (git-excluded). The script prints only
@@ -30,7 +31,7 @@ from openai import OpenAI
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_QUESTIONS = REPO_ROOT / "backend/tests/evaluation/questions_dev_batch1.json"
 DEFAULT_RESULTS_DIR = REPO_ROOT / "backend/tests/evaluation/local-results"
-AGENT_ID = "d832d4d0-5ec3-4953-bd39-cb2f0691b7d7"
+AGENT_ID = "2689c209-4f97-4a07-bfd9-39d3cdd5cf92"
 DEFAULT_QUESTION_IDS = (
     "q-001",
     "q-005",
@@ -48,9 +49,15 @@ SYSTEM_PROMPT = """You answer questions about a knowledge graph stored in GraphD
 
 Use the provided tools before answering factual questions. Never invent values, names,
 dates or causes. For sparql_query, send a complete SPARQL SELECT, CONSTRUCT or DESCRIBE
-query in the query field. Use LIMIT for long lists and aggregations for totals. If the
-graph does not contain the requested data, say so explicitly. Answer in the language of
-the question and keep the final answer concise."""
+query in the query field.
+
+Never run an unfiltered full scan over ?s ?p ?o. Do not use text filters such as
+FILTER(CONTAINS(STR(?s), ...)) or FILTER(REGEX(STR(?s), ...)) over ?s ?p ?o. Start from a
+specific named graph, class or predicate, add selective filters, and always use a small
+LIMIT (for example 50) for lists. Use COUNT, SUM or other aggregations for totals.
+
+If the graph does not contain the requested data, say so explicitly. Answer in the
+language of the question and keep the final answer concise."""
 
 
 def _secret_values(env: dict[str, str]) -> set[str]:
@@ -78,6 +85,10 @@ def _redact_object(value: Any, secrets: set[str]) -> Any:
     return value
 
 
+class ToolTimeoutError(RuntimeError):
+    """Raised when a GraphDB tool call does not return within the configured timeout."""
+
+
 class GraphDBTools:
     """Minimal read-only client for the GraphDB LLM tool API."""
 
@@ -93,6 +104,7 @@ class GraphDBTools:
         self.base_url = host.rstrip("/")
         self.tool_url = f"{self.base_url}/rest/llm/tool/ttyg/{agent_id}"
         self.tool_timeout = tool_timeout
+        self._call_in_flight = False
         credentials = base64.b64encode(f"{user}:{password}".encode()).decode()
         self.auth_header = f"Basic {credentials}"
 
@@ -128,17 +140,29 @@ class GraphDBTools:
         return body
 
     def call_tool(self, path: str, arguments: dict[str, Any]) -> tuple[int, str]:
-        status, body = self._request(
-            "POST",
-            f"{self.tool_url}/{path.lstrip('/')}",
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/plain;q=0.9, */*;q=0.8",
-            },
-            data=json.dumps(arguments, ensure_ascii=False).encode(),
-            timeout=self.tool_timeout,
-        )
-        return status, body
+        if self._call_in_flight:
+            raise RuntimeError("a GraphDB tool call is already in flight")
+        self._call_in_flight = True
+        try:
+            status, body = self._request(
+                "POST",
+                f"{self.tool_url}/{path.lstrip('/')}",
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json, text/plain;q=0.9, */*;q=0.8",
+                },
+                data=json.dumps(arguments, ensure_ascii=False).encode(),
+                timeout=self.tool_timeout,
+            )
+            return status, body
+        except TimeoutError as error:
+            raise ToolTimeoutError("GraphDB tool call timed out") from error
+        except urllib.error.URLError as error:
+            if isinstance(error.reason, TimeoutError):
+                raise ToolTimeoutError("GraphDB tool call timed out") from error
+            raise
+        finally:
+            self._call_in_flight = False
 
 
 def _openapi_tools(document: str) -> tuple[list[dict[str, Any]], dict[str, str]]:
@@ -223,6 +247,7 @@ def _run_question(
         "duration_seconds": 0.0,
         "iterations": 0,
         "completed": False,
+        "aborted": False,
         "answer": "",
         "tool_calls": [],
         "failure_modes": [],
@@ -299,6 +324,7 @@ def _run_question(
         )
 
         stop_loop = False
+        abort_question = False
         for call in tool_calls:
             name = call.function.name
             try:
@@ -357,8 +383,12 @@ def _run_question(
 
             print(f"{record['id']}: tool {name}", flush=True)
             tool_started = time.monotonic()
+            timed_out = False
             try:
                 status, body = graph.call_tool(path, arguments)
+            except ToolTimeoutError:
+                status, body = 0, "tool request timed out"
+                timed_out = True
             except Exception as error:  # noqa: BLE001 - the spike records every failure
                 status, body = 0, f"tool request failed: {type(error).__name__}"
             tool_duration = round(time.monotonic() - tool_started, 3)
@@ -378,6 +408,23 @@ def _run_question(
                     "result": _redact(recorded_result, secrets),
                 }
             )
+            if timed_out:
+                record["failure_modes"].append(
+                    {
+                        "type": "tool_timeout",
+                        "detail": f"{name} did not return within {graph.tool_timeout}s",
+                    }
+                )
+                record["aborted"] = True
+                abort_question = True
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call.id,
+                        "content": json.dumps({"error": "tool call timed out"}),
+                    }
+                )
+                break
             if status != 200:
                 failure_type = (
                     "invalid_sparql"
@@ -396,7 +443,7 @@ def _run_question(
                 }
             )
 
-        if stop_loop:
+        if stop_loop or abort_question:
             break
         if iteration == max_iterations:
             record["failure_modes"].append(
@@ -421,6 +468,7 @@ def _summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "questions_run": len(records),
         "completed": completed,
         "failed": len(records) - completed,
+        "aborted": sum(1 for record in records if record.get("aborted")),
         "failure_mode_counts": dict(sorted(failure_counts.items())),
     }
 
@@ -443,6 +491,7 @@ def _write_markdown(path: Path, run: dict[str, Any]) -> None:
         f"- Questions run: {summary['questions_run']}",
         f"- Completed: {summary['completed']}",
         f"- Failed: {summary['failed']}",
+        f"- Aborted: {summary['aborted']}",
         f"- Failure modes: {modes or 'none'}",
         "",
         "The knowledge graph and question set are provisional. The evaluation must be "
@@ -494,13 +543,18 @@ def main() -> int:
     parser.add_argument("--questions", type=Path, default=DEFAULT_QUESTIONS)
     parser.add_argument("--results-dir", type=Path, default=DEFAULT_RESULTS_DIR)
     parser.add_argument("--max-iterations", type=int, default=MAX_ITERATIONS)
-    parser.add_argument("--tool-timeout", type=float, default=120)
+    parser.add_argument("--tool-timeout", type=float, default=60)
+    parser.add_argument("--agent-id", default=AGENT_ID)
     parser.add_argument(
         "--question-ids",
         default=",".join(DEFAULT_QUESTION_IDS),
         help="Comma-separated IDs; defaults to the eight development questions.",
     )
     args = parser.parse_args()
+    if not 0 < args.tool_timeout <= 60:
+        raise SystemExit("--tool-timeout must be greater than 0 and at most 60 seconds")
+    if args.max_iterations < 1:
+        raise SystemExit("--max-iterations must be at least 1")
 
     env = dotenv_values(REPO_ROOT / ".env")
     required = (
@@ -525,7 +579,7 @@ def main() -> int:
         host=str(env["KG_HOST"]),
         user=str(env["KG_USER"]),
         password=str(env["KG_PASSWORD"]),
-        agent_id=AGENT_ID,
+        agent_id=args.agent_id,
         tool_timeout=args.tool_timeout,
     )
     tools, tool_paths = _openapi_tools(graph.openapi_document())
@@ -541,7 +595,7 @@ def main() -> int:
         "task": "TASK-018",
         "run_id": run_id,
         "started_at": datetime.now(UTC).isoformat(),
-        "agent_id": AGENT_ID,
+        "agent_id": args.agent_id,
         "repository": repository,
         "model": model,
         "question_ids": list(question_ids),
@@ -581,6 +635,14 @@ def main() -> int:
             f"tool_calls={len(record['tool_calls'])}; failures={modes or '-'}; "
             f"seconds={record['duration_seconds']}"
         )
+        if record.get("aborted"):
+            run["aborted"] = True
+            run["abort_reason"] = "GraphDB tool call timed out; no further queries sent"
+            run["finished_at"] = datetime.now(UTC).isoformat()
+            _write_json(json_path, run)
+            _write_markdown(markdown_path, run)
+            print("Run aborted: GraphDB tool call timed out; no further queries sent.")
+            break
 
     summary = run["summary"]
     modes = ", ".join(f"{name} x{count}" for name, count in summary["failure_mode_counts"].items())
@@ -590,7 +652,7 @@ def main() -> int:
     )
     print(f"Detailed results: {json_path}")
     print(f"Owner report: {markdown_path}")
-    return 0
+    return 2 if run.get("aborted") else 0
 
 
 if __name__ == "__main__":

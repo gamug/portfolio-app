@@ -93,3 +93,12 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added `backend/spikes/task_018_tool_loop.py` (spike-only, not production code). It reads the tools from `GET /rest/llm/tool/ttyg/{agentId}`, bounds iterations, records timings and failure modes, and writes detailed output only to the git-excluded local-results directory under `backend/tests/evaluation/`.
 - Owner grade: pending. The KG and question set are provisional; repeat the evaluation on the final KG after the GraphDB endpoint is fixed.
 - Verification: `ruff` passes; `check_sdd.py` and `check_consistency.py` pass; no question text, answers, graph data or local result files are committed.
+
+## 2026-11-07 (spike rerun)
+
+### TASK-018 — DeepSeek tool loop rerun (WI-007, AC-SPIKE-02)
+
+- Re-ran the official loop with the DeepSeek-based agent `reportes-piloto-ds` on the provisional `portfolio_test` KG, using the same 8 development questions. Preflight `/now` and a one-row `sparql_query` succeeded; 1 of the 8 questions then ran and the model-generated `sparql_query` exceeded the 60 s per-tool timeout. The run aborted without sending further queries and produced no final answers. Failure mode: tool timeout.
+- Hardened `backend/spikes/task_018_tool_loop.py`: the per-tool timeout is capped at 60 s, an in-flight guard prevents overlapping tool calls, the run aborts on the first tool timeout, and the system prompt forbids unfiltered `?s ?p ?o` scans and requires a small `LIMIT`.
+- Owner grade: pending. The KG and question set are provisional; repeat on the final KG after query generation is fixed.
+- Verification: `ruff` passes; `check_sdd.py` and `check_consistency.py` pass; no question text, answers, graph data or local results are committed.
