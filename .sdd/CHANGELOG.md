@@ -274,3 +274,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests cover a plan with a null/empty table cell, a plan with an invented table number and the failure log.
 - No dependency or schema change and no real LLM call.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (light, dark and system theme)
+
+### UI polish extension — Light, dark and system theme toggle (user-approved, no FR)
+
+- Added a theme control in the session header with System, Light and Dark choices. System is the default and follows `prefers-color-scheme`; the choice is stored in localStorage inside try/catch.
+- Defined the app palette as CSS variables in `frontend/src/styles.css` for both modes. Explicit choices set `data-theme` and `data-openui-theme`, so `@openuidev/react-ui` cards, charts and tables use the same theme and keep readable contrast.
+- Added Vitest coverage for the toggle and the theme helpers.
+- No dependency or schema change.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests (53 passed) and production build pass; the backend checks remain green.

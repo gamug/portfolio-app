@@ -56,7 +56,7 @@ Open <http://localhost:5173>. In VS Code, if the browser cannot reach the page, 
 
 ### What works today
 
-Sessions can be created, renamed and deleted with confirmation. The chat panel asks a question, streams the raw answer, then reloads and renders the stored OpenUI Lang for each pair. Each pair has a relevance toggle and a single-pair delete action. The report panel sits beside the chat: **Generate Report** streams progress and the report, **Cancel** stops the request and keeps the previous report, and a failed generation keeps the partial report flagged incomplete. The report is shown again when the session is selected.
+Sessions can be created, renamed and deleted with confirmation. The chat panel asks a question, streams the raw answer, then reloads and renders the stored OpenUI Lang for each pair. Each pair has a relevance toggle and a single-pair delete action. The report panel sits beside the chat: **Generate Report** streams progress and the report, **Cancel** stops the request and keeps the previous report, and a failed generation keeps the partial report flagged incomplete. The report is shown again when the session is selected. A theme control in the header switches between system, light and dark, follows the system setting by default and remembers the choice.
 
 ### What is not built yet
 
