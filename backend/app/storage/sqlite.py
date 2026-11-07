@@ -63,6 +63,9 @@ class SQLiteQuestionAnswerStore:
     ) -> RelevanceMark | None:
         return await asyncio.to_thread(self._set_relevance_sync, session_id, pair_id, relevant)
 
+    async def delete_pair(self, session_id: str, pair_id: str) -> bool:
+        return await asyncio.to_thread(self._delete_pair_sync, session_id, pair_id)
+
     def _save_sync(self, pair: QuestionAnswerPair) -> None:
         timestamp = pair.created_at
         with self.database.connect() as connection:
@@ -240,6 +243,17 @@ class SQLiteQuestionAnswerStore:
                 (session_id, pair_id),
             ).fetchone()
         return _relevance_from_row(row) if row is not None else None
+
+    def _delete_pair_sync(self, session_id: str, pair_id: str) -> bool:
+        with self.database.connect() as connection, connection:
+            result = connection.execute(
+                """
+                DELETE FROM question_answer_pairs
+                WHERE id = ? AND session_id = ?
+                """,
+                (pair_id, session_id),
+            )
+        return bool(result.rowcount)
 
     def _set_relevance_sync(
         self, session_id: str, pair_id: str, relevant: bool

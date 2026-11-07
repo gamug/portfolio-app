@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Renderer } from "@openuidev/react-lang";
 import type { Message } from "@openuidev/react-ui";
 import { openuiChatLibrary, openuiLibrary } from "@openuidev/react-ui/genui-lib";
@@ -6,13 +7,15 @@ import type { SessionState } from "./SessionController";
 type SessionDetailProps = {
   state: SessionState;
   onToggleRelevance: (pairId: string) => void;
+  onDeletePair: (pairId: string) => void;
 };
 
 function messageText(message: Message): string {
   return typeof message.content === "string" ? message.content : "";
 }
 
-export function SessionDetail({ state, onToggleRelevance }: SessionDetailProps) {
+export function SessionDetail({ state, onToggleRelevance, onDeletePair }: SessionDetailProps) {
+  const [confirmingPairId, setConfirmingPairId] = useState<string | null>(null);
   const active = state.sessions.find((session) => session.id === state.activeSessionId);
   if (active === undefined) {
     return (
@@ -52,6 +55,32 @@ export function SessionDetail({ state, onToggleRelevance }: SessionDetailProps) 
                         Relevant for report
                       </label>
                     </div>
+                    {confirmingPairId === message.id ? (
+                      <div className="message__confirm" role="alertdialog">
+                        <span>Delete this question-answer pair?</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfirmingPairId(null);
+                            onDeletePair(message.id);
+                          }}
+                        >
+                          Delete
+                        </button>
+                        <button type="button" onClick={() => setConfirmingPairId(null)}>
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        data-delete-pair-id={message.id}
+                        disabled={state.isLoading}
+                        onClick={() => setConfirmingPairId(message.id)}
+                      >
+                        Delete pair
+                      </button>
+                    )}
                   </>
                 ) : (
                   <p>{messageText(message)}</p>

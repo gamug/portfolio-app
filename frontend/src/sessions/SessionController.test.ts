@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Message, Thread, UserMessage } from "@openuidev/react-ui";
 import {
   SessionController,
+  type PairClient,
   type RelevanceClient,
   type ReportClient,
   type SessionReport,
@@ -87,6 +88,16 @@ class FakeRelevance implements RelevanceClient {
   }
 }
 
+class FakePairs implements PairClient {
+  calls: Array<[string, string]> = [];
+  fail = false;
+
+  async deletePair(sessionId: string, pairId: string): Promise<void> {
+    if (this.fail) throw new Error("pair delete failed");
+    this.calls.push([sessionId, pairId]);
+  }
+}
+
 function report(text: string): SessionReport {
   return {
     openui_lang: text,
@@ -100,11 +111,13 @@ function makeController() {
   const storage = new FakeStorage();
   const reports = new FakeReports();
   const relevance = new FakeRelevance();
+  const pairs = new FakePairs();
   return {
     storage,
     reports,
     relevance,
-    controller: new SessionController(storage, reports, relevance),
+    pairs,
+    controller: new SessionController(storage, reports, relevance, pairs),
   };
 }
 
@@ -321,5 +334,82 @@ describe("SessionController relevance", () => {
     await controller.selectSession("s2");
 
     expect(controller.getSnapshot().relevance).toEqual({ p2: false });
+  });
+});
+
+describe("SessionController pair deletion", () => {
+  it("deletes only the confirmed pair and keeps the report", async () => {
+    const { storage, reports, relevance, pairs, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [
+      message("q1", "user", "First question"),
+      message("p1", "assistant", "root = Card([])"),
+      message("q2", "user", "Second question"),
+      message("p2", "assistant", "root = Stack([])"),
+    ]);
+    relevance.values.set("p2", false);
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+    const reportBefore = controller.getSnapshot().report;
+
+    await controller.deletePair("p1", true);
+
+    const state = controller.getSnapshot();
+    expect(pairs.calls).toEqual([["s1", "p1"]]);
+    expect(state.messages).toEqual([
+      message("q2", "user", "Second question"),
+      message("p2", "assistant", "root = Stack([])"),
+    ]);
+    expect(state.relevance).toEqual({ p2: false });
+    expect(state.report).toEqual(reportBefore);
+  });
+
+  it("does nothing when deletion is declined", async () => {
+    const { storage, pairs, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    await controller.initialize();
+    const before = controller.getSnapshot();
+
+    await controller.deletePair("p1", false);
+
+    const after = controller.getSnapshot();
+    expect(pairs.calls).toEqual([]);
+    expect(after.messages).toEqual(before.messages);
+    expect(after.report).toEqual(before.report);
+    expect(after.relevance).toEqual(before.relevance);
+  });
+
+  it("leaves the visible state unchanged when pair deletion fails", async () => {
+    const { storage, reports, relevance, pairs, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [
+      message("q1", "user", "Question"),
+      message("p1", "assistant", "root = Card([])"),
+    ]);
+    relevance.values.set("p1", false);
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+    const before = controller.getSnapshot();
+    pairs.fail = true;
+
+    await controller.deletePair("p1", true);
+
+    const after = controller.getSnapshot();
+    expect(after.messages).toEqual(before.messages);
+    expect(after.relevance).toEqual(before.relevance);
+    expect(after.report).toEqual(before.report);
+    expect(after.error).toBeTruthy();
+  });
+
+  it("does not delete a pair that is not in the active session", async () => {
+    const { storage, pairs, controller } = makeController();
+    storage.threads = [session("s1"), session("s2")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    await controller.initialize();
+
+    await controller.deletePair("p2", true);
+
+    expect(pairs.calls).toEqual([]);
   });
 });

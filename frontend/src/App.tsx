@@ -3,6 +3,7 @@ import { restStorage } from "@openuidev/react-ui";
 import { SessionController } from "./sessions/SessionController";
 import { SessionDetail } from "./sessions/SessionDetail";
 import { SessionList } from "./sessions/SessionList";
+import { createPairClient } from "./sessions/pairClient";
 import { createRelevanceClient } from "./sessions/relevanceClient";
 import { createReportClient } from "./sessions/reportClient";
 import { useSessionController } from "./sessions/useSessionController";
@@ -15,6 +16,7 @@ export function App() {
         storage.thread,
         createReportClient("/api/threads"),
         createRelevanceClient("/api/threads"),
+        createPairClient("/api/threads"),
       ),
     [storage],
   );
@@ -37,6 +39,7 @@ export function App() {
       <SessionDetail
         state={state}
         onToggleRelevance={(pairId) => void controller.toggleRelevance(pairId)}
+        onDeletePair={(pairId) => void controller.deletePair(pairId, true)}
       />
     </div>
   );

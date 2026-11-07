@@ -209,3 +209,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests mock the storage, report and relevance backend; no GraphDB or DeepSeek calls are made.
 - No backend change, dependency or schema change was needed.
 - Verification: `pnpm` lint, Prettier, `tsc --noEmit`, tests and build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (single pair delete)
+
+### TASK-027 — Delete a single question-answer pair (WI-010, AC-FR028-03, AC-FR028-04)
+
+- Added the single-pair delete endpoint under `/api/threads` and the SQLite delete method; the relevance row cascades and the current report is untouched.
+- The session view exposes a delete action per answer with explicit confirmation. Declining changes nothing; confirming removes only that pair's question/answer messages and relevance mark; failure shows an error and leaves the visible state unchanged.
+- Tests use Vitest with a mocked backend and pytest against a temporary SQLite database.
+- No schema change, dependency, GraphDB or DeepSeek call was needed.
+- Verification: `pnpm` lint, Prettier, `tsc --noEmit`, tests and build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
