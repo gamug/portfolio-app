@@ -72,7 +72,7 @@ bash scripts/sdd-verify.sh render   # after editing config.yaml: re-render the c
 
 These validators serve the SDD process and are not part of the hooks or CI. The script keeps a gitignored checkout in `.sdd-tooling/`. `.sdd/constitution.md` is generated: change `config.yaml` (and its row in `docs/PRODUCT.md`), then render.
 
-`CLAUDE.md` is local and not tracked; `scripts/init.sh` creates it from `scripts/templates/CLAUDE.md.template` when it is missing.
+`CLAUDE.md` is local and not tracked; `scripts/init.sh` creates it from `scripts/templates/CLAUDE.md.template` when it is missing. `AGENTS.md` (read by OpenCode agents) is the same file, local and not tracked, created from the same template.
 
 ## Recovery
 
