@@ -93,3 +93,11 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added `backend/spikes/task_018_tool_loop.py` (spike-only, not production code). It reads the tools from `GET /rest/llm/tool/ttyg/{agentId}`, bounds iterations, records timings and failure modes, and writes detailed output only to the git-excluded local-results directory under `backend/tests/evaluation/`.
 - Owner grade: pending. The KG and question set are provisional; repeat the evaluation on the final KG after the GraphDB endpoint is fixed.
 - Verification: `ruff` passes; `check_sdd.py` and `check_consistency.py` pass; no question text, answers, graph data or local result files are committed.
+
+## 2026-11-07 (ADR proposal)
+
+### TASK-018 — Proposed `adr-010` after the spike (WI-007, AC-SPIKE-02)
+
+- Added `adr-010` (`Proposed`) to `adr.md`: forward the question to the Talk to Your Graph agent through the Workbench chat API, with the `adr-007` tool loop as a fallback. Nothing is implemented and `adr-007` stays `Accepted` until the project owners accept or reject `adr-010`.
+- TASK-018 stays open; the PR #5 branch is not touched by this change.
+- Verification: `check_sdd.py` and `check_consistency.py` pass; no question text, answers or graph data are included.
