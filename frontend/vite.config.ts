@@ -4,7 +4,11 @@ import { defineConfig } from "vite";
 // The dev server proxies /api to the FastAPI backend on port 8000.
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173, proxy: { "/api": "http://localhost:8000" } },
+  server: {
+    host: true,
+    port: 5173,
+    proxy: { "/api": "http://localhost:8000" },
+  },
   test: {
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
