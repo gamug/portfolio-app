@@ -84,3 +84,12 @@ Record completed Work Items and their associated tasks here after verification. 
 - The template gains the delivery rule (branch `sdd/<WI>-<TASK-ids>`, traced commit, push, PR to `main`, no merge, stay inside the assigned task files) and the rule to never `source` `.env`. This is a process improvement requested by the project owners; no requirement or acceptance criterion changed.
 - Verification: `CLAUDE.md` and `AGENTS.md` are byte-identical to the template; `check_consistency.py` passes.
 - `.gitleaks.toml` allowlists the git-ignored local `.env` and `.pnpm-store/`, which the pre-push working-tree scan reads and which blocked every push once `.env` held real credentials. The staged-files scan (pre-commit) is unchanged and still blocks any secret that is staged.
+
+## 2026-11-07 (spike)
+
+### TASK-018 — DeepSeek tool loop (WI-007, AC-SPIKE-02)
+
+- Ran the bounded loop with the 8 development questions on the provisional `portfolio_test` KG. The required `/rest/llm/tool/ttyg/.../sparql_query` endpoint timed out on every call, so the official run produced no final answers and recorded tool-timeout and iteration-limit failures. A local-only diagnostic through the agent's legacy `sparql_query` endpoint completed 7 of 8 questions, confirming the loop and DeepSeek tool calling work; the blocker is the external tool endpoint or the agent configuration.
+- Added `backend/spikes/task_018_tool_loop.py` (spike-only, not production code). It reads the tools from `GET /rest/llm/tool/ttyg/{agentId}`, bounds iterations, records timings and failure modes, and writes detailed output only to the git-excluded local-results directory under `backend/tests/evaluation/`.
+- Owner grade: pending. The KG and question set are provisional; repeat the evaluation on the final KG after the GraphDB endpoint is fixed.
+- Verification: `ruff` passes; `check_sdd.py` and `check_consistency.py` pass; no question text, answers, graph data or local result files are committed.
