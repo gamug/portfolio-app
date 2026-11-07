@@ -127,3 +127,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added `backend/spikes/task_018_chat_api.py`; the earlier tool-loop script is unchanged as the fallback.
 - TASK-018 is marked done. Owner grade: pending. The KG and question set are provisional; repeat on the final KG.
 - Verification: `ruff`, `check_sdd.py` and `check_consistency.py` pass; no question text, answers, graph data or local results are committed.
+
+## 2026-11-07 (OpenUI spike)
+
+### TASK-019 — OpenUI generation, chat controls and offline export (WI-007, AC-SPIKE-03..06)
+
+- **AC-SPIKE-03 pass:** the locally generated OpenUI chat and report prompts were used for two short DeepSeek calls; 2 of 2 outputs parsed without errors.
+- **AC-SPIKE-04 pass:** the react-ui chat layout accepts custom assistant and user message components, and a relevance toggle and delete action render for each message. Click handlers are wired; no browser-automation dependency was added, so this was verified structurally.
+- **AC-SPIKE-05 pass:** the OpenUI renderer and the report were inlined into one HTML file of 3,702,568 bytes (about 3.7 MB) with 0 external references.
+- **AC-SPIKE-06 pass:** the report contained a bar chart built from the synthetic answer text, with the expected series and values; no ADR for storing structured tool results is needed.
+- Added `backend/spikes/task_019_openui.py` and the prompt/parser, controls and offline-export spikes under `frontend/spikes/`. No product code and no new dependency.
+- Failure modes: none for the four checks; AC-SPIKE-04 was verified structurally rather than through browser clicks. Detailed outputs are only in the git-excluded local-results directory under `backend/tests/evaluation/`.
+- Verification: `ruff`, `check_sdd.py`, `check_consistency.py`, the frontend spike tests, ESLint and Prettier pass.
