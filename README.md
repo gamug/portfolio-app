@@ -56,11 +56,11 @@ Open <http://localhost:5173>. In VS Code, if the browser cannot reach the page, 
 
 ### What works today
 
-Sessions can be created, renamed and deleted with confirmation. The relevance toggle and single-pair delete are implemented, but the chat UI that would show the pairs is not built yet.
+Sessions can be created, renamed and deleted with confirmation. The chat panel asks a question, streams the raw answer, then reloads and renders the stored OpenUI Lang for each pair. Each pair has a relevance toggle and a single-pair delete action. The report panel sits beside the chat: **Generate Report** streams progress and the report, **Cancel** stops the request and keeps the previous report, and a failed generation keeps the partial report flagged incomplete. The report is shown again when the session is selected.
 
 ### What is not built yet
 
-There is no chat input or report panel in the frontend yet. The `POST /api/chat` backend endpoint exists.
+There is no report download or erase action yet, and manual report editing is out of the MVP. The report download is TASK-030 and the erase actions are WI-013.
 
 ## Commands
 

@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026`, `TASK-027` and `TASK-028` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026`, `TASK-027`, `TASK-028` and `TASK-029` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -286,7 +286,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ## WI-011 — Report generation
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-028 — Implement the report agent
 
@@ -299,11 +299,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-029 — Build the report panel and the Generate Report flow
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-011
 - **Depends on:** TASK-028
 - **Acceptance criteria:** AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-06, AC-FR021-01
 - **Action:** Show the report beside the chat with progress, disable the chat during generation, store the result, and handle empty history, nothing marked and failure with a partial report flagged incomplete.
+- **Result (2026-11-07):** Added the side-by-side chat and report panels next to the session list. The chat panel sends a question to `POST /api/chat`, streams the raw answer, then reloads and renders the stored OpenUI Lang; a failed request shows the backend's localized error and leaves the failed question out of the history. The report panel consumes the SSE generation endpoint, shows planning/rendering progress, streams the OpenUI Lang progressively, offers Cancel, reloads the current report when a session is selected, keeps the previous report until completion then replaces it, keeps the previous report on cancel, and reloads the partial report flagged incomplete with a localized error on failure. No-history and nothing-marked rejections are shown in the panel. The task list had no frontend chat input task, so this plan gap was filled with a minimal chat panel as FR-002, FR-022 and the "disable the chat" requirement need it. Tests mock fetch and SSE and cover success, cancel, failure, regenerate, both rejections, localized errors and the disabled chat. No dependency or schema change and no real GraphDB or DeepSeek call in the tests.
 
 ## WI-012 — Report download
 

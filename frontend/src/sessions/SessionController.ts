@@ -9,8 +9,17 @@ export type SessionReport = {
   updated_at: string;
 };
 
+export type ReportStage = "planning" | "rendering";
+
+export type ReportStreamEvent =
+  | { type: "progress"; stage: ReportStage }
+  | { type: "delta"; text: string }
+  | { type: "done"; report: SessionReport }
+  | { type: "error"; error: string; incomplete: boolean };
+
 export interface ReportClient {
   getReport(sessionId: string): Promise<SessionReport | null>;
+  generateReport(sessionId: string, signal?: AbortSignal): AsyncIterable<ReportStreamEvent>;
 }
 
 export interface RelevanceClient {
@@ -22,6 +31,15 @@ export interface PairClient {
   deletePair(sessionId: string, pairId: string): Promise<void>;
 }
 
+export interface ChatClient {
+  streamAnswer(question: string, sessionId: string, signal?: AbortSignal): AsyncIterable<string>;
+}
+
+export type ChatStream = {
+  question: string;
+  answer: string;
+};
+
 export type SessionState = {
   sessions: Thread[];
   activeSessionId: string | null;
@@ -30,6 +48,13 @@ export type SessionState = {
   relevance: Record<string, boolean>;
   isLoading: boolean;
   error: string | null;
+  isSendingChat: boolean;
+  chatStream: ChatStream | null;
+  chatError: string | null;
+  isGeneratingReport: boolean;
+  reportProgress: ReportStage | null;
+  reportStream: string;
+  reportError: string | null;
 };
 
 const LOAD_ERROR = "Could not load sessions. Please try again.";
@@ -39,6 +64,9 @@ const DELETE_ERROR = "Could not delete the session. Please try again.";
 const SELECT_ERROR = "Could not load the session. Please try again.";
 const RELEVANCE_ERROR = "Could not update the relevance. Please try again.";
 const PAIR_DELETE_ERROR = "Could not delete the question-answer pair. Please try again.";
+const CHAT_ERROR = "Could not send the question. Please try again.";
+const REPORT_ERROR = "Could not generate the report. Please try again.";
+const REPORT_STREAM_ERROR = "The report stream ended unexpectedly. Please try again.";
 
 function newUserMessage(): UserMessage {
   const id =
@@ -46,6 +74,31 @@ function newUserMessage(): UserMessage {
       ? crypto.randomUUID()
       : `session-${Date.now()}`;
   return { id, role: "user", content: "New Chat" };
+}
+
+function idleStreamingState(): Pick<
+  SessionState,
+  | "isSendingChat"
+  | "chatStream"
+  | "chatError"
+  | "isGeneratingReport"
+  | "reportProgress"
+  | "reportStream"
+  | "reportError"
+> {
+  return {
+    isSendingChat: false,
+    chatStream: null,
+    chatError: null,
+    isGeneratingReport: false,
+    reportProgress: null,
+    reportStream: "",
+    reportError: null,
+  };
+}
+
+function errorText(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message.trim().length > 0 ? error.message : fallback;
 }
 
 export class SessionController {
@@ -57,14 +110,18 @@ export class SessionController {
     relevance: {},
     isLoading: false,
     error: null,
+    ...idleStreamingState(),
   };
   private readonly listeners = new Set<() => void>();
+  private chatAbort: AbortController | null = null;
+  private reportAbort: AbortController | null = null;
 
   constructor(
     private readonly storage: ThreadStorage,
     private readonly reports: ReportClient,
     private readonly relevance: RelevanceClient,
     private readonly pairs: PairClient,
+    private readonly chats: ChatClient,
   ) {}
 
   subscribe = (listener: () => void): (() => void) => {
@@ -81,8 +138,17 @@ export class SessionController {
     }
   }
 
+  private abortStreams(): void {
+    this.chatAbort?.abort();
+    this.reportAbort?.abort();
+    this.chatAbort = null;
+    this.reportAbort = null;
+    this.setState({ ...idleStreamingState() });
+  }
+
   async initialize(): Promise<void> {
-    this.setState({ isLoading: true, error: null });
+    this.abortStreams();
+    this.setState({ ...idleStreamingState(), isLoading: true, error: null });
     try {
       const { threads = [] } = await this.storage.listThreads(undefined);
       if (threads.length === 0) {
@@ -105,7 +171,8 @@ export class SessionController {
   }
 
   async createSession(): Promise<void> {
-    this.setState({ isLoading: true, error: null });
+    this.abortStreams();
+    this.setState({ ...idleStreamingState(), isLoading: true, error: null });
     try {
       const session = await this.storage.createThread(newUserMessage());
       this.setState({
@@ -129,7 +196,8 @@ export class SessionController {
   }
 
   private async loadSession(sessionId: string): Promise<void> {
-    this.setState({ isLoading: true, error: null });
+    this.abortStreams();
+    this.setState({ ...idleStreamingState(), isLoading: true, error: null });
     try {
       const [messages, report] = await Promise.all([
         this.storage.getMessages(sessionId),
@@ -181,8 +249,11 @@ export class SessionController {
     if (session === undefined) {
       return;
     }
-    this.setState({ isLoading: true, error: null });
     const deletingActive = this.state.activeSessionId === sessionId;
+    if (deletingActive) {
+      this.abortStreams();
+    }
+    this.setState({ isLoading: true, error: null });
     let replacement: Thread | null = null;
     try {
       if (deletingActive) {
@@ -204,6 +275,7 @@ export class SessionController {
     const remaining = this.state.sessions.filter((item) => item.id !== sessionId);
     if (deletingActive && replacement !== null) {
       this.setState({
+        ...idleStreamingState(),
         sessions: [replacement, ...remaining],
         activeSessionId: replacement.id,
         messages: [],
@@ -231,7 +303,7 @@ export class SessionController {
   }
 
   async deletePair(pairId: string, confirmed: boolean): Promise<void> {
-    if (!confirmed) {
+    if (!confirmed || this.state.isGeneratingReport || this.state.isSendingChat) {
       return;
     }
     const sessionId = this.state.activeSessionId;
@@ -260,6 +332,9 @@ export class SessionController {
   }
 
   async toggleRelevance(pairId: string): Promise<void> {
+    if (this.state.isGeneratingReport || this.state.isSendingChat) {
+      return;
+    }
     const sessionId = this.state.activeSessionId;
     if (sessionId === null) {
       return;
@@ -275,6 +350,192 @@ export class SessionController {
     } catch {
       this.setState({ isLoading: false, error: RELEVANCE_ERROR });
     }
+  }
+
+  async sendQuestion(question: string): Promise<void> {
+    const trimmed = question.trim();
+    const sessionId = this.state.activeSessionId;
+    if (
+      trimmed.length === 0 ||
+      sessionId === null ||
+      this.state.isLoading ||
+      this.state.isSendingChat ||
+      this.state.isGeneratingReport
+    ) {
+      return;
+    }
+    this.chatAbort?.abort();
+    const controller = new AbortController();
+    this.chatAbort = controller;
+    this.setState({
+      isSendingChat: true,
+      chatStream: { question: trimmed, answer: "" },
+      chatError: null,
+    });
+    try {
+      for await (const chunk of this.chats.streamAnswer(trimmed, sessionId, controller.signal)) {
+        if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+          return;
+        }
+        const current = this.state.chatStream;
+        this.setState({
+          chatStream: {
+            question: current?.question ?? trimmed,
+            answer: `${current?.answer ?? ""}${chunk}`,
+          },
+        });
+      }
+      if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+        return;
+      }
+      const messages = await this.storage.getMessages(sessionId);
+      const pairIds = messages
+        .filter((message) => message.role === "assistant")
+        .map((message) => message.id);
+      const relevanceEntries = await Promise.all(
+        pairIds.map(async (pairId) => {
+          const relevant = await this.relevance.getRelevance(sessionId, pairId);
+          return [pairId, relevant] as const;
+        }),
+      );
+      if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+        return;
+      }
+      this.setState({
+        messages,
+        relevance: Object.fromEntries(relevanceEntries),
+        isSendingChat: false,
+        chatStream: null,
+      });
+    } catch (error) {
+      if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+        return;
+      }
+      this.setState({
+        isSendingChat: false,
+        chatStream: null,
+        chatError: errorText(error, CHAT_ERROR),
+      });
+    } finally {
+      if (this.chatAbort === controller) {
+        this.chatAbort = null;
+      }
+    }
+  }
+
+  async generateReport(): Promise<void> {
+    const sessionId = this.state.activeSessionId;
+    if (
+      sessionId === null ||
+      this.state.isLoading ||
+      this.state.isGeneratingReport ||
+      this.state.isSendingChat
+    ) {
+      return;
+    }
+    this.reportAbort?.abort();
+    const controller = new AbortController();
+    this.reportAbort = controller;
+    const previousReport = this.state.report;
+    this.setState({
+      isGeneratingReport: true,
+      reportProgress: "planning",
+      reportStream: "",
+      reportError: null,
+    });
+    try {
+      for await (const event of this.reports.generateReport(sessionId, controller.signal)) {
+        if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+          return;
+        }
+        if (event.type === "progress") {
+          this.setState({ reportProgress: event.stage });
+          continue;
+        }
+        if (event.type === "delta") {
+          this.setState({ reportStream: `${this.state.reportStream}${event.text}` });
+          continue;
+        }
+        if (event.type === "done") {
+          this.setState({
+            report: event.report,
+            isGeneratingReport: false,
+            reportProgress: null,
+            reportStream: "",
+            reportError: null,
+          });
+          return;
+        }
+        const report = await this.loadReportAfterFailure(sessionId, previousReport);
+        if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+          return;
+        }
+        this.setState({
+          report,
+          isGeneratingReport: false,
+          reportProgress: null,
+          reportStream: "",
+          reportError: event.error,
+        });
+        return;
+      }
+      if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+        return;
+      }
+      const report = await this.loadReportAfterFailure(sessionId, previousReport);
+      if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+        return;
+      }
+      this.setState({
+        report,
+        isGeneratingReport: false,
+        reportProgress: null,
+        reportStream: "",
+        reportError: REPORT_STREAM_ERROR,
+      });
+    } catch (error) {
+      if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+        return;
+      }
+      const report = await this.loadReportAfterFailure(sessionId, previousReport);
+      if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
+        return;
+      }
+      this.setState({
+        report,
+        isGeneratingReport: false,
+        reportProgress: null,
+        reportStream: "",
+        reportError: errorText(error, REPORT_ERROR),
+      });
+    } finally {
+      if (this.reportAbort === controller) {
+        this.reportAbort = null;
+      }
+    }
+  }
+
+  private async loadReportAfterFailure(
+    sessionId: string,
+    fallback: SessionReport | null,
+  ): Promise<SessionReport | null> {
+    try {
+      return await this.reports.getReport(sessionId);
+    } catch {
+      return fallback;
+    }
+  }
+
+  cancelReportGeneration(): void {
+    const controller = this.reportAbort;
+    this.reportAbort = null;
+    controller?.abort();
+    this.setState({
+      isGeneratingReport: false,
+      reportProgress: null,
+      reportStream: "",
+      reportError: null,
+    });
   }
 
   dismissError(): void {
