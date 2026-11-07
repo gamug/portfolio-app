@@ -74,10 +74,10 @@ def test_detects_a_checked_work_item_with_unchecked_tasks(tmp_path: Path) -> Non
     _edit(
         root,
         ".sdd/TASKS.md",
-        "## WI-007 — Technical spike\n\n- [ ] **Done**",
-        "## WI-007 — Technical spike\n\n- [x] **Done**",
+        "### TASK-001 — Execute the discovery workflow\n\n- [x] **Done**",
+        "### TASK-001 — Execute the discovery workflow\n\n- [ ] **Done**",
     )
-    assert any("WI-007" in issue and "checkbox" in issue for issue in check_traceability(root))
+    assert any("WI-001" in issue and "checkbox" in issue for issue in check_traceability(root))
 
 
 @pytest.mark.parametrize("bad", ["from derived from FR-021", "from"])
