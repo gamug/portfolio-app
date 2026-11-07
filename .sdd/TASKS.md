@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018` and `TASK-019` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019` and `TASK-020` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -206,11 +206,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-020 — Implement the tool loop and answer streaming
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-008
 - **Depends on:** TASK-019
 - **Acceptance criteria:** AC-FR002-01
 - **Action:** Build the connector tool loop with a bounded iteration count and stream the final answer to the chat.
+- **Result (2026-11-07):** Added the production connector under `backend/app/connector/` and the streaming `POST /api/chat` endpoint in `backend/app/main.py`. The default mode is the accepted `adr-010` Workbench chat API; `tool_loop` is the bounded `adr-007` fallback. The connector loads settings from `.env`, checks both chat endpoints at startup, uses a per-question timeout and no retries, and streams the completed answer in chunks. Tests use mocked HTTP and a fake LLM only. One real smoke call returned OK with latency 49.096 s and 148,399 total tokens; it was run once with no retries. Question-answer storage remains TASK-021. No dependency was added.
 
 ### TASK-021 — Convert and store question-answer pairs
 

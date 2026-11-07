@@ -139,3 +139,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added `backend/spikes/task_019_openui.py` and the prompt/parser, controls and offline-export spikes under `frontend/spikes/`. No product code and no new dependency.
 - Failure modes: none for the four checks; AC-SPIKE-04 was verified structurally rather than through browser clicks. Detailed outputs are only in the git-excluded local-results directory under `backend/tests/evaluation/`.
 - Verification: `ruff`, `check_sdd.py`, `check_consistency.py`, the frontend spike tests, ESLint and Prettier pass.
+
+## 2026-11-07 (connector)
+
+### TASK-020 — Knowledge-graph connector and answer streaming (WI-008, AC-FR002-01)
+
+- Added the production connector under `backend/app/connector/` and the streaming `POST /api/chat` endpoint in `backend/app/main.py`. The default is the accepted `adr-010` Workbench chat API; `tool_loop` is the bounded `adr-007` fallback behind `KG_CHAT_MODE`.
+- Settings load from `.env`; both chat endpoints are checked at startup; each question has a timeout and no retry. The final answer streams in chunks. Tests use mocked HTTP and a fake LLM only.
+- One real smoke call returned **OK** with latency **49.096 s** and **148,399 total tokens**. It ran once, with no retries; the answer and usage are only in the git-excluded local-results directory. Question-answer storage remains TASK-021.
+- `.env.example` now documents `KG_AGENT_ID`, `KG_CHAT_MODE` and the optional timeout/iteration limits. No dependency was added.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
