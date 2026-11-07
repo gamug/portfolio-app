@@ -251,3 +251,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests mock the LLM and the parser, except one parser integration test against the installed OpenUI library; the suite covers success, cancel keeping the previous report, failure keeping the partial report flagged incomplete, regenerate replacing the previous report, no-history and no-relevant rejections, and invalid skill output.
 - No schema change, dependency, GraphDB call or evaluation-question content was used.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (chat and report panels)
+
+### TASK-029 — Build the chat and report panels and the Generate Report flow (WI-011, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-06, AC-FR021-01)
+
+- Added the side-by-side chat and report panels next to the session list (`FR-022`). The chat panel sends a question to `POST /api/chat`, streams the raw answer, then reloads and renders the stored OpenUI Lang for each pair. A failed request shows the backend's localized error and leaves the failed question out of the history.
+- Added the report panel and the **Generate Report** flow. It consumes the SSE `POST /api/threads/{thread_id}/report/generate` endpoint, shows planning and rendering progress, streams the OpenUI Lang progressively, and renders the current report when a session is selected.
+- While a report is generated the chat is disabled (`FR-016`). **Cancel** aborts the request, keeps the previous report and re-enables the chat (`FR-017`). A failure shows the localized error, reloads the partial report flagged incomplete and re-enables the chat (`FR-019`). No-history and nothing-marked responses ask the analyst to start exploring or mark at least one pair (`FR-014`, `FR-015`). A successful regeneration replaces the previous report only when complete (`FR-018`).
+- The task list had no frontend chat input task; this plan gap was filled with a minimal chat panel because `FR-002`, `FR-022` and the "disable the chat" requirement need it.
+- Tests mock fetch and SSE and cover the streamed chat, localized chat errors, success, cancel, failure with a partial report, regeneration, both report rejections, progress, disabled chat and the side-by-side panels.
+- No dependency or schema change and no real GraphDB or DeepSeek call in the tests.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests (49 passed), production build, `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass; `pnpm dev` and `uvicorn` both start and serve their pages.

@@ -109,8 +109,9 @@ input {
 .session-detail {
   padding: 1.5rem;
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
   align-content: start;
+  min-width: 0;
 }
 
 .session-detail header {
@@ -124,12 +125,118 @@ input {
   margin: 0;
 }
 
-.session-detail__history ol {
+.session-detail__panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.chat-panel,
+.report-panel {
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 10px;
+  padding: 1rem;
+  min-width: 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chat-panel__history {
+  overflow-x: auto;
+}
+
+.chat-panel__history ol {
   list-style: none;
   padding: 0;
   margin: 0.75rem 0 0;
   display: grid;
   gap: 0.75rem;
+}
+
+.chat-panel__history h4 {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #52606d;
+}
+
+.chat-panel__history > p {
+  margin: 0.75rem 0 0;
+}
+
+.chat-panel__notice {
+  margin: 0.5rem 0 0;
+  color: #8a6d1c;
+  font-size: 0.85rem;
+}
+
+.panel-error {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #fdecea;
+  color: #8a1c1c;
+  font-size: 0.9rem;
+}
+
+.chat-panel__stream {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.chat-panel__raw {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.chat-panel__composer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.chat-panel__composer input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #bcccdc;
+  border-radius: 6px;
+}
+
+.chat-panel__composer button {
+  padding: 0.45rem 0.9rem;
+}
+
+.report-panel__actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.report-panel__progress {
+  margin: 0.5rem 0 0;
+  color: #52606d;
+  font-size: 0.9rem;
+}
+
+.report-panel__incomplete {
+  color: #8a6d1c;
+  font-size: 0.85rem;
+}
+
+.report-panel__body {
+  margin-top: 0.75rem;
+  overflow-x: auto;
 }
 
 .message {
@@ -143,9 +250,10 @@ input {
   background: #eef5ff;
 }
 
-.session-detail__report {
-  padding-top: 0.5rem;
-  border-top: 1px solid #d9e2ec;
+@media (max-width: 960px) {
+  .session-detail__panels {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {

@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { restStorage } from "@openuidev/react-ui";
 import { SessionController } from "./sessions/SessionController";
 import { SessionDetail } from "./sessions/SessionDetail";
 import { SessionList } from "./sessions/SessionList";
+import { createChatClient } from "./sessions/chatClient";
 import { createPairClient } from "./sessions/pairClient";
 import { createRelevanceClient } from "./sessions/relevanceClient";
 import { createReportClient } from "./sessions/reportClient";
@@ -17,12 +18,18 @@ export function App() {
         createReportClient("/api/threads"),
         createRelevanceClient("/api/threads"),
         createPairClient("/api/threads"),
+        createChatClient("/api"),
       ),
     [storage],
   );
   const state = useSessionController(controller);
+  const initialized = useRef(false);
 
   useEffect(() => {
+    if (initialized.current) {
+      return;
+    }
+    initialized.current = true;
     void controller.initialize();
   }, [controller]);
 
@@ -40,6 +47,9 @@ export function App() {
         state={state}
         onToggleRelevance={(pairId) => void controller.toggleRelevance(pairId)}
         onDeletePair={(pairId) => void controller.deletePair(pairId, true)}
+        onSendQuestion={(question) => void controller.sendQuestion(question)}
+        onGenerateReport={() => void controller.generateReport()}
+        onCancelReport={() => controller.cancelReportGeneration()}
       />
     </div>
   );

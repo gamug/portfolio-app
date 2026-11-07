@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { Message, Thread, UserMessage } from "@openuidev/react-ui";
 import {
   SessionController,
+  type ChatClient,
   type PairClient,
   type RelevanceClient,
   type ReportClient,
+  type ReportStreamEvent,
   type SessionReport,
   type ThreadStorage,
 } from "./SessionController";
@@ -62,10 +64,39 @@ class FakeStorage implements ThreadStorage {
 class FakeReports implements ReportClient {
   reports = new Map<string, SessionReport>();
   fail = false;
+  generateImpl: (sessionId: string, signal?: AbortSignal) => AsyncIterable<ReportStreamEvent> =
+    async function* () {};
 
   async getReport(sessionId: string): Promise<SessionReport | null> {
     if (this.fail) throw new Error("report failed");
     return this.reports.get(sessionId) ?? null;
+  }
+
+  generateReport(sessionId: string, signal?: AbortSignal): AsyncIterable<ReportStreamEvent> {
+    return this.generateImpl(sessionId, signal);
+  }
+}
+
+class FakeChats implements ChatClient {
+  chunks: string[] = [];
+  error: Error | null = null;
+  calls: Array<{ question: string; sessionId: string; signal?: AbortSignal }> = [];
+
+  async *streamAnswer(
+    question: string,
+    sessionId: string,
+    signal?: AbortSignal,
+  ): AsyncIterable<string> {
+    this.calls.push({ question, sessionId, signal });
+    for (const chunk of this.chunks) {
+      if (signal?.aborted) {
+        throw new Error("aborted");
+      }
+      yield chunk;
+    }
+    if (this.error !== null) {
+      throw this.error;
+    }
   }
 }
 
@@ -98,13 +129,21 @@ class FakePairs implements PairClient {
   }
 }
 
-function report(text: string): SessionReport {
+function report(text: string, incomplete = false): SessionReport {
   return {
     openui_lang: text,
-    incomplete: false,
+    incomplete,
     created_at: "2026-11-07T00:00:00Z",
     updated_at: "2026-11-07T00:00:00Z",
   };
+}
+
+function deferred(): { promise: Promise<void>; resolve: () => void } {
+  let resolve: () => void = () => undefined;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
 }
 
 function makeController() {
@@ -112,12 +151,14 @@ function makeController() {
   const reports = new FakeReports();
   const relevance = new FakeRelevance();
   const pairs = new FakePairs();
+  const chats = new FakeChats();
   return {
     storage,
     reports,
     relevance,
     pairs,
-    controller: new SessionController(storage, reports, relevance, pairs),
+    chats,
+    controller: new SessionController(storage, reports, relevance, pairs, chats),
   };
 }
 
@@ -411,5 +452,202 @@ describe("SessionController pair deletion", () => {
     await controller.deletePair("p2", true);
 
     expect(pairs.calls).toEqual([]);
+  });
+});
+
+describe("SessionController chat", () => {
+  it("streams the raw answer and reloads the stored OpenUI pair", async () => {
+    const { storage, chats, relevance, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+    chats.chunks = ["Raw ", "answer"];
+    storage.messages.set("s1", [
+      message("q1", "user", "Question"),
+      message("p1", "assistant", "root = Card([])"),
+    ]);
+    relevance.values.set("p1", false);
+
+    await controller.sendQuestion("Question");
+
+    const state = controller.getSnapshot();
+    expect(chats.calls[0]).toMatchObject({ question: "Question", sessionId: "s1" });
+    expect(state.messages).toEqual([
+      message("q1", "user", "Question"),
+      message("p1", "assistant", "root = Card([])"),
+    ]);
+    expect(state.relevance).toEqual({ p1: false });
+    expect(state.isSendingChat).toBe(false);
+    expect(state.chatStream).toBeNull();
+    expect(state.chatError).toBeNull();
+  });
+
+  it("shows the localized backend error and does not add the failed question", async () => {
+    const { storage, chats, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+    const before = controller.getSnapshot();
+    chats.error = new Error("No se pudo generar la respuesta. Inténtalo de nuevo.");
+
+    await controller.sendQuestion("¿Pregunta?");
+
+    const after = controller.getSnapshot();
+    expect(after.messages).toEqual(before.messages);
+    expect(after.chatStream).toBeNull();
+    expect(after.isSendingChat).toBe(false);
+    expect(after.chatError).toBe("No se pudo generar la respuesta. Inténtalo de nuevo.");
+  });
+
+  it("does not send a question while a report is being generated", async () => {
+    const { storage, reports, chats, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+    const started = deferred();
+    const gate = deferred();
+    reports.generateImpl = async function* () {
+      yield { type: "progress", stage: "planning" };
+      started.resolve();
+      await gate.promise;
+      yield { type: "done", report: report("root = Card([])") };
+    };
+
+    const generation = controller.generateReport();
+    await started.promise;
+    await controller.sendQuestion("Question");
+
+    expect(chats.calls).toEqual([]);
+    gate.resolve();
+    await generation;
+  });
+});
+
+describe("SessionController report generation", () => {
+  it("keeps the previous report until the stream completes, then replaces it", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+    const reached = deferred();
+    const gate = deferred();
+    reports.generateImpl = async function* () {
+      yield { type: "progress", stage: "planning" };
+      yield { type: "progress", stage: "rendering" };
+      yield { type: "delta", text: "root = Card([" };
+      reached.resolve();
+      await gate.promise;
+      yield { type: "delta", text: "])" };
+      yield { type: "done", report: report("root = Card([])") };
+    };
+
+    const generation = controller.generateReport();
+    await reached.promise;
+    let state = controller.getSnapshot();
+    expect(state.isGeneratingReport).toBe(true);
+    expect(state.reportProgress).toBe("rendering");
+    expect(state.reportStream).toBe("root = Card([");
+    expect(state.report?.openui_lang).toBe("previous");
+
+    gate.resolve();
+    await generation;
+
+    state = controller.getSnapshot();
+    expect(state.isGeneratingReport).toBe(false);
+    expect(state.reportProgress).toBeNull();
+    expect(state.reportStream).toBe("");
+    expect(state.report?.openui_lang).toBe("root = Card([])");
+  });
+
+  it("keeps the previous report and re-enables the chat on cancel", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+    const started = deferred();
+    reports.generateImpl = async function* (_sessionId, signal) {
+      yield { type: "progress", stage: "planning" };
+      yield { type: "delta", text: "root = Card([" };
+      started.resolve();
+      await new Promise<void>((_resolve, reject) => {
+        signal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+      });
+    };
+
+    const generation = controller.generateReport();
+    await started.promise;
+    expect(controller.getSnapshot().isGeneratingReport).toBe(true);
+
+    controller.cancelReportGeneration();
+    await generation;
+
+    const state = controller.getSnapshot();
+    expect(state.isGeneratingReport).toBe(false);
+    expect(state.reportProgress).toBeNull();
+    expect(state.reportStream).toBe("");
+    expect(state.reportError).toBeNull();
+    expect(state.report?.openui_lang).toBe("previous");
+  });
+
+  it("reloads the partial report flagged incomplete when the agent fails", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+    reports.generateImpl = async function* () {
+      yield { type: "progress", stage: "rendering" };
+      yield { type: "delta", text: "root = Card([title])" };
+      reports.reports.set("s1", report("root = Card([title])", true));
+      yield {
+        type: "error",
+        error: "No se pudo generar el informe. El informe parcial se guardó como incompleto.",
+        incomplete: true,
+      };
+    };
+
+    await controller.generateReport();
+
+    const state = controller.getSnapshot();
+    expect(state.isGeneratingReport).toBe(false);
+    expect(state.reportStream).toBe("");
+    expect(state.report?.openui_lang).toBe("root = Card([title])");
+    expect(state.report?.incomplete).toBe(true);
+    expect(state.reportError).toContain("informe parcial");
+  });
+
+  it("shows the no-history message without replacing the report", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+    // eslint-disable-next-line require-yield -- the rejected request is the only outcome.
+    reports.generateImpl = async function* () {
+      throw new Error("This session has no history. Start the data exploration first.");
+    };
+
+    await controller.generateReport();
+
+    const state = controller.getSnapshot();
+    expect(state.isGeneratingReport).toBe(false);
+    expect(state.report?.openui_lang).toBe("previous");
+    expect(state.reportError).toBe(
+      "This session has no history. Start the data exploration first.",
+    );
+  });
+
+  it("shows the nothing-marked message without replacing the report", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+    // eslint-disable-next-line require-yield -- the rejected request is the only outcome.
+    reports.generateImpl = async function* () {
+      throw new Error(
+        "No question-answer pair is marked as relevant. Mark at least one pair first.",
+      );
+    };
+
+    await controller.generateReport();
+
+    const state = controller.getSnapshot();
+    expect(state.report?.openui_lang).toBe("previous");
+    expect(state.reportError).toContain("Mark at least one pair");
   });
 });
