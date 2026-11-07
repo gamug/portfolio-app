@@ -30,6 +30,8 @@ ALLOWED_TYPES: tuple[ChartType, ...] = ("bar", "line", "pie", "table")
 MAX_CHARTS = 8
 DEFAULT_MAX_TOKENS = 2500
 NUMBER_PATTERN = re.compile(r"(?<![\w.])-?\d[\d,]*(?:\.\d+)?")
+EMPTY_CELL = "–"
+EMPTY_CELL_MARKERS = frozenset({"-", "–", "n/a"})
 
 
 def strip_fences(text: str) -> str:
@@ -140,7 +142,11 @@ def _columns(value: object, source_numbers: set[float]) -> tuple[ChartColumn, ..
             raise ReportSkillError("Every table column must have the same number of values.")
         cells: list[str | float] = []
         for cell in raw_values:
-            if isinstance(cell, str):
+            if cell is None or (
+                isinstance(cell, str) and cell.strip().casefold() in EMPTY_CELL_MARKERS
+            ):
+                cells.append(EMPTY_CELL)
+            elif isinstance(cell, str):
                 cells.append(cell)
             elif _is_number(cell):
                 number = float(cell)

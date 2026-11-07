@@ -87,6 +87,43 @@ def test_accepts_a_pie_and_a_table() -> None:
     assert [chart.type for chart in plan.charts] == ["pie", "table"]
 
 
+def test_accepts_empty_table_cells_without_counting_them_as_numbers() -> None:
+    document = _document()
+    document["charts"] = [
+        {
+            "type": "table",
+            "title": "Monthly detail",
+            "columns": [
+                {"label": "Month", "values": ["January", "February", "March"]},
+                {"label": "Revenue", "values": [100, None, 150]},
+                {"label": "Cost", "values": ["-", "N/A", "–"]},
+            ],
+            "takeaway": "Some values are missing.",
+        }
+    ]
+    plan = parse_chart_plan(document, [ANSWERS])
+    table = plan.charts[0]
+    assert table.columns[1].values == (100.0, "–", 150.0)
+    assert table.columns[2].values == ("–", "–", "–")
+
+
+def test_rejects_an_invented_number_in_a_table() -> None:
+    document = _document()
+    document["charts"] = [
+        {
+            "type": "table",
+            "title": "Monthly detail",
+            "columns": [
+                {"label": "Month", "values": ["January", "February"]},
+                {"label": "Revenue", "values": [100, 999]},
+            ],
+            "takeaway": "Invalid.",
+        }
+    ]
+    with pytest.raises(ReportSkillError, match="not in the answers"):
+        parse_chart_plan(document, [ANSWERS])
+
+
 def test_allows_an_empty_chart_list() -> None:
     document = {
         "title": "No numbers",

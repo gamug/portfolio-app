@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -224,6 +225,50 @@ def test_failure_stores_the_partial_report_flagged_incomplete(tmp_path: Path) ->
     assert report is not None
     assert report.openui_lang == 'root = Card([title])\ntitle = TextContent("Partial")'
     assert report.incomplete is True
+
+
+def test_failure_logs_the_exception_type(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    store = _store(tmp_path)
+    asyncio.run(store.save(_pair()))
+    render = FakeRenderSkill(
+        chunks=["root = Card([title])"],
+        stream_error=ReportSkillError("provider stopped"),
+    )
+    agent = _agent(store, render=render)
+
+    async def scenario() -> None:
+        context = await agent.prepare("s1")
+        [event async for event in agent.stream(context)]
+
+    with caplog.at_level(logging.ERROR):
+        asyncio.run(scenario())
+
+    assert "ReportSkillError" in caplog.text
+    assert "provider stopped" in caplog.text
+
+
+def test_failure_log_redacts_the_api_key_and_truncates(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    store = _store(tmp_path)
+    asyncio.run(store.save(_pair()))
+    render = FakeRenderSkill(
+        chunks=["root = Card([title])"],
+        stream_error=ReportSkillError(f"provider llm-secret {'x' * 400}"),
+    )
+    agent = _agent(store, render=render)
+
+    async def scenario() -> None:
+        context = await agent.prepare("s1")
+        [event async for event in agent.stream(context)]
+
+    with caplog.at_level(logging.ERROR):
+        asyncio.run(scenario())
+
+    assert "llm-secret" not in caplog.text
+    assert "<redacted>" in caplog.text
+    assert "x" * 280 in caplog.text
+    assert "x" * 281 not in caplog.text
 
 
 def test_invalid_openui_output_keeps_the_partial_report_in_spanish(

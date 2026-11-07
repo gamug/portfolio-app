@@ -263,3 +263,36 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests mock fetch and SSE and cover the streamed chat, localized chat errors, success, cancel, failure with a partial report, regeneration, both report rejections, progress, disabled chat and the side-by-side panels.
 - No dependency or schema change and no real GraphDB or DeepSeek call in the tests.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests (49 passed), production build, `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass; `pnpm dev` and `uvicorn` both start and serve their pages.
+
+## 2026-11-07 (chart plan empty cells)
+
+### TASK-028 follow-up — Accept empty table cells and log report failures (WI-011, FR-013, FR-019)
+
+- `ChartPlanSkill` now accepts `null` and the strings `-`, `–` and `n/a` as empty table cells and renders them as `–`; empty cells are not counted as source numbers, and invented numbers are still rejected.
+- The chart-plan prompt now tells the model to use the string `–` for a missing table value, never `null`.
+- `ReportAgent.stream` now logs the failure type and a truncated, redacted message server-side (at most 300 characters, no API key, no prompt or graph-answer text). The user-facing error is unchanged.
+- Tests cover a plan with a null/empty table cell, a plan with an invented table number and the failure log.
+- No dependency or schema change and no real LLM call.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (light, dark and system theme)
+
+### UI polish extension — Light, dark and system theme toggle (user-approved, no FR)
+
+- Added a theme control in the session header with System, Light and Dark choices. System is the default and follows `prefers-color-scheme`; the choice is stored in localStorage inside try/catch.
+- Defined the app palette as CSS variables in `frontend/src/styles.css` for both modes. Explicit choices set `data-theme` and `data-openui-theme`, so `@openuidev/react-ui` cards, charts and tables use the same theme and keep readable contrast.
+- Added Vitest coverage for the toggle and the theme helpers.
+- No dependency or schema change.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests (53 passed) and production build pass; the backend checks remain green.
+
+## 2026-11-07 (answer text and chat layout)
+
+### TASK-029 follow-up — Show the answer text and improve the chat and report layout (WI-011, FR-002, FR-021, FR-022)
+
+- Each question-answer pair now shows the stored answer as readable text first, with line breaks, bold text, lists and simple markdown tables. The OpenUI card is collapsed behind a **Show chart** toggle below the text; the text stays selectable and uses the normal contrast tokens in both themes.
+- The thread endpoint returns the stored OpenUI Lang, so the frontend extracts its narrative text for the text view; no backend change was needed.
+- The session list is narrower, the chat and report panels share the remaining width with a minimum of about 420 px each, and each panel scrolls internally instead of the page. Long questions wrap, and wide tables and charts scroll horizontally inside their own container.
+- Added contrast fixes for both themes: the OpenUI library follows the app theme, the answer and report containers use the normal text tokens, and leftover chart entry opacity no longer leaves faded content.
+- Added Vitest coverage for answer-text extraction and rendering, the **Show chart** toggle and the existing flows.
+- No dependency or schema change and no task checkbox change.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests (60 passed) and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.

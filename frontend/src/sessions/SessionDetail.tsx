@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../ThemeToggle";
 import { ChatPanel } from "./ChatPanel";
 import { ReportPanel } from "./ReportPanel";
 import type { SessionState } from "./SessionController";
@@ -33,6 +34,7 @@ export function SessionDetail({
       <header>
         <h2>{active.title}</h2>
         {state.isLoading && <span role="status">Loading…</span>}
+        <ThemeToggle />
       </header>
 
       <div className="session-detail__panels">

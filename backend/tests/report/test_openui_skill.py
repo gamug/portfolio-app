@@ -127,6 +127,7 @@ def test_prompt_files_are_drafts_and_exist() -> None:
     assert PLAN_PROMPT_PATH.is_file()
     assert "DRAFT" in DEFAULT_PROMPT_PATH.read_text(encoding="utf-8")
     assert "DRAFT" in PLAN_PROMPT_PATH.read_text(encoding="utf-8")
+    assert "never null" in PLAN_PROMPT_PATH.read_text(encoding="utf-8")
 
 
 def test_stream_uses_the_chat_prompt_as_reference(tmp_path: Path) -> None:
