@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017` is done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017` and `TASK-018` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -179,11 +179,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-018 — Spike the DeepSeek tool loop on the live tools
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-007
 - **Depends on:** TASK-017
 - **Acceptance criteria:** AC-SPIKE-02
 - **Action:** Prerequisite: `backend/tests/evaluation/questions.json` prepared by gamug and dova (format in its README). Run a DeepSeek tool loop over the GraphDB tools against the curated question set and record accuracy and failure modes (RSK-001).
+- **Result (2026-11-07):** Ran the bounded DeepSeek tool loop on the provisional `portfolio_test` KG with 8 development questions. The required external `sparql_query` tool (`/rest/llm/tool/ttyg/...`) timed out on every call, so the official run produced no final answers and recorded tool-timeout and iteration-limit failures. A local-only diagnostic against the same agent's legacy `sparql_query` endpoint completed 7 of 8 questions, which confirms the loop and DeepSeek tool calling work and isolates the blocker to the external endpoint or agent configuration. Detailed outputs are only in the git-excluded local-results directory under `backend/tests/evaluation/`. Owner grade: pending. The KG and question set are provisional; repeat on the final KG after the GraphDB endpoint is fixed.
 
 ### TASK-019 — Spike OpenUI generation, chat layout and report export
 
