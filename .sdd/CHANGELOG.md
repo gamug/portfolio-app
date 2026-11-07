@@ -178,3 +178,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added a stdlib `sqlite3` migration runner using `PRAGMA user_version`, plus the SQLite implementation of the question-answer storage boundary. It replaces the in-memory default and reads `SQLITE_PATH` from `.env`.
 - Tests use temporary databases only and cover migration idempotence, reopen persistence, default relevance, relevance updates, session cascades and one current report per session. No dependency was added and no network or API calls are used.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (thread endpoints)
+
+### TASK-024 — Thread, report and relevance REST endpoints (WI-009, AC-FR005-01, AC-FR005-02)
+
+- Added the adr-005 thread endpoints under `/api/threads`: list, create, get history, update/rename and delete, plus separate current-report get/set and per-pair relevance get/set endpoints.
+- The get-history response contains the stored user question and OpenUI Lang assistant message; the report and relevance endpoints stay separate from the thread convention. Deleting a session cascades to its history and report.
+- Database failures return a generic user-safe error. Tests use a temporary database through the FastAPI test client, with no network or API calls.
+- No schema change and no dependency was added.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
