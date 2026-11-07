@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017` is done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017` and `TASK-019` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -188,11 +188,17 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-019 — Spike OpenUI generation, chat layout and report export
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-007
 - **Depends on:** TASK-017
 - **Acceptance criteria:** AC-SPIKE-03, AC-SPIKE-04, AC-SPIKE-05, AC-SPIKE-06
 - **Action:** Verify valid OpenUI Lang from DeepSeek, per-pair controls in the react-ui chat, inlining of the browser bundle into one offline HTML file, and plot quality from answer text (RSK-002, RSK-003, RSK-004, RSK-006).
+- **Result (2026-11-07):** Pass.
+  - **AC-SPIKE-03 pass:** the locally generated OpenUI chat and report prompts were used for two short DeepSeek calls; 2 of 2 outputs parsed without errors.
+  - **AC-SPIKE-04 pass:** the react-ui chat layout accepts custom assistant and user message components, and a relevance toggle and delete action render for each message. Click handlers are wired; no browser-automation dependency was added, so this was verified structurally.
+  - **AC-SPIKE-05 pass:** the OpenUI renderer and the report were inlined into one HTML file of 3,702,568 bytes (about 3.7 MB) with 0 external references.
+  - **AC-SPIKE-06 pass:** the report contained a bar chart built from the synthetic answer text, with the expected series and values; no ADR for storing structured tool results is needed.
+  - **Failure modes:** none for the four checks; AC-SPIKE-04 was verified structurally rather than through browser clicks. Detailed outputs are only in the git-excluded local-results directory under `backend/tests/evaluation/`.
 
 ## WI-008 — Chat with the knowledge graph
 
