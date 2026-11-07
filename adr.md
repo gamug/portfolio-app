@@ -275,3 +275,34 @@ Live ADR log. Rules: the constitution's Architecture decisions section. Discover
 - **Rejected Options**: Standalone HTML written by the agent: portable, but the panel and the download would use two rendering paths and the agent would produce unvalidated HTML.
 - **Traceability**: `FR-013`, `FR-018`, `FR-021`, `FR-022`, `FR-026`
 - **External Docs**: `packages/browser-bundle/README.md`
+
+### `adr-010`: Forward the analyst's question to a Talk to Your Graph agent through the Workbench chat API
+
+- **Status**: Proposed
+- **Proposed on**: 2026-11-07
+- **Approved by**: N/A
+- **Approved on**: N/A
+- **Rejected by**: N/A
+- **Rejected on**: N/A
+- **Rejection reason**: N/A
+- **Deprecated by**: N/A
+- **Deprecated on**: N/A
+- **Deprecation reason**: N/A
+- **Supersedes**: `adr-007` (only if this ADR is accepted)
+- **Superseded By**: N/A
+- **Context**: `adr-007` chose a FastAPI connector that runs DeepSeek as the chat agent over GraphDB's documented tool API, and rejected forwarding the question to a Talk to Your Graph agent because no documented endpoint answers a question. The TASK-018 spike found two things. First, the tool loop is fragile: with no knowledge of the graph schema, DeepSeek generated unfiltered full scans (`?s ?p ?o` with `FILTER(CONTAINS(STR(...)))`) that stayed running in GraphDB after the client gave up, filled the query queue and blocked every later call (the repository `portfolio_test` has no query timeout). Second, the running GraphDB 11.5.1 does expose an undocumented endpoint pair used by its own Workbench chat, which is absent from the instance's OpenAPI description (`/v3/api-docs`): `POST /rest/chat/chats` with `{agentId, question, tzOffset}` creates a conversation and returns its `conversationId`, and `POST /rest/chat/chats/question` with `{agentId, conversationId, question, tzOffset}` returns the complete answer as JSON (`messages[].message`, with `usage`). Both worked from outside the Workbench with the read-only application user (`portfolio.app`, role User, Read on one repository). The existing agent (`reportes-piloto-ds`, DeepSeek model, SPARQL tool only) already carries instructions that describe the data, so it answers with targeted queries. Measured on one question: about 25 s end to end and about 125,000 input tokens (GraphDB reports a lower total than the DeepSeek panel; the project owners state the cost is not a concern).
+- **Decision Drivers**:
+  - **Business goal**: deliver the MVP in 1 week and answer accurately against the graph.
+  - **Technical constraint**: credentials stay on the server; the app user is read-only; the question and the raw answer must be stored and the answer converted to OpenUI Lang.
+  - **Quality attribute**: avoid query floods that block GraphDB; keep the data description in one place (the agent) instead of copying the schema into the connector prompt.
+- **Considered Options**:
+  1. Keep `adr-007`: DeepSeek tool loop over the documented tool API, with the schema in the connector prompt and a repository query timeout
+  2. Forward the question to the Talk to Your Graph agent through `/rest/chat/chats` and `/rest/chat/chats/question`, then convert the answer to OpenUI Lang with a second DeepSeek call
+  3. Option 2 as the default, keeping option 1 as a fallback behind one setting
+- **Decision**: Proposed: option 3. The connector creates a chat with `POST /rest/chat/chats`, sends the question with `POST /rest/chat/chats/question` using the app user's credentials, takes the answer text from the response, converts it to OpenUI Lang with a second DeepSeek call, and stores the question, the raw answer and the OpenUI Lang after the answer completes. The agent id, the chat mode and a fallback to the `adr-007` tool loop are settings. The connector checks at startup that both endpoints respond, and reports a clear error when they do not.
+- **Consequences (Positive)**: No tool loop, schema prompt or iteration limit to build in the backend; the data description lives in the agent instructions; no model-generated full scans from our code; fewer moving parts for a 1-week MVP.
+- **Consequences (Trade-offs)**: The endpoints are internal and undocumented, so a GraphDB upgrade can break them without notice; the answer arrives whole (about 25 s), so streaming to the chat needs a progress state instead of token streaming; the answer language and format follow the agent instructions, so `FR-035` needs the instructions adjusted or a conversion step; about 125,000 input tokens per question; conversations accumulate in the Workbench history unless deleted.
+- **Mitigation**: Pin the supported GraphDB version (11.5.1) in the documentation and the startup check; keep the `adr-007` loop as a selectable fallback; set a query timeout on the repository; show a progress state while waiting; delete or reuse the conversation per session; re-run the curated question set (`AC-ACC-01`) on the final graph before accepting this ADR as final.
+- **Rejected Options**: Option 1 alone: it needs a schema prompt and guard rails written and maintained in the backend, and it already blocked GraphDB in the spike. Option 2 without a fallback: a single internal API with no documented contract is too fragile to be the only path.
+- **Traceability**: `FR-002`, `FR-003`, `FR-004`, `FR-035`; spike `AC-SPIKE-02`; `docs/PRODUCT.md` `RSK-001`
+- **External Docs**: `https://graphdb.ontotext.com/documentation/11.5/talk-to-graph.html`; `https://graphdb.ontotext.com/documentation/11.5/using-graphdb-llm-tools-with-external-clients.html`

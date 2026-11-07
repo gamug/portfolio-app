@@ -102,3 +102,11 @@ Record completed Work Items and their associated tasks here after verification. 
 - Hardened `backend/spikes/task_018_tool_loop.py`: the per-tool timeout is capped at 60 s, an in-flight guard prevents overlapping tool calls, the run aborts on the first tool timeout, and the system prompt forbids unfiltered `?s ?p ?o` scans and requires a small `LIMIT`.
 - Owner grade: pending. The KG and question set are provisional; repeat on the final KG after query generation is fixed.
 - Verification: `ruff` passes; `check_sdd.py` and `check_consistency.py` pass; no question text, answers, graph data or local results are committed.
+
+## 2026-11-07 (ADR proposal)
+
+### TASK-018 — Proposed `adr-010` after the spike (WI-007, AC-SPIKE-02)
+
+- Added `adr-010` (`Proposed`) to `adr.md`: forward the question to the Talk to Your Graph agent through the Workbench chat API, with the `adr-007` tool loop as a fallback. Nothing is implemented and `adr-007` stays `Accepted` until the project owners accept or reject `adr-010`.
+- TASK-018 stays open; the PR #5 branch is not touched by this change.
+- Verification: `check_sdd.py` and `check_consistency.py` pass; no question text, answers or graph data are included.
