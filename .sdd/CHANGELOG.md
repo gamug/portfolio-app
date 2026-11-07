@@ -229,3 +229,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Verified `uvicorn app.main:app --port 8000` boots and `GET /api/threads/get` returns `200`.
 - No schema change, dependency change or task-checkbox change.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (local run docs)
+
+### TASK-025 follow-up — Document running the app locally (WI-009, FR-005..FR-010)
+
+- Added the README section "Run the app locally" with prerequisites, the backend and frontend commands, the browser URL and troubleshooting for the IPv6-only Vite binding, the harmless `/health` probes and the fixed circular import.
+- Set `server.host: true` in `frontend/vite.config.ts` so `pnpm dev` listens on `0.0.0.0` while keeping port 5173 and the `/api` proxy to `http://localhost:8000`.
+- Documented what works today (session create/rename/delete, relevance toggle and single-pair delete pending the chat UI) and what is not built yet (no chat input or report panel; the `POST /api/chat` endpoint exists).
+- No task checkbox, dependency or schema change.
+- Verification: `ruff`, `check_sdd.py`, `check_consistency.py` and the frontend lint, Prettier, `tsc --noEmit` and tests pass.

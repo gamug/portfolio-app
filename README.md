@@ -28,6 +28,40 @@ The script is safe to re-run. It checks the prerequisites, creates `.env` from `
 
 Prerequisites outside the container: git, python3, uv 0.12.1, Node.js 22.12 or newer (`.nvmrc`), pnpm 10.33.0, gitleaks 8.30.1, shellcheck 0.11.0. GraphDB 11.5 runs separately; the container reaches it at `KG_HOST` (default `http://host.docker.internal:7200`).
 
+## Run the app locally
+
+Prerequisites: GraphDB 11.5 is reachable at `KG_HOST`, and `.env` exists with the DeepSeek key and the read-only GraphDB user. `scripts/init.sh` creates `.env` from `.env.example` when it is missing. Fill it in and never `source` it in a shell; parse it as a dotenv file.
+
+Terminal 1, backend:
+
+```bash
+cd backend
+uv run uvicorn app.main:app --port 8000
+```
+
+Terminal 2, frontend:
+
+```bash
+cd frontend
+pnpm dev
+```
+
+Open <http://localhost:5173>. In VS Code, if the browser cannot reach the page, open the **Ports** tab and use **Open in Browser** for port 5173.
+
+### Troubleshooting
+
+- **Blank page or "Waiting for localhost":** Vite was listening on IPv6 only. `server.host: true` in `frontend/vite.config.ts` makes it listen on `0.0.0.0`; restart `pnpm dev`.
+- **Repeated `GET /health 404` lines in the backend log:** harmless. VS Code probes the port, and the backend has no `/health` endpoint by the TASK-035 removal.
+- **`ImportError ... circular import`:** fixed in PR #18; update `main`.
+
+### What works today
+
+Sessions can be created, renamed and deleted with confirmation. The relevance toggle and single-pair delete are implemented, but the chat UI that would show the pairs is not built yet.
+
+### What is not built yet
+
+There is no chat input or report panel in the frontend yet. The `POST /api/chat` backend endpoint exists.
+
 ## Commands
 
 Run from the repository root (they are fixed in `config.yaml`):
