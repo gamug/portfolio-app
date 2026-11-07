@@ -8,10 +8,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
+from app.api.reports import router as reports_router
 from app.api.threads import router as threads_router
 from app.connector import ConnectorError, KnowledgeGraphConnector, Settings
 from app.connector.language import detect_language, error_message
 from app.connector.service import STREAM_CHUNK_SIZE
+from app.report import ReportAgent
 from app.storage import SQLiteQuestionAnswerStore, StorageError
 
 
@@ -23,6 +25,7 @@ class ChatRequest(BaseModel):
 def create_app(
     connector: KnowledgeGraphConnector | None = None,
     store: SQLiteQuestionAnswerStore | None = None,
+    report_agent: ReportAgent | None = None,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -30,12 +33,19 @@ def create_app(
         app.state.connector = active
         if app.state.store is None:
             app.state.store = getattr(active, "store", None)
+        if (
+            app.state.report_agent is None
+            and isinstance(app.state.store, SQLiteQuestionAnswerStore)
+            and isinstance(getattr(active, "settings", None), Settings)
+        ):
+            app.state.report_agent = ReportAgent(active.settings, app.state.store)
         await active.check_startup()
         yield
 
     app = FastAPI(lifespan=lifespan)
     app.state.connector = connector
     app.state.store = store
+    app.state.report_agent = report_agent
 
     @app.exception_handler(StorageError)
     async def storage_error_handler(request: Request, error: StorageError) -> JSONResponse:
@@ -46,6 +56,7 @@ def create_app(
         return JSONResponse({"error": "The database operation failed."}, status_code=500)
 
     app.include_router(threads_router)
+    app.include_router(reports_router)
 
     @app.post("/api/chat", response_model=None)
     async def chat(request: ChatRequest) -> JSONResponse | StreamingResponse:

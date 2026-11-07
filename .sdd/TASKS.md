@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026` and `TASK-027` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026`, `TASK-027` and `TASK-028` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -290,11 +290,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-028 — Implement the report agent
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-011
 - **Depends on:** TASK-027
 - **Acceptance criteria:** AC-FR013-01, AC-FR013-04, AC-FR013-05, AC-FR013-06
 - **Action:** Implement the two skills as sequential DeepSeek calls producing OpenUI Lang from the relevant pairs, with streaming and cancellation.
+- **Result (2026-11-07):** Added skill 1 in `report_skill_1_chart_plan_prompt.txt` (relevant pairs to a validated JSON plan) and skill 2 in `report_skill_2_openui_prompt.txt` (plan to OpenUI Lang, with `openui_chat_prompt.txt` as the component reference). Skill 1 rejects numbers that are not present in the answer text and skips pairs without numeric content. Skill 2 streams one DeepSeek call and validates the complete output with the same `@openuidev/react-lang` parser as the TASK-019 spike through `frontend/scripts/validate-openui-report.mjs`; invalid output is one clear error with no retry. The `ReportAgent` orchestrator adds `POST /api/threads/{thread_id}/report/generate`, which streams SSE progress and OpenUI deltas, rejects no-history and no-relevant requests before streaming, stores the report only when complete, keeps the previous report on cancellation, and stores the partial report flagged incomplete on failure with a user-safe message in the analyst's language. Tests mock the LLM and parser except one parser integration test; the single real smoke run used synthetic answers and reported OK with 5.696 s, 1,378 plan tokens and 15,670 report tokens. The prompt files are a DRAFT pending the teammate's review. No schema change, dependency, GraphDB call or evaluation-question content was used.
 
 ### TASK-029 — Build the report panel and the Generate Report flow
 

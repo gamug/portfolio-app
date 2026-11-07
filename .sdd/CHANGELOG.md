@@ -239,3 +239,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Documented what works today (session create/rename/delete, relevance toggle and single-pair delete pending the chat UI) and what is not built yet (no chat input or report panel; the `POST /api/chat` endpoint exists).
 - No task checkbox, dependency or schema change.
 - Verification: `ruff`, `check_sdd.py`, `check_consistency.py` and the frontend lint, Prettier, `tsc --noEmit` and tests pass.
+
+## 2026-11-07 (report agent)
+
+### TASK-028 — Implement the report agent (WI-011, AC-FR013-01, AC-FR013-04, AC-FR013-05, AC-FR013-06)
+
+- Added skill 1 (relevant pairs to a validated JSON chart plan) and skill 2 (plan to OpenUI Lang) in separate prompt files, `backend/app/report/prompts/report_skill_1_chart_plan_prompt.txt` and `backend/app/report/prompts/report_skill_2_openui_prompt.txt`. Both are marked DRAFT pending the teammate's review; the owner authorized the draft.
+- Skill 1 rejects numbers that do not appear in the answer text and skips pairs without numeric content. Skill 2 reuses `backend/app/connector/openui_chat_prompt.txt` as the component reference and validates the complete output with the same OpenUI parser as the TASK-019 spike through `frontend/scripts/validate-openui-report.mjs`; invalid output is one clear error with no retry.
+- Added the `ReportAgent` orchestrator and `POST /api/threads/{thread_id}/report/generate`, which streams SSE progress and OpenUI deltas, rejects no-history and no-relevant requests with a clear message in the analyst's language, stores the report only when complete, keeps the previous report on cancellation, and stores the partial report flagged incomplete on failure.
+- The single real smoke run used synthetic answers, not the evaluation files, and wrote its plan, report and metadata only to the git-excluded local-results directory under `backend/tests/evaluation/`. Result: OK, 5.696 s, 1,378 plan tokens and 15,670 report tokens. No retry was made.
+- Tests mock the LLM and the parser, except one parser integration test against the installed OpenUI library; the suite covers success, cancel keeping the previous report, failure keeping the partial report flagged incomplete, regenerate replacing the previous report, no-history and no-relevant rejections, and invalid skill output.
+- No schema change, dependency, GraphDB call or evaluation-question content was used.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
