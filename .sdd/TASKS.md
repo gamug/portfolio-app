@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019` and `TASK-020` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020` and `TASK-021` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -215,11 +215,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-021 — Convert and store question-answer pairs
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-008
 - **Depends on:** TASK-020
 - **Acceptance criteria:** AC-FR002-01
 - **Action:** Convert the final answer to OpenUI Lang with a second DeepSeek call and store the question, the raw answer and the OpenUI Lang after the answer completes.
+- **Result (2026-11-07):** Added the second DeepSeek OpenUI conversion and a storage boundary with an in-memory implementation; no database schema was changed, and TASK-023 will replace the in-memory store with SQLite. `POST /api/chat` now converts only after the answer completes, stores the pair only after a successful conversion, and streams the raw answer. Tests use mocked HTTP and LLM only. One real smoke call returned OK with latency 29.03 s; 128,787 answer tokens plus 15,930 conversion tokens, 144,717 total. It ran once with no retries. The OpenUI prompt is committed as a generated local asset; no dependency was added.
 
 ### TASK-022 — Handle errors and the analyst's language
 
