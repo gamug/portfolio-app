@@ -149,3 +149,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - One real smoke call returned **OK** with latency **49.096 s** and **148,399 total tokens**. It ran once, with no retries; the answer and usage are only in the git-excluded local-results directory. Question-answer storage remains TASK-021.
 - `.env.example` now documents `KG_AGENT_ID`, `KG_CHAT_MODE` and the optional timeout/iteration limits. No dependency was added.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (question-answer pairs)
+
+### TASK-021 — Convert and store question-answer pairs (WI-008, AC-FR002-01)
+
+- Added the second DeepSeek call that converts a completed answer to OpenUI Lang and a storage boundary with an in-memory implementation. No database schema was changed; TASK-023 will replace the in-memory store with SQLite.
+- `POST /api/chat` now converts only after the answer completes, stores the question, raw answer and OpenUI Lang only after a successful conversion, and still streams the raw answer.
+- Tests use mocked HTTP and LLM only. One real smoke call returned **OK** with latency **29.03 s**; **128,787** answer tokens plus **15,930** conversion tokens (**144,717** total). It ran once with no retries; the answer and OpenUI output are only in the git-excluded local-results directory.
+- The locally generated OpenUI chat prompt is committed as `backend/app/connector/openui_chat_prompt.txt`. No dependency was added.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.

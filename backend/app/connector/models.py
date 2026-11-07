@@ -33,6 +33,24 @@ class AnswerResult:
     total_tokens: int | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ConversionResult:
+    """The OpenUI Lang conversion and its provider metadata."""
+
+    text: str
+    latency_seconds: float
+    usage: dict[str, Any] | None = None
+    total_tokens: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ChatAnswer:
+    """The raw answer, its OpenUI Lang conversion and the stored pair."""
+
+    raw: AnswerResult
+    conversion: ConversionResult
+
+
 def total_tokens(usage: dict[str, Any] | None) -> int | None:
     """Return a token total from the common usage shapes, when present."""
     if not isinstance(usage, dict):

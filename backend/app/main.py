@@ -13,6 +13,7 @@ from app.connector.service import STREAM_CHUNK_SIZE
 
 class ChatRequest(BaseModel):
     question: str = Field(min_length=1)
+    session_id: str = Field(default="default", min_length=1)
 
 
 def create_app(connector: KnowledgeGraphConnector | None = None) -> FastAPI:
@@ -34,13 +35,13 @@ def create_app(connector: KnowledgeGraphConnector | None = None) -> FastAPI:
                 {"error": "The knowledge-graph connector is not ready."}, status_code=503
             )
         try:
-            result = await active.answer(request.question)
+            result = await active.answer_and_store(request.question, request.session_id)
         except ConnectorError as error:
             return JSONResponse({"error": str(error)}, status_code=error.status_code)
 
         async def body() -> AsyncIterator[bytes]:
-            for index in range(0, len(result.text), STREAM_CHUNK_SIZE):
-                yield result.text[index : index + STREAM_CHUNK_SIZE].encode()
+            for index in range(0, len(result.raw.text), STREAM_CHUNK_SIZE):
+                yield result.raw.text[index : index + STREAM_CHUNK_SIZE].encode()
 
         return StreamingResponse(body(), media_type="text/plain")
 
