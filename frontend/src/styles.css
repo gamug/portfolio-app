@@ -1,0 +1,160 @@
+:root {
+  color: #1f2933;
+  background: #f5f7fa;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  min-height: 100vh;
+}
+
+.session-list {
+  padding: 1rem;
+  background: #ffffff;
+  border-right: 1px solid #d9e2ec;
+  overflow-y: auto;
+}
+
+.session-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.session-list__header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.session-list ul {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.session-list li {
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.session-list li.is-active {
+  border-color: #2f80ed;
+  background: #eef5ff;
+}
+
+.session-list__row,
+.session-list__rename,
+.session-list__confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.session-list__select {
+  flex: 1;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-list__error {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #fdecea;
+  color: #8a1c1c;
+}
+
+.session-list__empty {
+  color: #52606d;
+  font-size: 0.9rem;
+}
+
+.session-detail {
+  padding: 1.5rem;
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.session-detail header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.session-detail h2,
+.session-detail h3 {
+  margin: 0;
+}
+
+.session-detail__history ol {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.message {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+}
+
+.message--user {
+  background: #eef5ff;
+}
+
+.session-detail__report {
+  padding-top: 0.5rem;
+  border-top: 1px solid #d9e2ec;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .session-list {
+    border-right: 0;
+    border-bottom: 1px solid #d9e2ec;
+  }
+}

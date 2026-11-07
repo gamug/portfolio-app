@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023` and `TASK-024` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024` and `TASK-025` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -233,7 +233,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ## WI-009 — Sessions and persistence
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-023 — Create the SQLite schema and migrations
 
@@ -255,11 +255,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-025 — Build the session list in the frontend
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-009
 - **Depends on:** TASK-024
 - **Acceptance criteria:** AC-FR005-01, AC-FR005-02, AC-FR005-04
 - **Action:** Create, select, rename and delete sessions, create a new empty session after deleting the active one, and show database errors.
+- **Result (2026-11-07):** Added the frontend session list over `restStorage({baseUrl: "/api/threads"})` with create, select, inline rename and delete after explicit confirmation. Deleting the active session creates a new empty session and makes it active. Selecting a session loads its history and current report. Failed create, rename, delete or select operations set a visible error and leave the visible session, history and report unchanged. Tests mock the storage and report backend through the controller; no GraphDB or DeepSeek calls are made. `pnpm` lint, Prettier, `tsc --noEmit`, tests and the production build pass. No dependency was added.
 
 ## WI-010 — Relevance marking and question-answer deletion
 
