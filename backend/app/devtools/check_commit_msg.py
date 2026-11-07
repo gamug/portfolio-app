@@ -8,7 +8,7 @@ Usage:
     check_commit_msg.py --stdin                 CI: checks every line of stdin as a subject;
                                                 empty input fails, so a failed `git log` cannot pass
 
-Example subject: feat(chat): stream the answer [FR-002][WI-008][TASK-020]
+Example subject: feat(chat): stream the answer [FR-002][FR-035][WI-008][TASK-020]
 """
 
 import re
@@ -16,11 +16,11 @@ import sys
 
 TYPES = "feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert"
 PATTERN = re.compile(
-    rf"^({TYPES})(\([a-z0-9._-]+\))?!?: \S.* \[FR-\d{{3}}\]\[WI-\d{{3}}\]\[TASK-\d{{3}}\]$"
+    rf"^({TYPES})(\([a-z0-9._-]+\))?!?: \S.* (?:\[FR-\d{{3}}\])+\[WI-\d{{3}}\]\[TASK-\d{{3}}\]$"
 )
 EXEMPT_PREFIXES = ("Merge ", 'Revert "', "fixup! ", "squash! ")
 EXPECTED = (
-    "Expected: type(scope): imperative summary [FR-002][WI-008][TASK-020]\n"
+    "Expected: type(scope): imperative summary [FR-002][FR-035][WI-008][TASK-020]\n"
     f"Types: {TYPES.replace('|', ', ')}"
 )
 

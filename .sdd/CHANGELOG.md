@@ -159,3 +159,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests use mocked HTTP and LLM only. One real smoke call returned **OK** with latency **29.03 s**; **128,787** answer tokens plus **15,930** conversion tokens (**144,717** total). It ran once with no retries; the answer and OpenUI output are only in the git-excluded local-results directory.
 - The locally generated OpenUI chat prompt is committed as `backend/app/connector/openui_chat_prompt.txt`. No dependency was added.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (errors and language)
+
+### TASK-022 — Handle errors and follow the analyst's language (WI-008, AC-FR002-02, AC-FR035-01)
+
+- Added a minimal language detector and localized, user-safe error mapping for validation, timeouts, GraphDB, DeepSeek, conversion and storage failures. Raw upstream bodies and internal messages are never returned.
+- The detected language instruction is passed to the GraphDB agent, the bounded tool loop and the OpenUI conversion prompt. Failed questions are never stored; tests cover answer, conversion and storage failures.
+- Tests use mocked HTTP and LLM only. The optional one-shot Spanish smoke call returned **error** (timeout after **120 s**) and was not retried; no tokens were reported.
+- The backend returns a localized error JSON; displaying it visibly remains chat-UI work. No dependency or database schema change.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.

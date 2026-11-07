@@ -69,6 +69,14 @@ def test_answer_uses_chat_api_without_retry() -> None:
     assert result.conversation_id == "c1"
     assert result.mode == "chat"
     assert len(http.calls) == 2
+    assert "Answer in English" in str(http.calls[0][2]["question"])
+    assert "Answer in English" in str(http.calls[1][2]["question"])
+
+
+def test_spanish_question_sends_spanish_instruction() -> None:
+    http = FakeHttp(_responses())
+    asyncio.run(ChatAPIClient(_settings(), http=http).answer("question", "es"))
+    assert "Responde en español" in str(http.calls[0][2]["question"])
 
 
 def test_http_error_is_not_retried() -> None:

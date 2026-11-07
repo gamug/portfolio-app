@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pytest
 from fastapi.testclient import TestClient
 
+from app.connector.language import ERROR_MESSAGES
 from app.connector.models import (
     AnswerResult,
     ChatAnswer,
@@ -58,7 +59,7 @@ def test_chat_endpoint_returns_a_clear_timeout() -> None:
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"question": "question"})
     assert response.status_code == 504
-    assert response.json() == {"error": "timed out"}
+    assert response.json() == {"error": ERROR_MESSAGES["en"]["timeout"]}
 
 
 def test_chat_endpoint_rejects_an_empty_question() -> None:
@@ -71,7 +72,20 @@ def test_chat_endpoint_rejects_an_empty_question() -> None:
     app = create_app(connector)  # type: ignore[arg-type]
     with TestClient(app) as client:
         response = client.post("/api/chat", json={"question": ""})
-    assert response.status_code == 422
+    assert response.status_code == 400
+    assert response.json() == {"error": ERROR_MESSAGES["en"]["validation"]}
+
+
+def test_upstream_details_are_not_exposed_and_errors_follow_spanish() -> None:
+    connector = FakeConnector(
+        error=ConnectorError("upstream secret body", status_code=502, kind="graphdb")
+    )
+    app = create_app(connector)  # type: ignore[arg-type]
+    with TestClient(app) as client:
+        response = client.post("/api/chat", json={"question": "¿Qué datos contiene el grafo?"})
+    assert response.status_code == 502
+    assert response.json() == {"error": ERROR_MESSAGES["es"]["graphdb"]}
+    assert "secret" not in response.text
 
 
 def test_startup_error_prevents_the_app_from_starting() -> None:

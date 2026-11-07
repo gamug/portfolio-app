@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020` and `TASK-021` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021` and `TASK-022` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -202,7 +202,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ## WI-008 — Chat with the knowledge graph
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-020 — Implement the tool loop and answer streaming
 
@@ -224,11 +224,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-022 — Handle errors and the analyst's language
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-008
 - **Depends on:** TASK-021
 - **Acceptance criteria:** AC-FR002-02, AC-FR035-01
 - **Action:** Show an error for GraphDB, DeepSeek or tool-loop failures without storing the question; make interface text and answers follow the analyst's language.
+- **Result (2026-11-07):** Added a minimal language detector and localized, user-safe error mapping for validation, timeouts, GraphDB, DeepSeek, conversion and storage failures. Raw upstream bodies and internal messages are never returned. The detected language instruction is sent to the GraphDB agent and the tool loop, and to the OpenUI conversion prompt. Failed questions are never stored; tests cover answer, conversion and storage failures. Tests use mocked HTTP and LLM only. The optional one-shot Spanish smoke call failed once with a timeout after 120 s and was not retried; no tokens were reported. The backend returns a localized error JSON; displaying it visibly is left to the chat UI task. No dependency or database schema change.
 
 ## WI-009 — Sessions and persistence
 
