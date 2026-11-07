@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024` and `TASK-025` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025` and `TASK-026` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -268,11 +268,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-026 — Implement the relevance toggle
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-010
 - **Depends on:** TASK-025
 - **Acceptance criteria:** AC-FR003-01, AC-FR003-02
 - **Action:** Store and show the relevance state of each pair; new pairs are marked.
+- **Result (2026-11-07):** Added a relevance client and controller state that loads each pair's stored relevance when a session is opened or switched, defaults a new pair to relevant, and toggles it through the existing backend relevance endpoints. The session view renders one relevance checkbox per answer. A failed update shows an error and leaves the visible relevance state unchanged. Tests mock the storage, report and relevance backend; no GraphDB or DeepSeek calls are made. No backend change, dependency or schema change was needed.
 
 ### TASK-027 — Implement deletion of a single pair
 

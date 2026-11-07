@@ -5,13 +5,14 @@ import type { SessionState } from "./SessionController";
 
 type SessionDetailProps = {
   state: SessionState;
+  onToggleRelevance: (pairId: string) => void;
 };
 
 function messageText(message: Message): string {
   return typeof message.content === "string" ? message.content : "";
 }
 
-export function SessionDetail({ state }: SessionDetailProps) {
+export function SessionDetail({ state, onToggleRelevance }: SessionDetailProps) {
   const active = state.sessions.find((session) => session.id === state.activeSessionId);
   if (active === undefined) {
     return (
@@ -37,7 +38,21 @@ export function SessionDetail({ state }: SessionDetailProps) {
             {state.messages.map((message) => (
               <li key={message.id} className={`message message--${message.role}`}>
                 {message.role === "assistant" ? (
-                  <Renderer response={messageText(message)} library={openuiChatLibrary} />
+                  <>
+                    <Renderer response={messageText(message)} library={openuiChatLibrary} />
+                    <div className="message__relevance">
+                      <label>
+                        <input
+                          type="checkbox"
+                          data-pair-id={message.id}
+                          checked={state.relevance[message.id] ?? true}
+                          disabled={state.isLoading}
+                          onChange={() => onToggleRelevance(message.id)}
+                        />
+                        Relevant for report
+                      </label>
+                    </div>
+                  </>
                 ) : (
                   <p>{messageText(message)}</p>
                 )}

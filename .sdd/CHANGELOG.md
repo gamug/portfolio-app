@@ -199,3 +199,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests mock the storage and report backend through the controller; no GraphDB or DeepSeek calls are made. `pnpm` lint, Prettier, `tsc --noEmit`, tests and the production build pass.
 - No dependency was added.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (relevance toggle)
+
+### TASK-026 — Implement the relevance toggle (WI-010, AC-FR003-01, AC-FR003-02)
+
+- Added a relevance client and controller state that loads each pair's stored relevance when a session is opened or switched, defaults new pairs to relevant, and toggles it through the existing relevance endpoints.
+- The session view renders one relevance checkbox per answer. A failed update shows an error and leaves the visible relevance state unchanged.
+- Tests mock the storage, report and relevance backend; no GraphDB or DeepSeek calls are made.
+- No backend change, dependency or schema change was needed.
+- Verification: `pnpm` lint, Prettier, `tsc --noEmit`, tests and build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
