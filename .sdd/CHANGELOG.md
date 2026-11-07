@@ -219,3 +219,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests use Vitest with a mocked backend and pytest against a temporary SQLite database.
 - No schema change, dependency, GraphDB or DeepSeek call was needed.
 - Verification: `pnpm` lint, Prettier, `tsc --noEmit`, tests and build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (import fix)
+
+### TASK-023 follow-up — Break the connector and storage import cycle (WI-009, FR-005)
+
+- Moved `QuestionAnswerPair` and `QuestionAnswerStore` to the neutral `app.storage.models`; `app.connector.storage` now re-exports the same public names.
+- Added a regression test that imports `app.main`, `app.storage` and `app.connector` each in a fresh Python subprocess.
+- Verified `uvicorn app.main:app --port 8000` boots and `GET /api/threads/get` returns `200`.
+- No schema change, dependency change or task-checkbox change.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
