@@ -119,6 +119,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - TASK-018 stays unchecked. No question text, answers or graph data are included.
 - Verification: `check_sdd.py` and `check_consistency.py` pass.
 
+## 2026-11-07 (chat API spike)
+
+### TASK-018 — Chat API spike (WI-007, AC-SPIKE-02)
+
+- Ran the accepted `adr-010` path through the Workbench chat API with the DeepSeek-based agent `reportes-piloto-ds` on the provisional `portfolio_test` KG. All 8 development questions returned an answer; errors 0; median latency 25.808 s; total tokens 1,188,318 (median 136,779.5 per question). The `adr-007` tool loop remains the selectable fallback.
+- Added `backend/spikes/task_018_chat_api.py`; the earlier tool-loop script is unchanged as the fallback.
+- TASK-018 is marked done. Owner grade: pending. The KG and question set are provisional; repeat on the final KG.
+- Verification: `ruff`, `check_sdd.py` and `check_consistency.py` pass; no question text, answers, graph data or local results are committed.
+
 ## 2026-11-07 (OpenUI spike)
 
 ### TASK-019 — OpenUI generation, chat controls and offline export (WI-007, AC-SPIKE-03..06)
