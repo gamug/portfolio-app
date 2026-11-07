@@ -284,3 +284,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added Vitest coverage for the toggle and the theme helpers.
 - No dependency or schema change.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests (53 passed) and production build pass; the backend checks remain green.
+
+## 2026-11-07 (answer text and chat layout)
+
+### TASK-029 follow-up — Show the answer text and improve the chat and report layout (WI-011, FR-002, FR-021, FR-022)
+
+- Each question-answer pair now shows the stored answer as readable text first, with line breaks, bold text, lists and simple markdown tables. The OpenUI card is collapsed behind a **Show chart** toggle below the text; the text stays selectable and uses the normal contrast tokens in both themes.
+- The thread endpoint returns the stored OpenUI Lang, so the frontend extracts its narrative text for the text view; no backend change was needed.
+- The session list is narrower, the chat and report panels share the remaining width with a minimum of about 420 px each, and each panel scrolls internally instead of the page. Long questions wrap, and wide tables and charts scroll horizontally inside their own container.
+- Added contrast fixes for both themes: the OpenUI library follows the app theme, the answer and report containers use the normal text tokens, and leftover chart entry opacity no longer leaves faded content.
+- Added Vitest coverage for answer-text extraction and rendering, the **Show chart** toggle and the existing flows.
+- No dependency or schema change and no task checkbox change.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests (60 passed) and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
