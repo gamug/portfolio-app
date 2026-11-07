@@ -6,10 +6,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from app.connector.storage import QuestionAnswerPair
-
 from .database import SQLiteDatabase
-from .models import RelevanceMark, Report, Session
+from .models import QuestionAnswerPair, RelevanceMark, Report, Session
 
 DEFAULT_SESSION_TITLE = "New Chat"
 

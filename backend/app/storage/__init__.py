@@ -2,10 +2,18 @@
 
 from .database import SQLiteDatabase
 from .errors import StorageError
-from .models import RelevanceMark, Report, Session
+from .models import (
+    QuestionAnswerPair,
+    QuestionAnswerStore,
+    RelevanceMark,
+    Report,
+    Session,
+)
 from .sqlite import SQLiteQuestionAnswerStore
 
 __all__ = [
+    "QuestionAnswerPair",
+    "QuestionAnswerStore",
     "RelevanceMark",
     "Report",
     "SQLiteDatabase",
