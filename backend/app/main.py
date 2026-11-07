@@ -1,15 +1,18 @@
 """FastAPI entry point and streaming chat endpoint."""
 
+import sqlite3
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
+from app.api.threads import router as threads_router
 from app.connector import ConnectorError, KnowledgeGraphConnector, Settings
 from app.connector.language import detect_language, error_message
 from app.connector.service import STREAM_CHUNK_SIZE
+from app.storage import SQLiteQuestionAnswerStore, StorageError
 
 
 class ChatRequest(BaseModel):
@@ -17,16 +20,32 @@ class ChatRequest(BaseModel):
     session_id: str = "default"
 
 
-def create_app(connector: KnowledgeGraphConnector | None = None) -> FastAPI:
+def create_app(
+    connector: KnowledgeGraphConnector | None = None,
+    store: SQLiteQuestionAnswerStore | None = None,
+) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         active = app.state.connector or KnowledgeGraphConnector(Settings.load())
         app.state.connector = active
+        if app.state.store is None:
+            app.state.store = getattr(active, "store", None)
         await active.check_startup()
         yield
 
     app = FastAPI(lifespan=lifespan)
     app.state.connector = connector
+    app.state.store = store
+
+    @app.exception_handler(StorageError)
+    async def storage_error_handler(request: Request, error: StorageError) -> JSONResponse:
+        return JSONResponse({"error": "The database operation failed."}, status_code=500)
+
+    @app.exception_handler(sqlite3.Error)
+    async def sqlite_error_handler(request: Request, error: sqlite3.Error) -> JSONResponse:
+        return JSONResponse({"error": "The database operation failed."}, status_code=500)
+
+    app.include_router(threads_router)
 
     @app.post("/api/chat", response_model=None)
     async def chat(request: ChatRequest) -> JSONResponse | StreamingResponse:

@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022` and `TASK-023` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023` and `TASK-024` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -246,11 +246,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-024 — Implement the thread REST endpoints
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-009
 - **Depends on:** TASK-023
 - **Acceptance criteria:** AC-FR005-01, AC-FR005-02
 - **Action:** Implement get, create, update and delete thread endpoints over SQLite, plus the report and relevance endpoints.
+- **Result (2026-11-07):** Implemented the adr-005 thread endpoints under `/api/threads` (`/get`, `/create`, `/get/{id}`, `/update/{id}`, `/delete/{id}`), the current-report get/set endpoints with the incomplete flag, and per-pair relevance get/set endpoints over the TASK-023 SQLite store. History is returned as user/assistant messages with the stored OpenUI Lang; the report has its own endpoint beside the thread convention. Deleting a session cascades to its history and report. Database failures return a generic user-safe error. Tests use a temporary database through the FastAPI test client, with no network or API calls. No schema change or dependency was added.
 
 ### TASK-025 — Build the session list in the frontend
 
