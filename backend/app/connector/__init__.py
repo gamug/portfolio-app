@@ -11,7 +11,7 @@ from .models import (
 from .openui import OpenUIConverter
 from .service import KnowledgeGraphConnector
 from .settings import Settings
-from .storage import InMemoryQuestionAnswerStore, QuestionAnswerPair, QuestionAnswerStore
+from .storage import QuestionAnswerPair, QuestionAnswerStore
 
 __all__ = [
     "AnswerResult",
@@ -20,7 +20,6 @@ __all__ = [
     "ConnectorError",
     "ConnectorTimeout",
     "ConversionResult",
-    "InMemoryQuestionAnswerStore",
     "KnowledgeGraphConnector",
     "OpenUIConverter",
     "QuestionAnswerPair",

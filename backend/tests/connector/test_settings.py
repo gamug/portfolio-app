@@ -12,6 +12,7 @@ BASE = {
     "LLM_API_KEY": "llm-secret",
     "LLM_MODEL": "deepseek-chat",
     "LLM_URL": "https://api.deepseek.com",
+    "SQLITE_PATH": "backend/data/app.sqlite3",
 }
 
 
@@ -28,6 +29,7 @@ def test_default_mode_is_chat(tmp_path: Path) -> None:
     assert settings.kg_agent_id == "agent-1"
     assert settings.chat_timeout_seconds == 120.0
     assert settings.tool_max_iterations == 8
+    assert settings.sqlite_path == "backend/data/app.sqlite3"
 
 
 def test_tool_loop_mode_and_limits(tmp_path: Path) -> None:

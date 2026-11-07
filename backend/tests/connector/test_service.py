@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import pytest
 
@@ -7,6 +7,7 @@ from app.connector.models import AnswerResult, ConnectorError, ConversionResult
 from app.connector.service import KnowledgeGraphConnector
 from app.connector.settings import Settings
 from app.connector.storage import QuestionAnswerPair
+from app.storage import SQLiteQuestionAnswerStore
 
 
 @dataclass
@@ -154,3 +155,13 @@ def test_storage_failure_is_reported_without_a_pair() -> None:
         asyncio.run(connector.answer_and_store("question"))
     assert raised.value.kind == "storage"
     assert store.pairs == []
+
+
+def test_default_store_is_sqlite(tmp_path) -> None:
+    connector = KnowledgeGraphConnector(
+        replace(_settings(), sqlite_path=str(tmp_path / "app.sqlite3")),
+        chat_api=FakeChatAPI([]),  # type: ignore[arg-type]
+        tool_loop=object(),  # type: ignore[arg-type]
+        converter=FakeConverter([]),  # type: ignore[arg-type]
+    )
+    assert isinstance(connector.store, SQLiteQuestionAnswerStore)

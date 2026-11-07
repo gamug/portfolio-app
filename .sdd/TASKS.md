@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021` and `TASK-022` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022` and `TASK-023` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -237,11 +237,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-023 — Create the SQLite schema and migrations
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-009
 - **Depends on:** TASK-019
 - **Acceptance criteria:** AC-FR005-03
 - **Action:** Define the tables for sessions, question-answer pairs, relevance marks and reports with migrations (schema approval applies).
+- **Result (2026-11-07):** Added the approved four-table schema in `backend/app/storage/migrations/001_initial.sql` with the agreed indexes, foreign keys and cascade rules, and a stdlib `sqlite3` migration runner using `PRAGMA user_version`. Added the SQLite implementation of the question-answer storage boundary, which replaces the in-memory default; `SQLITE_PATH` is read from `.env`. Tests use temporary databases only and cover migration idempotence, reopen persistence, default relevance, relevance updates, session cascades and one report per session. No dependency was added and no network or API calls are used.
 
 ### TASK-024 — Implement the thread REST endpoints
 

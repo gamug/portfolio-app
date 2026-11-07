@@ -169,3 +169,12 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests use mocked HTTP and LLM only. The optional one-shot Spanish smoke call returned **error** (timeout after **120 s**) and was not retried; no tokens were reported.
 - The backend returns a localized error JSON; displaying it visibly remains chat-UI work. No dependency or database schema change.
 - Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-07 (SQLite schema)
+
+### TASK-023 — Create the SQLite schema and migrations (WI-009, AC-FR005-03)
+
+- Added the approved four-table schema for sessions, question-answer pairs, relevance marks and reports in `backend/app/storage/migrations/001_initial.sql`, with the agreed indexes, foreign keys and cascade rules.
+- Added a stdlib `sqlite3` migration runner using `PRAGMA user_version`, plus the SQLite implementation of the question-answer storage boundary. It replaces the in-memory default and reads `SQLITE_PATH` from `.env`.
+- Tests use temporary databases only and cover migration idempotence, reopen persistence, default relevance, relevance updates, session cascades and one current report per session. No dependency was added and no network or API calls are used.
+- Verification: `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
