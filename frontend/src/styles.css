@@ -172,3 +172,12 @@ input {
   color: #52606d;
   font-size: 0.9rem;
 }
+
+.message__confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  color: #8a1c1c;
+}

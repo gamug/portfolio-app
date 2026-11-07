@@ -16,10 +16,15 @@ const state: SessionState = {
 describe("SessionDetail relevance control", () => {
   it("renders one relevance toggle per answer with its stored state", () => {
     const html = renderToStaticMarkup(
-      <SessionDetail state={state} onToggleRelevance={() => undefined} />,
+      <SessionDetail
+        state={state}
+        onToggleRelevance={() => undefined}
+        onDeletePair={() => undefined}
+      />,
     );
     expect(html).toContain('data-pair-id="p1"');
     expect(html).toContain("Relevant for report");
+    expect(html).toContain('data-delete-pair-id="p1"');
     expect(html).not.toContain('data-pair-id="p1" checked=""');
   });
 });

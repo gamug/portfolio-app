@@ -18,6 +18,10 @@ export interface RelevanceClient {
   setRelevance(sessionId: string, pairId: string, relevant: boolean): Promise<boolean>;
 }
 
+export interface PairClient {
+  deletePair(sessionId: string, pairId: string): Promise<void>;
+}
+
 export type SessionState = {
   sessions: Thread[];
   activeSessionId: string | null;
@@ -34,6 +38,7 @@ const RENAME_ERROR = "Could not rename the session. Please try again.";
 const DELETE_ERROR = "Could not delete the session. Please try again.";
 const SELECT_ERROR = "Could not load the session. Please try again.";
 const RELEVANCE_ERROR = "Could not update the relevance. Please try again.";
+const PAIR_DELETE_ERROR = "Could not delete the question-answer pair. Please try again.";
 
 function newUserMessage(): UserMessage {
   const id =
@@ -59,6 +64,7 @@ export class SessionController {
     private readonly storage: ThreadStorage,
     private readonly reports: ReportClient,
     private readonly relevance: RelevanceClient,
+    private readonly pairs: PairClient,
   ) {}
 
   subscribe = (listener: () => void): (() => void) => {
@@ -208,6 +214,49 @@ export class SessionController {
       return;
     }
     this.setState({ sessions: remaining, isLoading: false });
+  }
+
+  private withoutPair(messages: Message[], pairId: string): Message[] {
+    const index = messages.findIndex(
+      (message) => message.id === pairId && message.role === "assistant",
+    );
+    if (index === -1) {
+      return messages.filter((message) => message.id !== pairId);
+    }
+    const previousIsQuestion = index > 0 && messages[index - 1]?.role === "user";
+    return messages.filter(
+      (_, messageIndex) =>
+        messageIndex !== index && (!previousIsQuestion || messageIndex !== index - 1),
+    );
+  }
+
+  async deletePair(pairId: string, confirmed: boolean): Promise<void> {
+    if (!confirmed) {
+      return;
+    }
+    const sessionId = this.state.activeSessionId;
+    if (sessionId === null) {
+      return;
+    }
+    const exists = this.state.messages.some(
+      (message) => message.id === pairId && message.role === "assistant",
+    );
+    if (!exists) {
+      return;
+    }
+    this.setState({ isLoading: true, error: null });
+    try {
+      await this.pairs.deletePair(sessionId, pairId);
+      const relevance = { ...this.state.relevance };
+      delete relevance[pairId];
+      this.setState({
+        messages: this.withoutPair(this.state.messages, pairId),
+        relevance,
+        isLoading: false,
+      });
+    } catch {
+      this.setState({ isLoading: false, error: PAIR_DELETE_ERROR });
+    }
   }
 
   async toggleRelevance(pairId: string): Promise<void> {

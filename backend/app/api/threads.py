@@ -182,3 +182,10 @@ async def set_relevance(
     if mark is None:
         raise HTTPException(status_code=404, detail="Question-answer pair not found.")
     return _relevance(mark)
+
+
+@router.delete("/{thread_id}/pairs/{pair_id}", status_code=204)
+async def delete_pair(thread_id: str, pair_id: str, request: Request) -> Response:
+    if not await _store(request).delete_pair(thread_id, pair_id):
+        raise HTTPException(status_code=404, detail="Question-answer pair not found.")
+    return Response(status_code=204)

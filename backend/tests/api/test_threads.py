@@ -160,3 +160,57 @@ def test_two_sessions_keep_separate_histories_and_reports(tmp_path: Path) -> Non
             client.get(f"/api/threads/{second['id']}/report").json()["report"]["openui_lang"]
             == "root = Stack([])"
         )
+
+
+def test_delete_one_pair_keeps_the_other_pairs_and_the_report(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        thread = client.post("/api/threads/create", json={"messages": []}).json()
+        first = _pair(thread["id"])
+        second = QuestionAnswerPair(
+            session_id=thread["id"],
+            question="Second question",
+            raw_answer="Second raw answer",
+            openui_lang="root = Stack([])",
+        )
+        asyncio.run(store.save(first))
+        asyncio.run(store.save(second))
+        asyncio.run(store.set_report(thread["id"], "root = Card([])", False))
+        report_before = client.get(f"/api/threads/{thread['id']}/report").json()
+
+        deleted = client.delete(f"/api/threads/{thread['id']}/pairs/{first.id}")
+        assert deleted.status_code == 204
+
+        history = client.get(f"/api/threads/get/{thread['id']}").json()
+        assert [message["id"] for message in history] == [
+            f"{second.id}:question",
+            second.id,
+        ]
+        assert client.get(f"/api/threads/{thread['id']}/report").json() == report_before
+        assert (
+            client.get(f"/api/threads/{thread['id']}/pairs/{first.id}/relevance").status_code == 404
+        )
+        assert (
+            client.get(f"/api/threads/{thread['id']}/pairs/{second.id}/relevance").status_code
+            == 200
+        )
+        assert asyncio.run(store.list_for_session(thread["id"])) == [second]
+        assert client.delete(f"/api/threads/{thread['id']}/pairs/{first.id}").status_code == 404
+
+
+def test_cannot_delete_a_pair_through_another_session(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        first = client.post("/api/threads/create", json={"messages": []}).json()
+        second = client.post("/api/threads/create", json={"messages": []}).json()
+        pair = QuestionAnswerPair(
+            session_id=second["id"],
+            question="Other session question",
+            raw_answer="Other session answer",
+            openui_lang="root = Card([])",
+        )
+        asyncio.run(store.save(pair))
+
+        response = client.delete(f"/api/threads/{first['id']}/pairs/{pair.id}")
+        assert response.status_code == 404
+        assert asyncio.run(store.list_for_session(second["id"])) == [pair]

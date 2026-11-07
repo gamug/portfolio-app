@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025` and `TASK-026` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026` and `TASK-027` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -264,7 +264,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ## WI-010 — Relevance marking and question-answer deletion
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-026 — Implement the relevance toggle
 
@@ -277,11 +277,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-027 — Implement deletion of a single pair
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-010
 - **Depends on:** TASK-026
 - **Acceptance criteria:** AC-FR028-03, AC-FR028-04
 - **Action:** Delete a pair after confirmation in the active session only, leaving the current report unchanged.
+- **Result (2026-11-07):** Added the single-pair delete endpoint under `/api/threads` and the SQLite delete method; the relevance row cascades and the current report is untouched. The session view now exposes a delete action per answer with explicit confirmation. Declining changes nothing; confirming removes only that pair's question/answer messages and relevance mark; failure shows an error and leaves the visible state unchanged. Tests use Vitest with a mocked backend and pytest against a temporary SQLite database. No schema change, dependency, GraphDB or DeepSeek call was needed.
 
 ## WI-011 — Report generation
 
