@@ -110,3 +110,11 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added `adr-010` (`Proposed`) to `adr.md`: forward the question to the Talk to Your Graph agent through the Workbench chat API, with the `adr-007` tool loop as a fallback. Nothing is implemented and `adr-007` stays `Accepted` until the project owners accept or reject `adr-010`.
 - TASK-018 stays open; the PR #5 branch is not touched by this change.
 - Verification: `check_sdd.py` and `check_consistency.py` pass; no question text, answers or graph data are included.
+
+## 2026-11-07 (ADR acceptance)
+
+### TASK-018 — Accept adr-010 and supersede adr-007 (WI-007, AC-SPIKE-02)
+
+- Accepted `adr-010` by dova on 2026-11-07; it supersedes `adr-007`. The `adr-007` tool loop is kept as a selectable fallback.
+- TASK-018 stays unchecked. No question text, answers or graph data are included.
+- Verification: `check_sdd.py` and `check_consistency.py` pass.
