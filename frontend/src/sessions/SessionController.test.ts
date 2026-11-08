@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Message, Thread, UserMessage } from "@openuidev/react-ui";
 import {
+  NO_REPORT_MESSAGE,
   SessionController,
   type ChatClient,
   type PairClient,
@@ -677,9 +678,10 @@ describe("SessionController report download", () => {
     expect(exporter.calls).toEqual([
       { sessionName: "Q3 sales", report: report("root = Card([])") },
     ]);
+    expect(controller.getSnapshot().downloadNotice).toBeNull();
   });
 
-  it("does nothing when the session has no report", async () => {
+  it("shows the no-report message and downloads nothing", async () => {
     const { storage, exporter, controller } = makeController();
     storage.threads = [session("s1")];
     await controller.initialize();
@@ -687,7 +689,55 @@ describe("SessionController report download", () => {
     await controller.downloadReport();
 
     expect(exporter.calls).toEqual([]);
+    expect(controller.getSnapshot().downloadNotice).toBe(NO_REPORT_MESSAGE);
     expect(controller.getSnapshot().reportError).toBeNull();
+  });
+
+  it("shows the no-report message while a first report is being generated", async () => {
+    const { storage, reports, exporter, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+    const started = deferred();
+    const gate = deferred();
+    reports.generateImpl = async function* () {
+      yield { type: "progress", stage: "planning" };
+      started.resolve();
+      await gate.promise;
+      yield { type: "done", report: report("root = Card([])") };
+    };
+
+    const generation = controller.generateReport();
+    await started.promise;
+    await controller.downloadReport();
+
+    expect(exporter.calls).toEqual([]);
+    expect(controller.getSnapshot().downloadNotice).toBe(NO_REPORT_MESSAGE);
+    gate.resolve();
+    await generation;
+    expect(controller.getSnapshot().downloadNotice).toBeNull();
+  });
+
+  it("clears the no-report message when the session changes", async () => {
+    const { storage, controller } = makeController();
+    storage.threads = [session("s1"), session("s2")];
+    await controller.initialize();
+    await controller.downloadReport();
+    expect(controller.getSnapshot().downloadNotice).toBe(NO_REPORT_MESSAGE);
+
+    await controller.selectSession("s2");
+
+    expect(controller.getSnapshot().downloadNotice).toBeNull();
+  });
+
+  it("dismisses the no-report message", async () => {
+    const { storage, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+    await controller.downloadReport();
+
+    controller.dismissDownloadNotice();
+
+    expect(controller.getSnapshot().downloadNotice).toBeNull();
   });
 
   it("shows an error when the download fails", async () => {

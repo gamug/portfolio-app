@@ -317,3 +317,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests cover the false-positive documentation text, a real `<link href>`, a real `<script src>`, real CSS `url(https://...)` in a style block and style attribute, and the real built template plus a sample report through the full download path.
 - No dependency or schema change and no task checkbox change.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-08 (download without a report)
+
+### TASK-031 — Tell the analyst to generate a report before downloading (WI-012, AC-FR026-02)
+
+- **Download Report** is now always visible in the report panel. When the active session has no report (including while a first report is being generated and nothing is stored), pressing it downloads nothing and shows the dismissible message "No report is stored yet. Generate a report first."
+- The message disappears when a report exists or when the session changes. When a report exists, the TASK-030 download behavior is unchanged.
+- Tests cover no report with no download call and the message, report present with a successful download, the message during a first generation, dismissal, session change and hiding the message once a report exists.
+- No dependency or schema change and no real LLM or GraphDB call.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
