@@ -54,11 +54,28 @@ export function buildReportHtml(
   return template.replaceAll("__REPORT_META__", meta).replaceAll("__REPORT_DATA__", data);
 }
 
+function withoutInlineCodeContents(html: string): string {
+  return html
+    .replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1")
+    .replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/gi, "$1");
+}
+
+function hasExternalCssUrl(css: string): boolean {
+  return /(?<![A-Za-z0-9_])url\(\s*["']?(?:https?:)?\/\//i.test(css);
+}
+
 export function hasExternalReferences(html: string): boolean {
-  return (
-    /(?:src|href)\s*=\s*["'](?:https?:)?\/\//i.test(html) ||
-    /url\(\s*["']?(?:https?:)?\/\//i.test(html)
+  const shell = withoutInlineCodeContents(html);
+  if (/<[a-z][^>]*(?<![\w-])(?:src|href)\s*=\s*["'](?:https?:)?\/\//i.test(shell)) {
+    return true;
+  }
+  const styleAttributes = [...shell.matchAll(/(?<![\w-])style\s*=\s*["']([^"']*)["']/gi)].map(
+    (match) => match[1] ?? "",
   );
+  const styleBlocks = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map(
+    (match) => match[1] ?? "",
+  );
+  return [...styleAttributes, ...styleBlocks].some(hasExternalCssUrl);
 }
 
 export function createReportExporter(templateUrl = "/report-template.html"): ReportExporter {
