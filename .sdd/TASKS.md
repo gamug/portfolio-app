@@ -340,6 +340,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Acceptance criteria:** AC-FR028-01, AC-FR028-02, AC-FR028-04, AC-FR028-05
 - **Action:** Add both buttons with confirmation, session scoping and disabled states.
 - **Result (2026-11-08):** Added `DELETE /api/threads/{thread_id}/history` (all pairs and the report) and `DELETE /api/threads/{thread_id}/report` (report only), both scoped to the given session and using the existing SQLite tables; relevance rows cascade with their pairs. The report panel exposes **Erase History** and **Erase Report** with explicit confirmations. Confirming history clears the active session's pairs, relevance and report; confirming report clears only the report and keeps the pairs. Declining changes nothing; failure shows the existing session error and leaves the visible state unchanged. Both buttons are disabled when there is no history and no report, **Erase Report** is also disabled without a report, and both are disabled while a report is generated. Tests use a temporary SQLite database and cover other sessions unchanged, report-only keeping pairs, missing sessions, idempotent report erase, confirm, decline, failure and the disabled states. No dependency or schema change and no real LLM or GraphDB call.
+- **Fix (2026-11-08):** `ChatPanel` and `ReportPanel` now use distinct session-scoped keys (`chat-<session>` and `report-<session>`) so switching sessions cannot duplicate stale panels; the remount-on-session-change behavior is unchanged.
 
 ## WI-014 — Acceptance testing and fixes
 

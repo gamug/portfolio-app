@@ -338,3 +338,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests use a temporary SQLite database for other sessions unchanged, report-only keeping pairs, missing sessions and idempotent report erase, and Vitest for confirm, decline, failure and disabled states.
 - No dependency or schema change and no real LLM or GraphDB call.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-08 (session switch panel duplication)
+
+### TASK-032 follow-up — Keep one chat and report panel when switching sessions (WI-013, FR-028)
+
+- Fixed the duplicated Chat panel: `ChatPanel` and `ReportPanel` were siblings with the same `key={activeSessionId}`, so React kept stale keyed nodes as the key changed. They now use `chat-<session-id>` and `report-<session-id>`, which keeps the remount on session change and makes the sibling keys distinct.
+- Added a regression test that switches the active session through three sessions. For each session it renders `SessionDetail`, asserts exactly one `aria-label="Chat"` and one `aria-label="Report"` element, and asserts that the two panel elements have distinct, session-specific React keys.
+- Client rendering with `react-dom/client` is not possible in the current test setup: Vitest runs in the `node` environment and neither `jsdom` nor Testing Library is a dependency. The test inspects the React element tree returned by `SessionDetail` instead; no dependency was added.
+- No API call, dependency or schema change.
+- Verification: frontend tests, ESLint, Prettier and `tsc --noEmit` pass.

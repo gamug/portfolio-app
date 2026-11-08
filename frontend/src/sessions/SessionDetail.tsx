@@ -47,14 +47,14 @@ export function SessionDetail({
 
       <div className="session-detail__panels">
         <ChatPanel
-          key={state.activeSessionId ?? "none"}
+          key={`chat-${state.activeSessionId ?? "none"}`}
           state={state}
           onToggleRelevance={onToggleRelevance}
           onDeletePair={onDeletePair}
           onSendQuestion={onSendQuestion}
         />
         <ReportPanel
-          key={state.activeSessionId ?? "none"}
+          key={`report-${state.activeSessionId ?? "none"}`}
           state={state}
           onGenerate={onGenerateReport}
           onDownload={onDownloadReport}

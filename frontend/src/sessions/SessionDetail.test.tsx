@@ -1,5 +1,8 @@
+import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { ChatPanel } from "./ChatPanel";
+import { ReportPanel } from "./ReportPanel";
 import { SessionDetail } from "./SessionDetail";
 import { NO_REPORT_MESSAGE, type SessionState } from "./SessionController";
 
@@ -21,21 +24,36 @@ const baseState: SessionState = {
   downloadNotice: null,
 };
 
+const noopHandlers = {
+  onToggleRelevance: () => undefined,
+  onDeletePair: () => undefined,
+  onSendQuestion: () => undefined,
+  onGenerateReport: () => undefined,
+  onDownloadReport: () => undefined,
+  onDismissDownloadNotice: () => undefined,
+  onEraseHistory: () => undefined,
+  onEraseReport: () => undefined,
+  onCancelReport: () => undefined,
+};
+
+function renderDetailElement(state: SessionState) {
+  return <SessionDetail state={state} {...noopHandlers} />;
+}
+
 function renderDetail(overrides: Partial<SessionState> = {}): string {
-  return renderToStaticMarkup(
-    <SessionDetail
-      state={{ ...baseState, ...overrides }}
-      onToggleRelevance={() => undefined}
-      onDeletePair={() => undefined}
-      onSendQuestion={() => undefined}
-      onGenerateReport={() => undefined}
-      onDownloadReport={() => undefined}
-      onDismissDownloadNotice={() => undefined}
-      onEraseHistory={() => undefined}
-      onEraseReport={() => undefined}
-      onCancelReport={() => undefined}
-    />,
+  return renderToStaticMarkup(renderDetailElement({ ...baseState, ...overrides }));
+}
+
+function panelElements(state: SessionState): ReactElement[] {
+  const detail = SessionDetail({ state, ...noopHandlers });
+  const panelsContainer = Children.toArray(detail.props.children).find(
+    (child): child is ReactElement<{ children: ReactNode }> =>
+      isValidElement(child) && child.type === "div",
   );
+  if (panelsContainer === undefined) {
+    throw new Error("SessionDetail did not render the panels container");
+  }
+  return Children.toArray(panelsContainer.props.children).filter(isValidElement);
 }
 
 describe("SessionDetail chat and report panels", () => {
@@ -53,6 +71,30 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).not.toMatch(/disabled=""[^>]*>Erase History/);
     expect(html).toContain("No report yet.");
     expect(html).toContain('data-report-view="empty"');
+  });
+
+  it("keeps one chat and one report panel across session switches", () => {
+    const sessions = [
+      { id: "s1", title: "One", createdAt: "2026-11-07T00:00:00Z" },
+      { id: "s2", title: "Two", createdAt: "2026-11-07T00:00:00Z" },
+      { id: "s3", title: "Three", createdAt: "2026-11-07T00:00:00Z" },
+    ];
+
+    for (const activeSessionId of ["s1", "s2", "s3"]) {
+      const state = { ...baseState, sessions, activeSessionId };
+      const html = renderToStaticMarkup(renderDetailElement(state));
+      expect(html.match(/aria-label="Chat"/g) ?? []).toHaveLength(1);
+      expect(html.match(/aria-label="Report"/g) ?? []).toHaveLength(1);
+
+      const [chat, report] = panelElements(state);
+      expect(chat.type).toBe(ChatPanel);
+      expect(report.type).toBe(ReportPanel);
+      const chatKey = String(chat.key);
+      const reportKey = String(report.key);
+      expect(chatKey).toContain(`chat-${activeSessionId}`);
+      expect(reportKey).toContain(`report-${activeSessionId}`);
+      expect(chatKey).not.toBe(reportKey);
+    }
   });
 
   it("disables both erase actions when there is no history and no report", () => {
