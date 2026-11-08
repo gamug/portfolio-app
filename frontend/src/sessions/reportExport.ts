@@ -54,10 +54,12 @@ export function buildReportHtml(
   return template.replaceAll("__REPORT_META__", meta).replaceAll("__REPORT_DATA__", data);
 }
 
+function withoutScriptContents(html: string): string {
+  return html.replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1");
+}
+
 function withoutInlineCodeContents(html: string): string {
-  return html
-    .replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1")
-    .replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/gi, "$1");
+  return withoutScriptContents(html).replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/gi, "$1");
 }
 
 function hasExternalCssUrl(css: string): boolean {
@@ -72,9 +74,9 @@ export function hasExternalReferences(html: string): boolean {
   const styleAttributes = [...shell.matchAll(/(?<![\w-])style\s*=\s*["']([^"']*)["']/gi)].map(
     (match) => match[1] ?? "",
   );
-  const styleBlocks = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map(
-    (match) => match[1] ?? "",
-  );
+  const styleBlocks = [
+    ...withoutScriptContents(html).matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi),
+  ].map((match) => match[1] ?? "");
   return [...styleAttributes, ...styleBlocks].some(hasExternalCssUrl);
 }
 

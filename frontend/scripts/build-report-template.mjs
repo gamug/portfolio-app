@@ -25,10 +25,12 @@ function assetPath(url) {
 // Keep this check in sync with hasExternalReferences in
 // frontend/src/sessions/reportExport.ts: it must reject real resources but
 // ignore URLs that are only documentation text inside the bundled JavaScript.
+function withoutScriptContents(html) {
+  return html.replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1");
+}
+
 function withoutInlineCodeContents(html) {
-  return html
-    .replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1")
-    .replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/gi, "$1");
+  return withoutScriptContents(html).replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/gi, "$1");
 }
 
 function hasExternalCssUrl(css) {
@@ -43,9 +45,9 @@ function hasExternalReferences(html) {
   const styleAttributes = [...shell.matchAll(/(?<![\w-])style\s*=\s*["']([^"']*)["']/gi)].map(
     (match) => match[1] ?? "",
   );
-  const styleBlocks = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map(
-    (match) => match[1] ?? "",
-  );
+  const styleBlocks = [
+    ...withoutScriptContents(html).matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi),
+  ].map((match) => match[1] ?? "");
   return [...styleAttributes, ...styleBlocks].some(hasExternalCssUrl);
 }
 

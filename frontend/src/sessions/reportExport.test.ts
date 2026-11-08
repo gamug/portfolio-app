@@ -121,6 +121,11 @@ describe("report export", () => {
       "const b = 'Action([@OpenUrl(\"https://example.com\"), ...';</script>";
     expect(hasExternalReferences(documentation)).toBe(false);
     expect(hasExternalReferences('<div>@OpenUrl("https://example.com")</div>')).toBe(false);
+    expect(
+      hasExternalReferences(
+        '<script>const x = "<style>body{background:url(https://x/y.png)}</style>";</script>',
+      ),
+    ).toBe(false);
 
     const reportText = 'root = Card([text])\ntext = TextContent("@OpenUrl(https://example.com)")';
     const html = buildReportHtml(TEMPLATE, "Q3 sales", report(reportText), new Date(2026, 10, 5));
