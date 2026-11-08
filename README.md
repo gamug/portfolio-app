@@ -48,6 +48,8 @@ pnpm dev
 
 Open <http://localhost:5173>. In VS Code, if the browser cannot reach the page, open the **Ports** tab and use **Open in Browser** for port 5173.
 
+The first `pnpm dev` (and every `pnpm build`) builds the offline report template `public/report-template.html` before starting Vite. It takes a few seconds and is about 3.7 MB; it is generated locally and ignored by Git.
+
 ### Troubleshooting
 
 - **Blank page or "Waiting for localhost":** Vite was listening on IPv6 only. `server.host: true` in `frontend/vite.config.ts` makes it listen on `0.0.0.0`; restart `pnpm dev`.
@@ -56,11 +58,11 @@ Open <http://localhost:5173>. In VS Code, if the browser cannot reach the page, 
 
 ### What works today
 
-Sessions can be created, renamed and deleted with confirmation. The chat panel asks a question, streams the raw answer, then reloads and shows the stored answer as readable text; the OpenUI chart sits behind a **Show chart** toggle so the text stays the main content. Each pair has a relevance toggle and a single-pair delete action. The report panel sits beside the chat: **Generate Report** streams progress and the report, **Cancel** stops the request and keeps the previous report, and a failed generation keeps the partial report flagged incomplete. The report is shown again when the session is selected. A theme control in the header switches between system, light and dark, follows the system setting by default and remembers the choice.
+Sessions can be created, renamed and deleted with confirmation. The chat panel asks a question, streams the raw answer, then reloads and shows the stored answer as readable text; the OpenUI chart sits behind a **Show chart** toggle so the text stays the main content. Each pair has a relevance toggle and a single-pair delete action. The report panel sits beside the chat: **Generate Report** streams progress and the report, **Cancel** stops the request and keeps the previous report, and a failed generation keeps the partial report flagged incomplete. **Download Report** saves the current report as one self-contained HTML file named from the session and the date that opens offline. The report is shown again when the session is selected. A theme control in the header switches between system, light and dark, follows the system setting by default and remembers the choice.
 
 ### What is not built yet
 
-There is no report download or erase action yet, and manual report editing is out of the MVP. The report download is TASK-030 and the erase actions are WI-013.
+There are no erase actions yet; the erase actions are WI-013. Manual report editing is out of the MVP.
 
 ## Commands
 

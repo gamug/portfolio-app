@@ -296,3 +296,14 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added Vitest coverage for answer-text extraction and rendering, the **Show chart** toggle and the existing flows.
 - No dependency or schema change and no task checkbox change.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests (60 passed) and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-08 (report download)
+
+### TASK-030 — Implement the HTML export (WI-012, AC-FR026-01)
+
+- Added **Download Report** to the report panel for the active session, shown only when the session has a report. The browser builds one self-contained HTML file from the stored OpenUI Lang and downloads it with a filesystem-safe `<session-name>-<YYYY-MM-DD>.html` name.
+- Chose a build-time inlined template plus a client-side download: `frontend/scripts/build-report-template.mjs` builds `frontend/report-export/` with Vite, inlines the renderer script and styles, and writes the git-ignored generated report template under the public directory. The template keeps the report data and metadata as JSON placeholders; the browser fills them at download time. The build fails if the template has any external reference.
+- The exported page follows the system light or dark theme with the OpenUI theme variables and has no external resources, so it opens offline.
+- Changed the report skill 2 prompt to require a one-line context subtitle from the plan's scope (for example the run label and windows, or the main question topic) and never the literal word "Report".
+- Tests cover filename sanitization, the zero-external-reference check, report content, escaping a closing script sequence and the download trigger. No dependency or schema change and no real LLM or GraphDB call.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests (70 passed) and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.

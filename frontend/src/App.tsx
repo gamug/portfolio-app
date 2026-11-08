@@ -7,6 +7,7 @@ import { createChatClient } from "./sessions/chatClient";
 import { createPairClient } from "./sessions/pairClient";
 import { createRelevanceClient } from "./sessions/relevanceClient";
 import { createReportClient } from "./sessions/reportClient";
+import { createReportExporter } from "./sessions/reportExport";
 import { useSessionController } from "./sessions/useSessionController";
 
 export function App() {
@@ -19,6 +20,7 @@ export function App() {
         createRelevanceClient("/api/threads"),
         createPairClient("/api/threads"),
         createChatClient("/api"),
+        createReportExporter(),
       ),
     [storage],
   );
@@ -49,6 +51,7 @@ export function App() {
         onDeletePair={(pairId) => void controller.deletePair(pairId, true)}
         onSendQuestion={(question) => void controller.sendQuestion(question)}
         onGenerateReport={() => void controller.generateReport()}
+        onDownloadReport={() => void controller.downloadReport()}
         onCancelReport={() => controller.cancelReportGeneration()}
       />
     </div>
