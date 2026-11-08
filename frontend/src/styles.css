@@ -309,6 +309,24 @@ select {
   flex-shrink: 0;
 }
 
+.panel-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: var(--app-surface-muted);
+  color: var(--app-text);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.panel-notice button {
+  padding: 0 0.35rem;
+}
+
 .chat-panel__stream {
   display: grid;
   gap: 0.5rem;

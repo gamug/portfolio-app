@@ -59,6 +59,7 @@ export type SessionState = {
   reportProgress: ReportStage | null;
   reportStream: string;
   reportError: string | null;
+  downloadNotice: string | null;
 };
 
 const LOAD_ERROR = "Could not load sessions. Please try again.";
@@ -72,6 +73,7 @@ const CHAT_ERROR = "Could not send the question. Please try again.";
 const REPORT_ERROR = "Could not generate the report. Please try again.";
 const REPORT_STREAM_ERROR = "The report stream ended unexpectedly. Please try again.";
 const DOWNLOAD_ERROR = "Could not download the report. Please try again.";
+export const NO_REPORT_MESSAGE = "No report is stored yet. Generate a report first.";
 
 function newUserMessage(): UserMessage {
   const id =
@@ -90,6 +92,7 @@ function idleStreamingState(): Pick<
   | "reportProgress"
   | "reportStream"
   | "reportError"
+  | "downloadNotice"
 > {
   return {
     isSendingChat: false,
@@ -99,6 +102,7 @@ function idleStreamingState(): Pick<
     reportProgress: null,
     reportStream: "",
     reportError: null,
+    downloadNotice: null,
   };
 }
 
@@ -448,6 +452,7 @@ export class SessionController {
       reportProgress: "planning",
       reportStream: "",
       reportError: null,
+      downloadNotice: null,
     });
     try {
       for await (const event of this.reports.generateReport(sessionId, controller.signal)) {
@@ -469,6 +474,7 @@ export class SessionController {
             reportProgress: null,
             reportStream: "",
             reportError: null,
+            downloadNotice: null,
           });
           return;
         }
@@ -482,6 +488,7 @@ export class SessionController {
           reportProgress: null,
           reportStream: "",
           reportError: event.error,
+          downloadNotice: null,
         });
         return;
       }
@@ -498,6 +505,7 @@ export class SessionController {
         reportProgress: null,
         reportStream: "",
         reportError: REPORT_STREAM_ERROR,
+        downloadNotice: null,
       });
     } catch (error) {
       if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
@@ -513,6 +521,7 @@ export class SessionController {
         reportProgress: null,
         reportStream: "",
         reportError: errorText(error, REPORT_ERROR),
+        downloadNotice: null,
       });
     } finally {
       if (this.reportAbort === controller) {
@@ -546,21 +555,26 @@ export class SessionController {
 
   async downloadReport(): Promise<void> {
     const session = this.state.sessions.find((item) => item.id === this.state.activeSessionId);
-    if (
-      session === undefined ||
-      this.state.report === null ||
-      this.state.isLoading ||
-      this.state.isGeneratingReport ||
-      this.state.isSendingChat
-    ) {
+    if (session === undefined) {
       return;
     }
-    this.setState({ reportError: null });
+    if (this.state.report === null) {
+      this.setState({ downloadNotice: NO_REPORT_MESSAGE });
+      return;
+    }
+    if (this.state.isLoading || this.state.isGeneratingReport || this.state.isSendingChat) {
+      return;
+    }
+    this.setState({ downloadNotice: null, reportError: null });
     try {
       await this.exporter.download(session.title, this.state.report);
     } catch {
       this.setState({ reportError: DOWNLOAD_ERROR });
     }
+  }
+
+  dismissDownloadNotice(): void {
+    this.setState({ downloadNotice: null });
   }
 
   dismissError(): void {

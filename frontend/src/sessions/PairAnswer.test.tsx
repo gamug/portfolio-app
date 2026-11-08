@@ -19,6 +19,7 @@ const state: SessionState = {
   reportProgress: null,
   reportStream: "",
   reportError: null,
+  downloadNotice: null,
 };
 
 const message: Message = {

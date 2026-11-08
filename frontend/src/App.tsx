@@ -52,6 +52,7 @@ export function App() {
         onSendQuestion={(question) => void controller.sendQuestion(question)}
         onGenerateReport={() => void controller.generateReport()}
         onDownloadReport={() => void controller.downloadReport()}
+        onDismissDownloadNotice={() => controller.dismissDownloadNotice()}
         onCancelReport={() => controller.cancelReportGeneration()}
       />
     </div>

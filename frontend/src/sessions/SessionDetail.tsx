@@ -10,6 +10,7 @@ type SessionDetailProps = {
   onSendQuestion: (question: string) => void;
   onGenerateReport: () => void;
   onDownloadReport: () => void;
+  onDismissDownloadNotice: () => void;
   onCancelReport: () => void;
 };
 
@@ -20,6 +21,7 @@ export function SessionDetail({
   onSendQuestion,
   onGenerateReport,
   onDownloadReport,
+  onDismissDownloadNotice,
   onCancelReport,
 }: SessionDetailProps) {
   const active = state.sessions.find((session) => session.id === state.activeSessionId);
@@ -51,6 +53,7 @@ export function SessionDetail({
           state={state}
           onGenerate={onGenerateReport}
           onDownload={onDownloadReport}
+          onDismissDownloadNotice={onDismissDownloadNotice}
           onCancel={onCancelReport}
         />
       </div>

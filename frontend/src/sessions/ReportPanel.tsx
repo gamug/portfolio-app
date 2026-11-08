@@ -6,6 +6,7 @@ type ReportPanelProps = {
   state: SessionState;
   onGenerate: () => void;
   onDownload: () => void;
+  onDismissDownloadNotice: () => void;
   onCancel: () => void;
 };
 
@@ -14,8 +15,16 @@ const PROGRESS_LABELS = {
   rendering: "Rendering the report…",
 } as const;
 
-export function ReportPanel({ state, onGenerate, onDownload, onCancel }: ReportPanelProps) {
+export function ReportPanel({
+  state,
+  onGenerate,
+  onDownload,
+  onDismissDownloadNotice,
+  onCancel,
+}: ReportPanelProps) {
   const controlsDisabled = state.isLoading || state.isGeneratingReport || state.isSendingChat;
+  const downloadDisabled =
+    state.isLoading || (state.report !== null && (state.isGeneratingReport || state.isSendingChat));
   const progress =
     state.reportProgress === null
       ? PROGRESS_LABELS.planning
@@ -36,11 +45,9 @@ export function ReportPanel({ state, onGenerate, onDownload, onCancel }: ReportP
           <button type="button" onClick={onGenerate} disabled={controlsDisabled}>
             {state.report === null ? "Generate Report" : "Regenerate Report"}
           </button>
-          {state.report !== null && (
-            <button type="button" onClick={onDownload} disabled={controlsDisabled}>
-              Download Report
-            </button>
-          )}
+          <button type="button" onClick={onDownload} disabled={downloadDisabled}>
+            Download Report
+          </button>
           {state.isGeneratingReport && (
             <button type="button" onClick={onCancel}>
               Cancel
@@ -57,6 +64,14 @@ export function ReportPanel({ state, onGenerate, onDownload, onCancel }: ReportP
       {state.reportError !== null && (
         <div className="panel-error" role="alert">
           {state.reportError}
+        </div>
+      )}
+      {state.report === null && state.downloadNotice !== null && (
+        <div className="panel-notice" role="status">
+          <span>{state.downloadNotice}</span>
+          <button type="button" onClick={onDismissDownloadNotice} aria-label="Dismiss message">
+            ×
+          </button>
         </div>
       )}
 

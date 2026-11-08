@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026`, `TASK-027`, `TASK-028`, `TASK-029` and `TASK-030` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026`, `TASK-027`, `TASK-028`, `TASK-029`, `TASK-030` and `TASK-031` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -308,7 +308,7 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ## WI-012 — Report download
 
-- [ ] **Done** (checked only when every task below is checked)
+- [x] **Done** (checked only when every task below is checked)
 
 ### TASK-030 — Implement the HTML export
 
@@ -321,11 +321,12 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 
 ### TASK-031 — Handle download with no report
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-012
 - **Depends on:** TASK-030
 - **Acceptance criteria:** AC-FR026-02
 - **Action:** Show a message telling the analyst to generate a report first and download nothing.
+- **Result (2026-11-08):** **Download Report** is now always visible in the report panel. When the active session has no report, including while a first report is being generated, pressing it calls no export and shows the dismissible message "No report is stored yet. Generate a report first." The message disappears when a report exists or when the session changes. When a report exists, the TASK-030 download behavior is unchanged. Tests cover no report with no download call and the message, report present with a successful download, the message during a first generation, dismissal, session change and the message being hidden once a report exists. No dependency or schema change and no real LLM or GraphDB call.
 
 ## WI-013 — Erase actions
 

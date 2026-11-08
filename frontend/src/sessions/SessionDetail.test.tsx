@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { SessionDetail } from "./SessionDetail";
-import type { SessionState } from "./SessionController";
+import { NO_REPORT_MESSAGE, type SessionState } from "./SessionController";
 
 const baseState: SessionState = {
   sessions: [{ id: "s1", title: "Session", createdAt: "2026-11-07T00:00:00Z" }],
@@ -18,6 +18,7 @@ const baseState: SessionState = {
   reportProgress: null,
   reportStream: "",
   reportError: null,
+  downloadNotice: null,
 };
 
 function renderDetail(overrides: Partial<SessionState> = {}): string {
@@ -29,6 +30,7 @@ function renderDetail(overrides: Partial<SessionState> = {}): string {
       onSendQuestion={() => undefined}
       onGenerateReport={() => undefined}
       onDownloadReport={() => undefined}
+      onDismissDownloadNotice={() => undefined}
       onCancelReport={() => undefined}
     />,
   );
@@ -42,9 +44,30 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain('aria-label="Question"');
     expect(html).toContain("Send");
     expect(html).toContain("Generate Report");
-    expect(html).not.toContain("Download Report");
+    expect(html).toContain("Download Report");
     expect(html).toContain("No report yet.");
     expect(html).toContain('data-report-view="empty"');
+  });
+
+  it("shows a dismissible no-report message", () => {
+    const html = renderDetail({ downloadNotice: NO_REPORT_MESSAGE });
+    expect(html).toContain(NO_REPORT_MESSAGE);
+    expect(html).toContain('aria-label="Dismiss message"');
+    expect(html).toContain("Download Report");
+  });
+
+  it("hides the no-report message when a report exists", () => {
+    const html = renderDetail({
+      downloadNotice: NO_REPORT_MESSAGE,
+      report: {
+        openui_lang: "root = Card([])",
+        incomplete: false,
+        created_at: "2026-11-07T00:00:00Z",
+        updated_at: "2026-11-07T00:00:00Z",
+      },
+    });
+    expect(html).not.toContain(NO_REPORT_MESSAGE);
+    expect(html).toContain("Download Report");
   });
 
   it("renders one relevance toggle per answer with its stored state", () => {
@@ -66,6 +89,8 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain("Report generation in progress; the chat is disabled.");
     expect(html).toMatch(/aria-label="Question"[^>]*disabled/);
     expect(html).toMatch(/disabled=""[^>]*>Send/);
+    expect(html).toContain("Download Report");
+    expect(html).not.toMatch(/disabled=""[^>]*>Download Report/);
     expect(html).toContain('data-report-view="stream"');
   });
 
