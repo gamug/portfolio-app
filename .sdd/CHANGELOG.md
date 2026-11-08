@@ -348,3 +348,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Client rendering with `react-dom/client` is not possible in the current test setup: Vitest runs in the `node` environment and neither `jsdom` nor Testing Library is a dependency. The test inspects the React element tree returned by `SessionDetail` instead; no dependency was added.
 - No API call, dependency or schema change.
 - Verification: frontend tests, ESLint, Prettier and `tsc --noEmit` pass.
+
+## 2026-11-08 (session list labels)
+
+### TASK-025 follow-up — Give session names a full row in the sidebar (WI-009, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010)
+
+- Session names now take a full-width row and wrap to at most two lines with an ellipsis; the select button has a `title` with the full name so hovering shows it.
+- **Rename** and **Delete** moved to a smaller second-row action group, so they no longer compete with the name for horizontal space.
+- Widened the sidebar from 220–240 px to 260–280 px. The existing `max-width: 720px` single-column layout is unchanged, and the surface, border, text and active-highlight colours still use the light/dark theme tokens.
+- No behaviour, API, dependency or schema change; the active-session highlight, rename form, delete confirmation and every `aria-label` are unchanged. No test change was needed because the session logic is untouched.
+- Verification: frontend tests (89 passed), ESLint, Prettier and `tsc --noEmit` pass.

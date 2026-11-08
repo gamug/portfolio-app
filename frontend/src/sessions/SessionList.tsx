@@ -87,27 +87,30 @@ export function SessionList({
                   <button
                     type="button"
                     className="session-list__select"
+                    title={session.title}
                     onClick={() => onSelect(session.id)}
                   >
                     {session.title}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => startRename(session.id, session.title)}
-                    aria-label={`Rename ${session.title}`}
-                  >
-                    Rename
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirmingId(session.id);
-                      setEditingId(null);
-                    }}
-                    aria-label={`Delete ${session.title}`}
-                  >
-                    Delete
-                  </button>
+                  <div className="session-list__actions">
+                    <button
+                      type="button"
+                      onClick={() => startRename(session.id, session.title)}
+                      aria-label={`Rename ${session.title}`}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmingId(session.id);
+                        setEditingId(null);
+                      }}
+                      aria-label={`Delete ${session.title}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               )}
 
