@@ -31,6 +31,8 @@ function renderDetail(overrides: Partial<SessionState> = {}): string {
       onGenerateReport={() => undefined}
       onDownloadReport={() => undefined}
       onDismissDownloadNotice={() => undefined}
+      onEraseHistory={() => undefined}
+      onEraseReport={() => undefined}
       onCancelReport={() => undefined}
     />,
   );
@@ -45,8 +47,18 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain("Send");
     expect(html).toContain("Generate Report");
     expect(html).toContain("Download Report");
+    expect(html).toContain("Erase History");
+    expect(html).toContain("Erase Report");
+    expect(html).toMatch(/disabled=""[^>]*>Erase Report/);
+    expect(html).not.toMatch(/disabled=""[^>]*>Erase History/);
     expect(html).toContain("No report yet.");
     expect(html).toContain('data-report-view="empty"');
+  });
+
+  it("disables both erase actions when there is no history and no report", () => {
+    const html = renderDetail({ messages: [], relevance: {} });
+    expect(html).toMatch(/disabled=""[^>]*>Erase History/);
+    expect(html).toMatch(/disabled=""[^>]*>Erase Report/);
   });
 
   it("shows a dismissible no-report message", () => {
@@ -91,6 +103,8 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toMatch(/disabled=""[^>]*>Send/);
     expect(html).toContain("Download Report");
     expect(html).not.toMatch(/disabled=""[^>]*>Download Report/);
+    expect(html).toMatch(/disabled=""[^>]*>Erase History/);
+    expect(html).toMatch(/disabled=""[^>]*>Erase Report/);
     expect(html).toContain('data-report-view="stream"');
   });
 
@@ -108,6 +122,8 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain("The report could not be generated.");
     expect(html).toContain("Regenerate Report");
     expect(html).toContain("Download Report");
+    expect(html).not.toMatch(/disabled=""[^>]*>Erase History/);
+    expect(html).not.toMatch(/disabled=""[^>]*>Erase Report/);
     expect(html).toContain('data-report-view="current"');
   });
 

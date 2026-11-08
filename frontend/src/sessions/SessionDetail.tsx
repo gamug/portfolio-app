@@ -11,6 +11,8 @@ type SessionDetailProps = {
   onGenerateReport: () => void;
   onDownloadReport: () => void;
   onDismissDownloadNotice: () => void;
+  onEraseHistory: () => void;
+  onEraseReport: () => void;
   onCancelReport: () => void;
 };
 
@@ -22,6 +24,8 @@ export function SessionDetail({
   onGenerateReport,
   onDownloadReport,
   onDismissDownloadNotice,
+  onEraseHistory,
+  onEraseReport,
   onCancelReport,
 }: SessionDetailProps) {
   const active = state.sessions.find((session) => session.id === state.activeSessionId);
@@ -50,10 +54,13 @@ export function SessionDetail({
           onSendQuestion={onSendQuestion}
         />
         <ReportPanel
+          key={state.activeSessionId ?? "none"}
           state={state}
           onGenerate={onGenerateReport}
           onDownload={onDownloadReport}
           onDismissDownloadNotice={onDismissDownloadNotice}
+          onEraseHistory={onEraseHistory}
+          onEraseReport={onEraseReport}
           onCancel={onCancelReport}
         />
       </div>

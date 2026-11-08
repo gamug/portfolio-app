@@ -4,6 +4,7 @@ import {
   NO_REPORT_MESSAGE,
   SessionController,
   type ChatClient,
+  type EraseClient,
   type PairClient,
   type RelevanceClient,
   type ReportClient,
@@ -76,6 +77,23 @@ class FakeReports implements ReportClient {
 
   generateReport(sessionId: string, signal?: AbortSignal): AsyncIterable<ReportStreamEvent> {
     return this.generateImpl(sessionId, signal);
+  }
+}
+
+class FakeErase implements EraseClient {
+  historyCalls: string[] = [];
+  reportCalls: string[] = [];
+  failHistory = false;
+  failReport = false;
+
+  async eraseHistory(sessionId: string): Promise<void> {
+    if (this.failHistory) throw new Error("erase history failed");
+    this.historyCalls.push(sessionId);
+  }
+
+  async eraseReport(sessionId: string): Promise<void> {
+    if (this.failReport) throw new Error("erase report failed");
+    this.reportCalls.push(sessionId);
   }
 }
 
@@ -165,6 +183,7 @@ function makeController() {
   const pairs = new FakePairs();
   const chats = new FakeChats();
   const exporter = new FakeExporter();
+  const eraser = new FakeErase();
   return {
     storage,
     reports,
@@ -172,7 +191,8 @@ function makeController() {
     pairs,
     chats,
     exporter,
-    controller: new SessionController(storage, reports, relevance, pairs, chats, exporter),
+    eraser,
+    controller: new SessionController(storage, reports, relevance, pairs, chats, exporter, eraser),
   };
 }
 
@@ -751,5 +771,122 @@ describe("SessionController report download", () => {
 
     expect(exporter.calls).toEqual([]);
     expect(controller.getSnapshot().reportError).toContain("download");
+  });
+});
+
+describe("SessionController erase actions", () => {
+  it("erases the active session history and report after confirmation", async () => {
+    const { storage, reports, relevance, eraser, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [
+      message("q1", "user", "Question"),
+      message("p1", "assistant", "root = Card([])"),
+    ]);
+    relevance.values.set("p1", false);
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+
+    await controller.eraseHistory(true);
+
+    const state = controller.getSnapshot();
+    expect(eraser.historyCalls).toEqual(["s1"]);
+    expect(state.messages).toEqual([]);
+    expect(state.report).toBeNull();
+    expect(state.relevance).toEqual({});
+    expect(state.error).toBeNull();
+    expect(state.isLoading).toBe(false);
+  });
+
+  it("does nothing when erasing history is declined", async () => {
+    const { storage, reports, eraser, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+    const before = controller.getSnapshot();
+
+    await controller.eraseHistory(false);
+
+    expect(eraser.historyCalls).toEqual([]);
+    expect(controller.getSnapshot().messages).toEqual(before.messages);
+    expect(controller.getSnapshot().report).toEqual(before.report);
+  });
+
+  it("leaves the visible state unchanged when erasing history fails", async () => {
+    const { storage, reports, relevance, eraser, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    relevance.values.set("p1", false);
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+    const before = controller.getSnapshot();
+    eraser.failHistory = true;
+
+    await controller.eraseHistory(true);
+
+    const after = controller.getSnapshot();
+    expect(after.messages).toEqual(before.messages);
+    expect(after.report).toEqual(before.report);
+    expect(after.relevance).toEqual(before.relevance);
+    expect(after.error).toContain("erase the history");
+  });
+
+  it("erases the report but keeps the history after confirmation", async () => {
+    const { storage, reports, relevance, eraser, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    relevance.values.set("p1", false);
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+
+    await controller.eraseReport(true);
+
+    const state = controller.getSnapshot();
+    expect(eraser.reportCalls).toEqual(["s1"]);
+    expect(state.report).toBeNull();
+    expect(state.messages).toEqual([message("p1", "assistant", "root = Card([])")]);
+    expect(state.relevance).toEqual({ p1: false });
+    expect(state.error).toBeNull();
+    expect(state.isLoading).toBe(false);
+  });
+
+  it("does nothing when erasing the report is declined", async () => {
+    const { storage, reports, eraser, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+    const before = controller.getSnapshot();
+
+    await controller.eraseReport(false);
+
+    expect(eraser.reportCalls).toEqual([]);
+    expect(controller.getSnapshot().report).toEqual(before.report);
+  });
+
+  it("leaves the visible state unchanged when erasing the report fails", async () => {
+    const { storage, reports, eraser, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+    const before = controller.getSnapshot();
+    eraser.failReport = true;
+
+    await controller.eraseReport(true);
+
+    const after = controller.getSnapshot();
+    expect(after.report).toEqual(before.report);
+    expect(after.messages).toEqual(before.messages);
+    expect(after.error).toContain("erase the report");
+  });
+
+  it("does not call the backend when there is no report", async () => {
+    const { storage, eraser, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+
+    await controller.eraseReport(true);
+
+    expect(eraser.reportCalls).toEqual([]);
   });
 });

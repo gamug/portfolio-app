@@ -4,6 +4,7 @@ import { SessionController } from "./sessions/SessionController";
 import { SessionDetail } from "./sessions/SessionDetail";
 import { SessionList } from "./sessions/SessionList";
 import { createChatClient } from "./sessions/chatClient";
+import { createEraseClient } from "./sessions/eraseClient";
 import { createPairClient } from "./sessions/pairClient";
 import { createRelevanceClient } from "./sessions/relevanceClient";
 import { createReportClient } from "./sessions/reportClient";
@@ -21,6 +22,7 @@ export function App() {
         createPairClient("/api/threads"),
         createChatClient("/api"),
         createReportExporter(),
+        createEraseClient("/api/threads"),
       ),
     [storage],
   );
@@ -53,6 +55,8 @@ export function App() {
         onGenerateReport={() => void controller.generateReport()}
         onDownloadReport={() => void controller.downloadReport()}
         onDismissDownloadNotice={() => controller.dismissDownloadNotice()}
+        onEraseHistory={() => void controller.eraseHistory(true)}
+        onEraseReport={() => void controller.eraseReport(true)}
         onCancelReport={() => controller.cancelReportGeneration()}
       />
     </div>

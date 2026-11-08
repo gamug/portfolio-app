@@ -39,6 +39,11 @@ export interface ReportExporter {
   download(sessionName: string, report: SessionReport): Promise<void>;
 }
 
+export interface EraseClient {
+  eraseHistory(sessionId: string): Promise<void>;
+  eraseReport(sessionId: string): Promise<void>;
+}
+
 export type ChatStream = {
   question: string;
   answer: string;
@@ -73,6 +78,8 @@ const CHAT_ERROR = "Could not send the question. Please try again.";
 const REPORT_ERROR = "Could not generate the report. Please try again.";
 const REPORT_STREAM_ERROR = "The report stream ended unexpectedly. Please try again.";
 const DOWNLOAD_ERROR = "Could not download the report. Please try again.";
+const ERASE_HISTORY_ERROR = "Could not erase the history. Please try again.";
+const ERASE_REPORT_ERROR = "Could not erase the report. Please try again.";
 export const NO_REPORT_MESSAGE = "No report is stored yet. Generate a report first.";
 
 function newUserMessage(): UserMessage {
@@ -132,6 +139,7 @@ export class SessionController {
     private readonly pairs: PairClient,
     private readonly chats: ChatClient,
     private readonly exporter: ReportExporter,
+    private readonly eraser: EraseClient,
   ) {}
 
   subscribe = (listener: () => void): (() => void) => {
@@ -570,6 +578,69 @@ export class SessionController {
       await this.exporter.download(session.title, this.state.report);
     } catch {
       this.setState({ reportError: DOWNLOAD_ERROR });
+    }
+  }
+
+  async eraseHistory(confirmed: boolean): Promise<void> {
+    if (
+      !confirmed ||
+      this.state.isLoading ||
+      this.state.isGeneratingReport ||
+      this.state.isSendingChat
+    ) {
+      return;
+    }
+    const sessionId = this.state.activeSessionId;
+    if (sessionId === null) {
+      return;
+    }
+    this.setState({ isLoading: true, error: null });
+    try {
+      await this.eraser.eraseHistory(sessionId);
+      this.setState({
+        messages: [],
+        report: null,
+        relevance: {},
+        chatStream: null,
+        chatError: null,
+        reportProgress: null,
+        reportStream: "",
+        reportError: null,
+        downloadNotice: null,
+        isLoading: false,
+      });
+    } catch {
+      this.setState({ isLoading: false, error: ERASE_HISTORY_ERROR });
+    }
+  }
+
+  async eraseReport(confirmed: boolean): Promise<void> {
+    if (
+      !confirmed ||
+      this.state.isLoading ||
+      this.state.isGeneratingReport ||
+      this.state.isSendingChat ||
+      this.state.report === null
+    ) {
+      return;
+    }
+    const sessionId = this.state.activeSessionId;
+    if (sessionId === null) {
+      return;
+    }
+    this.setState({ isLoading: true, error: null });
+    try {
+      await this.eraser.eraseReport(sessionId);
+      this.setState({
+        report: null,
+        reportProgress: null,
+        reportStream: "",
+        reportError: null,
+        downloadNotice: null,
+        isLoading: false,
+      });
+    } catch {
+      this.setState({ isLoading: false, error: ERASE_REPORT_ERROR });
     }
   }
 
