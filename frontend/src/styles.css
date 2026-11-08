@@ -327,6 +327,20 @@ select {
   padding: 0 0.35rem;
 }
 
+.panel-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: var(--app-danger-bg);
+  color: var(--app-danger-text);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
 .chat-panel__stream {
   display: grid;
   gap: 0.5rem;

@@ -327,3 +327,14 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests cover no report with no download call and the message, report present with a successful download, the message during a first generation, dismissal, session change and hiding the message once a report exists.
 - No dependency or schema change and no real LLM or GraphDB call.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-08 (erase actions)
+
+### TASK-032 — Implement Erase History and Erase Report (WI-013, AC-FR028-01, AC-FR028-02, AC-FR028-04, AC-FR028-05)
+
+- Added `DELETE /api/threads/{thread_id}/history` to erase all pairs and the report of one session, and `DELETE /api/threads/{thread_id}/report` to erase only its report. Both are scoped to the given session and use the existing SQLite tables; relevance rows cascade with their pairs. Missing sessions return 404 and erasing a missing report is idempotent.
+- Added **Erase History** and **Erase Report** to the report panel with an explicit confirmation for each. Confirming history clears the active session's pairs, relevance and report; confirming report clears only the report and keeps the pairs. Declining changes nothing; failure shows the existing session error and leaves the visible state unchanged.
+- Both buttons are disabled when the session has no history and no report; **Erase Report** is also disabled without a report; both are disabled while a report is generated.
+- Tests use a temporary SQLite database for other sessions unchanged, report-only keeping pairs, missing sessions and idempotent report erase, and Vitest for confirm, decline, failure and disabled states.
+- No dependency or schema change and no real LLM or GraphDB call.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.

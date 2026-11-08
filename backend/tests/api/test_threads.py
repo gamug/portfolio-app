@@ -214,3 +214,80 @@ def test_cannot_delete_a_pair_through_another_session(tmp_path: Path) -> None:
         response = client.delete(f"/api/threads/{first['id']}/pairs/{pair.id}")
         assert response.status_code == 404
         assert asyncio.run(store.list_for_session(second["id"])) == [pair]
+
+
+def test_erase_history_removes_pairs_and_report_of_only_that_session(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        first = client.post("/api/threads/create", json={"messages": []}).json()
+        second = client.post("/api/threads/create", json={"messages": []}).json()
+        first_pair = _pair(first["id"])
+        second_pair = _pair(second["id"])
+        asyncio.run(store.save(first_pair))
+        asyncio.run(store.save(second_pair))
+        asyncio.run(store.set_report(first["id"], "root = Card([first])", False))
+        asyncio.run(store.set_report(second["id"], "root = Card([second])", False))
+
+        response = client.delete(f"/api/threads/{first['id']}/history")
+
+        assert response.status_code == 204
+        assert client.get(f"/api/threads/get/{first['id']}").json() == []
+        assert client.get(f"/api/threads/{first['id']}/report").json() == {"report": None}
+        assert asyncio.run(store.list_for_session(first["id"])) == []
+        assert (
+            client.get(f"/api/threads/{first['id']}/pairs/{first_pair.id}/relevance").status_code
+            == 404
+        )
+        assert [
+            message["id"] for message in client.get(f"/api/threads/get/{second['id']}").json()
+        ] == [f"{second_pair.id}:question", second_pair.id]
+        assert (
+            client.get(f"/api/threads/{second['id']}/report").json()["report"]["openui_lang"]
+            == "root = Card([second])"
+        )
+
+
+def test_erase_report_keeps_the_pairs_and_other_sessions(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        first = client.post("/api/threads/create", json={"messages": []}).json()
+        second = client.post("/api/threads/create", json={"messages": []}).json()
+        first_pair = _pair(first["id"])
+        second_pair = _pair(second["id"])
+        asyncio.run(store.save(first_pair))
+        asyncio.run(store.save(second_pair))
+        asyncio.run(store.set_report(first["id"], "root = Card([first])", False))
+        asyncio.run(store.set_report(second["id"], "root = Card([second])", False))
+
+        response = client.delete(f"/api/threads/{first['id']}/report")
+
+        assert response.status_code == 204
+        assert client.get(f"/api/threads/{first['id']}/report").json() == {"report": None}
+        assert [
+            message["id"] for message in client.get(f"/api/threads/get/{first['id']}").json()
+        ] == [f"{first_pair.id}:question", first_pair.id]
+        assert asyncio.run(store.list_for_session(first["id"])) == [first_pair]
+        assert (
+            client.get(f"/api/threads/{second['id']}/report").json()["report"]["openui_lang"]
+            == "root = Card([second])"
+        )
+        assert [
+            message["id"] for message in client.get(f"/api/threads/get/{second['id']}").json()
+        ] == [f"{second_pair.id}:question", second_pair.id]
+
+
+@pytest.mark.parametrize("action", ["history", "report"])
+def test_erase_requires_an_existing_session(tmp_path: Path, action: str) -> None:
+    client, _store = _client(tmp_path)
+    with client:
+        response = client.delete(f"/api/threads/missing/{action}")
+    assert response.status_code == 404
+
+
+def test_erase_report_without_a_report_is_idempotent(tmp_path: Path) -> None:
+    client, _store = _client(tmp_path)
+    with client:
+        thread = client.post("/api/threads/create", json={"messages": []}).json()
+        response = client.delete(f"/api/threads/{thread['id']}/report")
+        assert response.status_code == 204
+        assert client.get(f"/api/threads/{thread['id']}/report").json() == {"report": None}

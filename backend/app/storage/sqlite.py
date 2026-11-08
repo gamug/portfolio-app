@@ -64,6 +64,12 @@ class SQLiteQuestionAnswerStore:
     async def delete_pair(self, session_id: str, pair_id: str) -> bool:
         return await asyncio.to_thread(self._delete_pair_sync, session_id, pair_id)
 
+    async def erase_history(self, session_id: str) -> None:
+        await asyncio.to_thread(self._erase_history_sync, session_id)
+
+    async def erase_report(self, session_id: str) -> None:
+        await asyncio.to_thread(self._erase_report_sync, session_id)
+
     def _save_sync(self, pair: QuestionAnswerPair) -> None:
         timestamp = pair.created_at
         with self.database.connect() as connection:
@@ -252,6 +258,24 @@ class SQLiteQuestionAnswerStore:
                 (pair_id, session_id),
             )
         return bool(result.rowcount)
+
+    def _erase_history_sync(self, session_id: str) -> None:
+        with self.database.connect() as connection, connection:
+            connection.execute(
+                "DELETE FROM question_answer_pairs WHERE session_id = ?",
+                (session_id,),
+            )
+            connection.execute(
+                "DELETE FROM reports WHERE session_id = ?",
+                (session_id,),
+            )
+
+    def _erase_report_sync(self, session_id: str) -> None:
+        with self.database.connect() as connection, connection:
+            connection.execute(
+                "DELETE FROM reports WHERE session_id = ?",
+                (session_id,),
+            )
 
     def _set_relevance_sync(
         self, session_id: str, pair_id: str, relevant: bool

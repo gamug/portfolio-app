@@ -58,11 +58,11 @@ The first `pnpm dev` (and every `pnpm build`) builds the offline report template
 
 ### What works today
 
-Sessions can be created, renamed and deleted with confirmation. The chat panel asks a question, streams the raw answer, then reloads and shows the stored answer as readable text; the OpenUI chart sits behind a **Show chart** toggle so the text stays the main content. Each pair has a relevance toggle and a single-pair delete action. The report panel sits beside the chat: **Generate Report** streams progress and the report, **Cancel** stops the request and keeps the previous report, and a failed generation keeps the partial report flagged incomplete. **Download Report** saves the current report as one self-contained HTML file named from the session and the date that opens offline. The report is shown again when the session is selected. A theme control in the header switches between system, light and dark, follows the system setting by default and remembers the choice.
+Sessions can be created, renamed and deleted with confirmation. The chat panel asks a question, streams the raw answer, then reloads and shows the stored answer as readable text; the OpenUI chart sits behind a **Show chart** toggle so the text stays the main content. Each pair has a relevance toggle and a single-pair delete action. The report panel sits beside the chat: **Generate Report** streams progress and the report, **Cancel** stops the request and keeps the previous report, and a failed generation keeps the partial report flagged incomplete. **Download Report** saves the current report as one self-contained HTML file named from the session and the date that opens offline. **Erase History** removes the active session's history and report after confirmation; **Erase Report** removes only the report. The report is shown again when the session is selected. A theme control in the header switches between system, light and dark, follows the system setting by default and remembers the choice.
 
 ### What is not built yet
 
-There are no erase actions yet; the erase actions are WI-013. Manual report editing is out of the MVP.
+Manual report editing is out of the MVP.
 
 ## Commands
 

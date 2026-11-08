@@ -148,6 +148,24 @@ async def delete_thread(thread_id: str, request: Request) -> Response:
     return Response(status_code=204)
 
 
+@router.delete("/{thread_id}/history", status_code=204)
+async def erase_history(thread_id: str, request: Request) -> Response:
+    store = _store(request)
+    if await store.get_session(thread_id) is None:
+        raise HTTPException(status_code=404, detail="Thread not found.")
+    await store.erase_history(thread_id)
+    return Response(status_code=204)
+
+
+@router.delete("/{thread_id}/report", status_code=204)
+async def erase_report(thread_id: str, request: Request) -> Response:
+    store = _store(request)
+    if await store.get_session(thread_id) is None:
+        raise HTTPException(status_code=404, detail="Thread not found.")
+    await store.erase_report(thread_id)
+    return Response(status_code=204)
+
+
 @router.get("/{thread_id}/report")
 async def get_report(thread_id: str, request: Request) -> dict[str, Any]:
     store = _store(request)

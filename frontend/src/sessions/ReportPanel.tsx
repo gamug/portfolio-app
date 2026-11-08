@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Renderer } from "@openuidev/react-lang";
 import { openuiLibrary } from "@openuidev/react-ui/genui-lib";
 import type { SessionState } from "./SessionController";
@@ -7,8 +8,12 @@ type ReportPanelProps = {
   onGenerate: () => void;
   onDownload: () => void;
   onDismissDownloadNotice: () => void;
+  onEraseHistory: () => void;
+  onEraseReport: () => void;
   onCancel: () => void;
 };
+
+type EraseTarget = "history" | "report";
 
 const PROGRESS_LABELS = {
   planning: "Planning the report…",
@@ -20,11 +25,17 @@ export function ReportPanel({
   onGenerate,
   onDownload,
   onDismissDownloadNotice,
+  onEraseHistory,
+  onEraseReport,
   onCancel,
 }: ReportPanelProps) {
+  const [confirmingErase, setConfirmingErase] = useState<EraseTarget | null>(null);
   const controlsDisabled = state.isLoading || state.isGeneratingReport || state.isSendingChat;
   const downloadDisabled =
     state.isLoading || (state.report !== null && (state.isGeneratingReport || state.isSendingChat));
+  const historyEraseDisabled =
+    controlsDisabled || (state.messages.length === 0 && state.report === null);
+  const reportEraseDisabled = controlsDisabled || state.report === null;
   const progress =
     state.reportProgress === null
       ? PROGRESS_LABELS.planning
@@ -53,8 +64,59 @@ export function ReportPanel({
               Cancel
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => setConfirmingErase("history")}
+            disabled={historyEraseDisabled}
+          >
+            Erase History
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmingErase("report")}
+            disabled={reportEraseDisabled}
+          >
+            Erase Report
+          </button>
         </div>
       </div>
+
+      {confirmingErase === "history" && (
+        <div className="panel-confirm" role="alertdialog">
+          <span>Erase all history and the report of this session?</span>
+          <button
+            type="button"
+            disabled={controlsDisabled}
+            onClick={() => {
+              setConfirmingErase(null);
+              onEraseHistory();
+            }}
+          >
+            Erase
+          </button>
+          <button type="button" onClick={() => setConfirmingErase(null)}>
+            Cancel
+          </button>
+        </div>
+      )}
+      {confirmingErase === "report" && (
+        <div className="panel-confirm" role="alertdialog">
+          <span>Erase the report of this session? The history is kept.</span>
+          <button
+            type="button"
+            disabled={controlsDisabled}
+            onClick={() => {
+              setConfirmingErase(null);
+              onEraseReport();
+            }}
+          >
+            Erase
+          </button>
+          <button type="button" onClick={() => setConfirmingErase(null)}>
+            Cancel
+          </button>
+        </div>
+      )}
 
       {state.isGeneratingReport && (
         <p className="report-panel__progress" role="status">
