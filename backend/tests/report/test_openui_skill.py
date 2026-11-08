@@ -10,13 +10,20 @@ import pytest
 
 from app.connector.settings import Settings
 from app.report.chart_plan import DEFAULT_PROMPT_PATH as PLAN_PROMPT_PATH
-from app.report.models import ChartPlan, ReportSkillError
+from app.report.models import (
+    ChartColumn,
+    ChartPlan,
+    ChartSeries,
+    ChartSpec,
+    ReportSkillError,
+)
 from app.report.openui import (
     DEFAULT_PROMPT_PATH,
     DEFAULT_REFERENCE_PATH,
     DEFAULT_VALIDATOR_PATH,
     NodeOpenUIParser,
     OpenUIReportSkill,
+    plan_payload,
 )
 
 PLAN = ChartPlan(
@@ -117,8 +124,8 @@ def _skill(
     )
 
 
-async def _collect(skill: OpenUIReportSkill) -> str:
-    return "".join([chunk async for chunk in skill.stream(PLAN, "en")])
+async def _collect(skill: OpenUIReportSkill, language: str = "en") -> str:
+    return "".join([chunk async for chunk in skill.stream(PLAN, language)])
 
 
 def test_prompt_files_are_drafts_and_exist() -> None:
@@ -132,6 +139,46 @@ def test_prompt_files_are_drafts_and_exist() -> None:
     assert "one-line context summary" in report_prompt
     assert "Never use the literal word" in report_prompt
     assert '"Report" as the subtitle' in report_prompt
+
+
+def test_spanish_report_instruction_is_passed(tmp_path: Path) -> None:
+    completions = FakeCompletions(["root = Card([])"])
+    skill = _skill(tmp_path, completions)
+    asyncio.run(_collect(skill, "es"))
+    system = str(completions.calls_args[0]["messages"][0]["content"])
+    assert "español" in system
+
+
+def test_plan_payload_keeps_plots_a_table_and_narrative() -> None:
+    plan = ChartPlan(
+        title="Quarter",
+        summary="Revenue rose.",
+        charts=(
+            ChartSpec(
+                type="line",
+                title="Revenue",
+                takeaway="Revenue rose.",
+                labels=("January", "February"),
+                series=(ChartSeries("Revenue", (100.0, 120.0)),),
+            ),
+            ChartSpec(
+                type="table",
+                title="Monthly detail",
+                takeaway="Revenue rose.",
+                columns=(
+                    ChartColumn("Month", ("January", "February")),
+                    ChartColumn("Revenue", (100.0, 120.0)),
+                ),
+            ),
+        ),
+        conclusions="The quarter improved.",
+    )
+
+    payload = plan_payload(plan)
+
+    assert payload["summary"] == "Revenue rose."
+    assert payload["conclusions"] == "The quarter improved."
+    assert [chart["type"] for chart in payload["charts"]] == ["line", "table"]
 
 
 def test_stream_uses_the_chat_prompt_as_reference(tmp_path: Path) -> None:

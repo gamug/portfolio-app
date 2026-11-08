@@ -105,3 +105,21 @@ def test_only_one_current_report_per_session(tmp_path: Path) -> None:
         ).fetchone()
     assert row[0] == 1
     assert row[1] == 1
+
+
+def test_sessions_history_and_reports_survive_a_new_store_instance(tmp_path: Path) -> None:
+    path = tmp_path / "app.sqlite3"
+    pair = _pair()
+    store = SQLiteQuestionAnswerStore(path)
+    asyncio.run(store.save(pair))
+    asyncio.run(store.set_report("s1", "root = Card([])", incomplete=False))
+
+    reopened = SQLiteQuestionAnswerStore(path)
+
+    session = asyncio.run(reopened.get_session("s1"))
+    assert session is not None
+    assert asyncio.run(reopened.list_for_session("s1")) == [pair]
+    report = asyncio.run(reopened.get_report("s1"))
+    assert report is not None
+    assert report.openui_lang == "root = Card([])"
+    assert report.incomplete is False

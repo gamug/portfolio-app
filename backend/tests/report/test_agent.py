@@ -355,3 +355,28 @@ def test_requested_language_overrides_detection(tmp_path: Path) -> None:
     context = asyncio.run(agent.prepare("s1", "en"))
     assert context.language == "en"
     assert len(context.pairs) == 1
+
+
+def test_report_stores_plots_a_table_and_narrative(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    asyncio.run(store.save(_pair()))
+    render = FakeRenderSkill(
+        chunks=[
+            "root = Card([line, table, text])\n",
+            'line = LineChart(["January"], [Series("Revenue", [100])])\n',
+            'table = Table([Col("Revenue", [100], "number")])\n',
+            'text = TextContent("Revenue rose.")',
+        ]
+    )
+    agent = _agent(store, render=render)
+
+    async def scenario() -> Any:
+        context = await agent.prepare("s1")
+        [event async for event in agent.stream(context)]
+        return await store.get_report("s1")
+
+    report = asyncio.run(scenario())
+    assert report is not None
+    assert "LineChart" in report.openui_lang
+    assert "Table" in report.openui_lang
+    assert "TextContent" in report.openui_lang

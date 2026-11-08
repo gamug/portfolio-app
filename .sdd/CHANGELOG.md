@@ -338,3 +338,21 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests use a temporary SQLite database for other sessions unchanged, report-only keeping pairs, missing sessions and idempotent report erase, and Vitest for confirm, decline, failure and disabled states.
 - No dependency or schema change and no real LLM or GraphDB call.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-08 (answer accuracy evaluation deferred)
+
+### TASK-033 — Defer the curated question set evaluation (WI-014, AC-ACC-01)
+
+- Deferred by the project owner dova (with gamug) on 2026-11-08 because answer quality depends on the knowledge-graph repository and its final curated question set, which are not final.
+- Run TASK-033 on the final graph and the final `backend/tests/evaluation/questions.json`; the task stays unchecked until then.
+- TASK-034 now depends on TASK-032 and verifies that the app works and runs now. No code, dependency or schema change.
+
+## 2026-11-08 (acceptance verification)
+
+### TASK-034 — Run end-to-end verification and fix defects (WI-014, AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01)
+
+- Added `docs/ACCEPTANCE.md` with a traceability matrix linking every TASK-034 acceptance criterion to a passing automated test and an 11-step manual checklist for the owner.
+- Added the missing tests for sessions, history and reports surviving a new store instance; relevance toggling keeping the report unchanged; the report plan and stored report containing plots, tables and narrative; and the Spanish report instruction.
+- TASK-034 is checked. The manual checklist is pending the owner's run. TASK-033 remains deferred to the final knowledge graph and final `backend/tests/evaluation/questions.json`.
+- No dependency or schema change and no real LLM or GraphDB call.
+- Verification: `ruff`, `mypy`, `pytest` (158 passed, 1 skipped), `pnpm` lint, Prettier, `tsc --noEmit`, Vitest (88 passed), production build, `check_sdd.py`, `check_consistency.py` and gitleaks pass.
