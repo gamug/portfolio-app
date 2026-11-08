@@ -162,7 +162,7 @@ Every Work Item and task carries a checkbox: `[ ]` is the template value and `[x
 
 ## Product Work Items
 
-The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026`, `TASK-027`, `TASK-028`, `TASK-029`, `TASK-030`, `TASK-031` and `TASK-032` are done; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
+The product Work Items below implement the requirements `FR-002` to `FR-035` of the approved `docs/PRODUCT.md` (section 3) following its roadmap (section 7). `TASK-017`, `TASK-018`, `TASK-019`, `TASK-020`, `TASK-021`, `TASK-022`, `TASK-023`, `TASK-024`, `TASK-025`, `TASK-026`, `TASK-027`, `TASK-028`, `TASK-029`, `TASK-030`, `TASK-031`, `TASK-032` and `TASK-034` are done; `TASK-033` is deferred; the remaining product tasks are unchecked. Each task cites only the acceptance criteria it implements. `TASK-035` (a backend health endpoint) was removed on 2026-11-06 by decision of the project owners, because no functional requirement covers it; task IDs are not reused.
 
 ## WI-007 — Technical spike
 
@@ -352,11 +352,13 @@ The product Work Items below implement the requirements `FR-002` to `FR-035` of 
 - **Depends on:** TASK-032
 - **Acceptance criteria:** AC-ACC-01
 - **Action:** Run the curated question set in `backend/tests/evaluation/questions.json` (prepared by the project owners) and record the result against the 90% target.
+- **Deferred (2026-11-08):** Deferred by the project owner dova (with gamug) because answer quality depends on the knowledge-graph repository and its final curated question set, which are not final. Re-run this task on the final graph and the final `backend/tests/evaluation/questions.json`; do not check it until then.
 
 ### TASK-034 — Run end-to-end verification and fix defects
 
-- [ ] **Done**
+- [x] **Done**
 - **Work Item:** WI-014
-- **Depends on:** TASK-033
+- **Depends on:** TASK-032
 - **Acceptance criteria:** AC-FR002-01, AC-FR002-02, AC-FR003-01, AC-FR003-02, AC-FR005-01, AC-FR005-02, AC-FR005-03, AC-FR005-04, AC-FR013-01, AC-FR013-02, AC-FR013-03, AC-FR013-04, AC-FR013-05, AC-FR013-06, AC-FR021-01, AC-FR026-01, AC-FR026-02, AC-FR028-01, AC-FR028-02, AC-FR028-03, AC-FR028-04, AC-FR028-05, AC-FR035-01
 - **Action:** Verify the acceptance criteria of every Must Have requirement, run the full quality gates and fix defects.
+- **Result (2026-11-08):** Added `docs/ACCEPTANCE.md` with a traceability matrix linking every TASK-034 acceptance criterion to a passing automated test, plus an 11-step manual checklist for the owner. Added the missing tests for restart persistence, relevance toggling keeping the report, report content with plots, tables and narrative, and Spanish report instructions. All gates pass: `ruff`, `mypy`, `pytest` (158 passed, 1 skipped), `pnpm` lint, Prettier, `tsc --noEmit`, Vitest (88 passed), production build, `check_sdd.py`, `check_consistency.py` and gitleaks. No dependency or schema change and no real LLM or GraphDB call. The manual checklist is pending the owner's run. TASK-033 remains deferred to the final graph and final `backend/tests/evaluation/questions.json`.

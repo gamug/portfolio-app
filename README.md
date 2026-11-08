@@ -7,6 +7,7 @@ The project follows specification-driven development:
 | Path | Content |
 | :--- | :--- |
 | `docs/PRODUCT.md` | Approved discovery: use cases, requirements, stack, risks and roadmap |
+| `docs/ACCEPTANCE.md` | Acceptance traceability matrix and the owner's manual checklist |
 | `adr.md` | Architecture decision records (live) |
 | `config.yaml` | Project configuration, with sources in `docs/PRODUCT.md` |
 | `.sdd/` | Constitution, specification, plan, tasks and changelog |

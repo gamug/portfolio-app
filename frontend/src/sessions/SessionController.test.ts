@@ -371,16 +371,19 @@ describe("SessionController relevance", () => {
     expect(controller.getSnapshot().relevance).toEqual({ p1: false });
   });
 
-  it("toggles a pair and persists the new state", async () => {
-    const { storage, relevance, controller } = makeController();
+  it("toggles a pair, persists the new state and keeps the report unchanged", async () => {
+    const { storage, reports, relevance, controller } = makeController();
     storage.threads = [session("s1")];
     storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("root = Card([])"));
     await controller.initialize();
+    const reportBefore = controller.getSnapshot().report;
 
     await controller.toggleRelevance("p1");
 
     expect(relevance.calls).toEqual([["s1", "p1", false]]);
     expect(controller.getSnapshot().relevance["p1"]).toBe(false);
+    expect(controller.getSnapshot().report).toEqual(reportBefore);
   });
 
   it("leaves the visible relevance unchanged when the update fails", async () => {
