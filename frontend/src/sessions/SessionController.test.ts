@@ -6,6 +6,7 @@ import {
   type PairClient,
   type RelevanceClient,
   type ReportClient,
+  type ReportExporter,
   type ReportStreamEvent,
   type SessionReport,
   type ThreadStorage,
@@ -74,6 +75,16 @@ class FakeReports implements ReportClient {
 
   generateReport(sessionId: string, signal?: AbortSignal): AsyncIterable<ReportStreamEvent> {
     return this.generateImpl(sessionId, signal);
+  }
+}
+
+class FakeExporter implements ReportExporter {
+  calls: Array<{ sessionName: string; report: SessionReport }> = [];
+  fail = false;
+
+  async download(sessionName: string, report: SessionReport): Promise<void> {
+    if (this.fail) throw new Error("download failed");
+    this.calls.push({ sessionName, report });
   }
 }
 
@@ -152,13 +163,15 @@ function makeController() {
   const relevance = new FakeRelevance();
   const pairs = new FakePairs();
   const chats = new FakeChats();
+  const exporter = new FakeExporter();
   return {
     storage,
     reports,
     relevance,
     pairs,
     chats,
-    controller: new SessionController(storage, reports, relevance, pairs, chats),
+    exporter,
+    controller: new SessionController(storage, reports, relevance, pairs, chats, exporter),
   };
 }
 
@@ -649,5 +662,44 @@ describe("SessionController report generation", () => {
     const state = controller.getSnapshot();
     expect(state.report?.openui_lang).toBe("previous");
     expect(state.reportError).toContain("Mark at least one pair");
+  });
+});
+
+describe("SessionController report download", () => {
+  it("downloads the active session report with its title", async () => {
+    const { storage, reports, exporter, controller } = makeController();
+    storage.threads = [session("s1", "Q3 sales")];
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+
+    await controller.downloadReport();
+
+    expect(exporter.calls).toEqual([
+      { sessionName: "Q3 sales", report: report("root = Card([])") },
+    ]);
+  });
+
+  it("does nothing when the session has no report", async () => {
+    const { storage, exporter, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+
+    await controller.downloadReport();
+
+    expect(exporter.calls).toEqual([]);
+    expect(controller.getSnapshot().reportError).toBeNull();
+  });
+
+  it("shows an error when the download fails", async () => {
+    const { storage, reports, exporter, controller } = makeController();
+    storage.threads = [session("s1", "Q3 sales")];
+    reports.reports.set("s1", report("root = Card([])"));
+    await controller.initialize();
+    exporter.fail = true;
+
+    await controller.downloadReport();
+
+    expect(exporter.calls).toEqual([]);
+    expect(controller.getSnapshot().reportError).toContain("download");
   });
 });

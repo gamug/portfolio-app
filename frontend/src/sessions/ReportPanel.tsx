@@ -5,6 +5,7 @@ import type { SessionState } from "./SessionController";
 type ReportPanelProps = {
   state: SessionState;
   onGenerate: () => void;
+  onDownload: () => void;
   onCancel: () => void;
 };
 
@@ -13,7 +14,7 @@ const PROGRESS_LABELS = {
   rendering: "Rendering the report…",
 } as const;
 
-export function ReportPanel({ state, onGenerate, onCancel }: ReportPanelProps) {
+export function ReportPanel({ state, onGenerate, onDownload, onCancel }: ReportPanelProps) {
   const controlsDisabled = state.isLoading || state.isGeneratingReport || state.isSendingChat;
   const progress =
     state.reportProgress === null
@@ -35,6 +36,11 @@ export function ReportPanel({ state, onGenerate, onCancel }: ReportPanelProps) {
           <button type="button" onClick={onGenerate} disabled={controlsDisabled}>
             {state.report === null ? "Generate Report" : "Regenerate Report"}
           </button>
+          {state.report !== null && (
+            <button type="button" onClick={onDownload} disabled={controlsDisabled}>
+              Download Report
+            </button>
+          )}
           {state.isGeneratingReport && (
             <button type="button" onClick={onCancel}>
               Cancel

@@ -28,6 +28,7 @@ function renderDetail(overrides: Partial<SessionState> = {}): string {
       onDeletePair={() => undefined}
       onSendQuestion={() => undefined}
       onGenerateReport={() => undefined}
+      onDownloadReport={() => undefined}
       onCancelReport={() => undefined}
     />,
   );
@@ -41,6 +42,7 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain('aria-label="Question"');
     expect(html).toContain("Send");
     expect(html).toContain("Generate Report");
+    expect(html).not.toContain("Download Report");
     expect(html).toContain("No report yet.");
     expect(html).toContain('data-report-view="empty"');
   });
@@ -80,6 +82,7 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain("(incomplete)");
     expect(html).toContain("The report could not be generated.");
     expect(html).toContain("Regenerate Report");
+    expect(html).toContain("Download Report");
     expect(html).toContain('data-report-view="current"');
   });
 

@@ -79,4 +79,5 @@ __pycache__/
 .pytest_cache/
 *.sqlite3
 frontend/dist
+frontend/public/report-template.html
 .sdd-tooling/

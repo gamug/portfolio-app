@@ -17,8 +17,12 @@ OUTPUT RULES
   state variables, queries or any component outside the list above. This is a static report.
 - Keep every number, label and visible string exactly as it appears in the plan. Do not translate,
   rewrite, summarise or invent visible text. The plan is already in the analyst's language.
-- Build the report in this order: CardHeader(title, "Report"), TextContent(summary), one section
-  per plan chart in the same order, then InlineHeader("Conclusions") and TextContent(conclusions).
+- Build the report in this order: CardHeader(title, "<one-line context summary>"),
+  TextContent(summary), one section per plan chart in the same order, then
+  InlineHeader("Conclusions") and TextContent(conclusions).
+- The CardHeader subtitle must be a one-line context summary taken from the plan's scope (for
+  example the run label and windows, or the main question topic). Never use the literal word
+  "Report" as the subtitle.
 - Each chart section is a Card with an InlineHeader(chart title, takeaway) followed by the chart
   component. Do not add a section when the plan has no charts.
 - Map the plan charts exactly:

@@ -35,6 +35,10 @@ export interface ChatClient {
   streamAnswer(question: string, sessionId: string, signal?: AbortSignal): AsyncIterable<string>;
 }
 
+export interface ReportExporter {
+  download(sessionName: string, report: SessionReport): Promise<void>;
+}
+
 export type ChatStream = {
   question: string;
   answer: string;
@@ -67,6 +71,7 @@ const PAIR_DELETE_ERROR = "Could not delete the question-answer pair. Please try
 const CHAT_ERROR = "Could not send the question. Please try again.";
 const REPORT_ERROR = "Could not generate the report. Please try again.";
 const REPORT_STREAM_ERROR = "The report stream ended unexpectedly. Please try again.";
+const DOWNLOAD_ERROR = "Could not download the report. Please try again.";
 
 function newUserMessage(): UserMessage {
   const id =
@@ -122,6 +127,7 @@ export class SessionController {
     private readonly relevance: RelevanceClient,
     private readonly pairs: PairClient,
     private readonly chats: ChatClient,
+    private readonly exporter: ReportExporter,
   ) {}
 
   subscribe = (listener: () => void): (() => void) => {
@@ -536,6 +542,25 @@ export class SessionController {
       reportStream: "",
       reportError: null,
     });
+  }
+
+  async downloadReport(): Promise<void> {
+    const session = this.state.sessions.find((item) => item.id === this.state.activeSessionId);
+    if (
+      session === undefined ||
+      this.state.report === null ||
+      this.state.isLoading ||
+      this.state.isGeneratingReport ||
+      this.state.isSendingChat
+    ) {
+      return;
+    }
+    this.setState({ reportError: null });
+    try {
+      await this.exporter.download(session.title, this.state.report);
+    } catch {
+      this.setState({ reportError: DOWNLOAD_ERROR });
+    }
   }
 
   dismissError(): void {
