@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SessionReport } from "./SessionController";
 import {
@@ -27,6 +29,35 @@ function report(openuiLang = "root = Card([])"): SessionReport {
     created_at: "2026-11-07T00:00:00Z",
     updated_at: "2026-11-07T00:00:00Z",
   };
+}
+
+const REAL_TEMPLATE_PATH = [
+  resolve(process.cwd(), "public/report-template.html"),
+  resolve(process.cwd(), "frontend/public/report-template.html"),
+].find((candidate) => existsSync(candidate));
+
+function stubDownloadEnvironment(template: string) {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(template, { status: 200 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const anchor = {
+    href: "",
+    download: "",
+    style: { display: "" },
+    click: vi.fn(),
+    remove: vi.fn(),
+  };
+  const append = vi.fn();
+  vi.stubGlobal("document", {
+    createElement: vi.fn(() => anchor),
+    body: { append },
+  });
+  const createObjectURL = vi.fn((blob: Blob) => {
+    void blob;
+    return "blob:report";
+  });
+  const revokeObjectURL = vi.fn();
+  vi.stubGlobal("URL", { createObjectURL, revokeObjectURL });
+  return { fetchMock, anchor, append, createObjectURL, revokeObjectURL };
 }
 
 afterEach(() => {
@@ -69,12 +100,37 @@ describe("report export", () => {
     expect(html).toContain("\\u003c/script>");
   });
 
-  it("detects external references", () => {
-    expect(hasExternalReferences('<script src="https://cdn.example/report.js"></script>')).toBe(
+  it("detects real external resource loads", () => {
+    expect(hasExternalReferences('<link rel="stylesheet" href="https://x/y.css">')).toBe(true);
+    expect(hasExternalReferences('<script src="//x/y.js"></script>')).toBe(true);
+    expect(hasExternalReferences("<style>body{background:url(https://x/y.png)}</style>")).toBe(
       true,
     );
-    expect(hasExternalReferences("body{background:url(https://cdn.example/bg.png)}")).toBe(true);
-    expect(hasExternalReferences(TEMPLATE)).toBe(false);
+    expect(hasExternalReferences('<div style="background:url(https://x/y.png)"></div>')).toBe(true);
+    expect(
+      hasExternalReferences("<style>body{background:url(data:image/png;base64,abc)}</style>"),
+    ).toBe(false);
+    expect(hasExternalReferences("<style>body{background:myurl(https://x/y.png)}</style>")).toBe(
+      false,
+    );
+  });
+
+  it("ignores documentation text and user-provided report text", () => {
+    const documentation =
+      "<script>const a = '@OpenUrl(\"https://example.com\")'; " +
+      "const b = 'Action([@OpenUrl(\"https://example.com\"), ...';</script>";
+    expect(hasExternalReferences(documentation)).toBe(false);
+    expect(hasExternalReferences('<div>@OpenUrl("https://example.com")</div>')).toBe(false);
+    expect(
+      hasExternalReferences(
+        '<script>const x = "<style>body{background:url(https://x/y.png)}</style>";</script>',
+      ),
+    ).toBe(false);
+
+    const reportText = 'root = Card([text])\ntext = TextContent("@OpenUrl(https://example.com)")';
+    const html = buildReportHtml(TEMPLATE, "Q3 sales", report(reportText), new Date(2026, 10, 5));
+    expect(html).toContain("@OpenUrl(https://example.com)");
+    expect(hasExternalReferences(html)).toBe(false);
   });
 
   it("rejects a template without both placeholders", () => {
@@ -84,23 +140,8 @@ describe("report export", () => {
   it("fetches the template and triggers a named HTML download", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 10, 5, 12));
-    const fetchMock = vi.fn().mockResolvedValue(new Response(TEMPLATE, { status: 200 }));
-    vi.stubGlobal("fetch", fetchMock);
-    const anchor = {
-      href: "",
-      download: "",
-      style: { display: "" },
-      click: vi.fn(),
-      remove: vi.fn(),
-    };
-    const append = vi.fn();
-    vi.stubGlobal("document", {
-      createElement: vi.fn(() => anchor),
-      body: { append },
-    });
-    const createObjectURL = vi.fn(() => "blob:report");
-    const revokeObjectURL = vi.fn();
-    vi.stubGlobal("URL", { createObjectURL, revokeObjectURL });
+    const { fetchMock, anchor, append, createObjectURL, revokeObjectURL } =
+      stubDownloadEnvironment(TEMPLATE);
 
     await createReportExporter("/report-template.html").download("Q3 sales", report());
 
@@ -114,4 +155,36 @@ describe("report export", () => {
     vi.runAllTimers();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:report");
   });
+
+  it.skipIf(REAL_TEMPLATE_PATH === undefined)(
+    "runs the real built template through the full download path",
+    async () => {
+      if (REAL_TEMPLATE_PATH === undefined) {
+        return;
+      }
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 10, 5, 12));
+      const template = readFileSync(REAL_TEMPLATE_PATH, "utf8");
+      const sample = 'root = Card([text])\ntext = TextContent("Revenue rose from 100 to 150.")';
+      const { anchor, append, createObjectURL, revokeObjectURL } =
+        stubDownloadEnvironment(template);
+
+      await createReportExporter("/report-template.html").download("Q3 sales", report(sample));
+
+      expect(anchor.download).toBe("Q3 sales-2026-11-05.html");
+      expect(anchor.href).toBe("blob:report");
+      expect(append).toHaveBeenCalledWith(anchor);
+      expect(anchor.click).toHaveBeenCalledTimes(1);
+      const blob = createObjectURL.mock.calls[0]?.[0];
+      if (!(blob instanceof Blob)) {
+        throw new Error("expected the exporter to create a Blob");
+      }
+      const html = await blob.text();
+      expect(html).toContain("Revenue rose from 100 to 150.");
+      expect(html).not.toContain("__REPORT_");
+      expect(hasExternalReferences(html)).toBe(false);
+      vi.runAllTimers();
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:report");
+    },
+  );
 });

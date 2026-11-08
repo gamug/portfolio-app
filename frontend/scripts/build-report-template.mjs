@@ -22,6 +22,35 @@ function assetPath(url) {
   return resolve(built, url.replace(/^\//, ""));
 }
 
+// Keep this check in sync with hasExternalReferences in
+// frontend/src/sessions/reportExport.ts: it must reject real resources but
+// ignore URLs that are only documentation text inside the bundled JavaScript.
+function withoutScriptContents(html) {
+  return html.replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1");
+}
+
+function withoutInlineCodeContents(html) {
+  return withoutScriptContents(html).replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/gi, "$1");
+}
+
+function hasExternalCssUrl(css) {
+  return /(?<![A-Za-z0-9_])url\(\s*["']?(?:https?:)?\/\//i.test(css);
+}
+
+function hasExternalReferences(html) {
+  const shell = withoutInlineCodeContents(html);
+  if (/<[a-z][^>]*(?<![\w-])(?:src|href)\s*=\s*["'](?:https?:)?\/\//i.test(shell)) {
+    return true;
+  }
+  const styleAttributes = [...shell.matchAll(/(?<![\w-])style\s*=\s*["']([^"']*)["']/gi)].map(
+    (match) => match[1] ?? "",
+  );
+  const styleBlocks = [
+    ...withoutScriptContents(html).matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi),
+  ].map((match) => match[1] ?? "");
+  return [...styleAttributes, ...styleBlocks].some(hasExternalCssUrl);
+}
+
 function inlineHtml() {
   let html = readFileSync(join(built, "index.html"), "utf8");
   html = html.replace(/<link\b(?=[^>]*rel="modulepreload")[^>]*>/g, "");
@@ -49,17 +78,8 @@ function inlineHtml() {
     }
   }
 
-  const attributeUrls = [...html.matchAll(/(?:src|href)=["']((?:https?:)?\/\/[^"']+)/g)].map(
-    (match) => match[1],
-  );
-  const cssUrls = [...html.matchAll(/url\(\s*["']?((?:https?:)?\/\/[^"')\s]+)/g)].map(
-    (match) => match[1],
-  );
-  const externalReferences = [...attributeUrls, ...cssUrls];
-  if (externalReferences.length > 0) {
-    throw new Error(
-      `The report template has external references: ${externalReferences.join(", ")}`,
-    );
+  if (hasExternalReferences(html)) {
+    throw new Error("The report template has external references.");
   }
 
   return { html, javascriptBytes, cssBytes };

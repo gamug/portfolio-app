@@ -307,3 +307,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Changed the report skill 2 prompt to require a one-line context subtitle from the plan's scope (for example the run label and windows, or the main question topic) and never the literal word "Report".
 - Tests cover filename sanitization, the zero-external-reference check, report content, escaping a closing script sequence and the download trigger. No dependency or schema change and no real LLM or GraphDB call.
 - Verification: frontend lint, Prettier, `tsc --noEmit`, tests (70 passed) and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-08 (report export false positives)
+
+### TASK-030 follow-up — Stop flagging bundled documentation text as an external reference (WI-012, FR-026)
+
+- `hasExternalReferences` now removes inline script and style contents before checking. It flags only real external `src`/`href` attributes (http(s):// or //) and CSS `url(...)` inside `<style>` blocks or `style` attributes, with a negative lookbehind so documentation such as `@OpenUrl(...)` and names such as `myurl(...)` do not match. The user-provided report text is inside a script and is no longer scanned.
+- The build-time template check in `frontend/scripts/build-report-template.mjs` uses the same strictness, so the build and the download agree.
+- Tests cover the false-positive documentation text, a real `<link href>`, a real `<script src>`, real CSS `url(https://...)` in a style block and style attribute, and the real built template plus a sample report through the full download path.
+- No dependency or schema change and no task checkbox change.
+- Verification: frontend lint, Prettier, `tsc --noEmit`, tests and production build pass; backend `ruff`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
