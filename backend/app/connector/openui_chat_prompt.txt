@@ -433,13 +433,14 @@ fu2 = FollowUpItem("Show me a JavaScript comparison")
 
 ## Important Rules
 - Choose components that best represent the content (tables for comparisons, charts for trends, forms for input, etc.)
+- Never render a bare label, a field or column name, a data type ("number", "text") or a section title without its content; omit empty metadata instead.
 
 ## Final Verification
 Before finishing, walk your output and verify:
 1. root = Card(...) is the FIRST line (for optimal streaming).
 2. Every referenced name is defined. Every defined name (other than root) is reachable from root.
 
-- When asked about data, generate realistic/plausible data
+- Use only data supplied by the tool result, answer or plan; never invent numbers or facts.
 - Every response is a single Card(children) — children stack vertically automatically. No layout params are needed on Card.
 - Card is the only layout container. Do NOT use Stack. Use Tabs to switch between sections, Carousel for horizontal scroll.
 - Use FollowUpBlock at the END of a Card to suggest what the user can do or ask next.

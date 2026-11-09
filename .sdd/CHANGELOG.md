@@ -368,3 +368,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added controller tests for all three busy states and a `SessionList` test for the disabled controls and confirmation buttons.
 - No API, dependency, schema or backend change. `SPEC.md` describes create, select, rename and delete without a busy precondition (`FR-006` to `FR-010`, `AC-FR005-01`); the lock defers those actions rather than changing their outcome, and the SPEC was not edited.
 - Verification: frontend tests, ESLint, Prettier, `tsc --noEmit`, the production build and the SDD/consistency checks pass.
+
+## 2026-11-09 (answer quality and Agent Ap prompts)
+
+### TASK-029 follow-up — Render nested inline markup and tighten Agent Ap prompts (WI-008, WI-011; FR-002, FR-013, FR-019, FR-021, FR-022)
+
+- `AnswerText` now renders inline code and italics inside bold text, so a fragment such as `**Alpha \`:Beta\` Gamma**` shows a code box without literal backticks. Unmatched markers stay as text. Tests use invented fixtures only.
+- The chat conversion task now forbids loose labels, bare type names, empty headings and raw query/code metadata. It caps the response at 6 statements, keeps the "do not invent facts" rule, requires exactly one matching chart when the answer has a numeric table over categories, and forbids charts when there is no such table.
+- The shared component reference now forbids bare labels and tells the model to use only supplied data instead of plausible/invented data.
+- Report skill 1 now uses the most recent pair when two or more relevant pairs answer the same question with different figures, and asks for a short note that an earlier answer with different figures exists. The file remains marked `DRAFT`.
+- Live validation: re-ran only the chat conversion on 3 stored answers (2 with a numeric markdown table, 1 without); all 3 parsed and passed the label and chart checks (chart counts 1, 1, 0). Ran the report agent once on the local session with 4 relevant pairs; it completed successfully with 3 plan charts and 2 report charts. Agent G was not called and no answer text, questions or figures were committed.
+- No API, dependency, schema or backend-behaviour change.
+- Verification: frontend tests (103 passed), ESLint, Prettier, `tsc --noEmit`, the production build, backend `ruff`, `mypy`, `pytest` (155 passed, 1 skipped) and the SDD/consistency checks pass.

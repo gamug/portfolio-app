@@ -22,4 +22,38 @@ describe("AnswerText", () => {
     expect(html).toContain("<th");
     expect(html).toContain("<td>150</td>");
   });
+
+  it("renders inline code inside bold text", () => {
+    const html = renderToStaticMarkup(<AnswerText text={"**Alpha `:Beta` Gamma**"} />);
+    expect(html).toContain("<strong>Alpha <code>:Beta</code> Gamma</strong>");
+    expect(html).not.toContain("`");
+  });
+
+  it("renders italics inside bold text", () => {
+    const html = renderToStaticMarkup(<AnswerText text={"**Alpha *Beta* Gamma**"} />);
+    expect(html).toContain("<strong>Alpha <em>Beta</em> Gamma</strong>");
+  });
+
+  it("renders plain bold text", () => {
+    const html = renderToStaticMarkup(<AnswerText text="**Alpha**" />);
+    expect(html).toContain("<strong>Alpha</strong>");
+  });
+
+  it("renders plain inline code", () => {
+    const html = renderToStaticMarkup(<AnswerText text="`Alpha`" />);
+    expect(html).toContain("<code>Alpha</code>");
+  });
+
+  it("renders plain italics", () => {
+    const html = renderToStaticMarkup(<AnswerText text="*Alpha*" />);
+    expect(html).toContain("<em>Alpha</em>");
+  });
+
+  it("leaves unmatched markers as text", () => {
+    const html = renderToStaticMarkup(<AnswerText text={"**Alpha `Beta *Gamma"} />);
+    expect(html).toContain("**Alpha `Beta *Gamma");
+    expect(html).not.toContain("<strong>");
+    expect(html).not.toContain("<code>");
+    expect(html).not.toContain("<em>");
+  });
 });

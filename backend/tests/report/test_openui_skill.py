@@ -126,9 +126,12 @@ def test_prompt_files_are_drafts_and_exist() -> None:
     assert DEFAULT_REFERENCE_PATH.is_file()
     assert PLAN_PROMPT_PATH.is_file()
     report_prompt = DEFAULT_PROMPT_PATH.read_text(encoding="utf-8")
+    plan_prompt = PLAN_PROMPT_PATH.read_text(encoding="utf-8")
     assert "DRAFT" in report_prompt
-    assert "DRAFT" in PLAN_PROMPT_PATH.read_text(encoding="utf-8")
-    assert "never null" in PLAN_PROMPT_PATH.read_text(encoding="utf-8")
+    assert "DRAFT" in plan_prompt
+    assert "never null" in plan_prompt
+    assert "most recent pair" in plan_prompt
+    assert "different figures" in plan_prompt
     assert "one-line context summary" in report_prompt
     assert "Never use the literal word" in report_prompt
     assert '"Report" as the subtitle' in report_prompt

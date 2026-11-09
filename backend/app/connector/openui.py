@@ -11,8 +11,32 @@ from .models import ConnectorError, ConnectorTimeout, ConversionResult, total_to
 from .settings import Settings
 
 CONVERSION_TASK = """Convert the answer text into a short OpenUI Lang chat response
-using the chat component library. Keep it to at most 6 statements. Do not invent facts
-beyond the answer text. Return only OpenUI Lang, without markdown fences."""
+using the chat component library. The answer text is the only source of facts.
+
+Hard limits:
+- Keep it to at most 6 statements in total, including root. Each statement is one assignment.
+  Use only Card, CardHeader, TextContent and, only when required, one chart or one Table with
+  their labels and series. Inline short arrays instead of defining extra variables.
+- Do not use FollowUpBlock, FollowUpItem, CodeBlock, EntityList, nested card blocks, forms,
+  sections or carousels in this short conversion.
+- Do not invent facts, numbers, categories or labels beyond the answer text. Return only
+  OpenUI Lang, without markdown fences.
+
+Visible text rules:
+- Never emit a loose label, a bare type name such as "number" or "text", a field or column name,
+  or a heading or title without content as visible text. Omit headings and labels that have no
+  content under them, and do not render empty text components.
+- Show only the analyst-facing answer. Do not include raw queries, code blocks, tool metadata or
+  process notes.
+
+Chart rules:
+- Add a chart only when the answer contains a table with at least two numeric values over
+  categories. In that case the chart is mandatory: include exactly one chart for that table and
+  do not replace it with a Table alone. Use BarChart for category comparisons,
+  HorizontalBarChart for ranked lists or many/long category labels, and LineChart for a time
+  series. Use only that table's categories and numbers.
+- If the answer has no such table, do not add any chart, even when the answer contains numbers.
+  These chart rules override any general chart guidance in the component reference."""
 DEFAULT_PROMPT_PATH = Path(__file__).with_name("openui_chat_prompt.txt")
 
 

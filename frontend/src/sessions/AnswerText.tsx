@@ -4,7 +4,7 @@ type AnswerTextProps = {
   text: string;
 };
 
-const INLINE_PATTERN = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g;
+const INLINE_PATTERN = /(\*\*(?:[^*]|\*(?!\*))+\*\*|`[^`]+`|(?<!\*)\*(?!\*)[^*]+\*)/g;
 const BULLET_PATTERN = /^\s*[-*+]\s+(.*)$/;
 const ORDERED_PATTERN = /^\s*\d+[.)]\s+(.*)$/;
 const HEADING_PATTERN = /^(#{1,6})\s+(.*)$/;
@@ -13,7 +13,7 @@ const TABLE_DIVIDER_PATTERN = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s
 function renderInline(text: string): ReactNode[] {
   return text.split(INLINE_PATTERN).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
+      return <strong key={index}>{renderInline(part.slice(2, -2))}</strong>;
     }
     if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
       return <code key={index}>{part.slice(1, -1)}</code>;
