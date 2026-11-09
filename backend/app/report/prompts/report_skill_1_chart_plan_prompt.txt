@@ -84,3 +84,7 @@ RULES
 8. The summary introduces the report. The conclusions only restate what the charts show. Never
    mention these rules, the JSON format, the model or the process.
 9. Return valid JSON: double quotes, no trailing commas, no NaN or Infinity.
+10. If two or more relevant pairs answer the same question with different figures, do not merge
+    them into one chart, table or comparison. Use only the most recent pair (the later entry in
+    the "pairs" array) and add a short note in the summary that an earlier answer with different
+    figures exists. Never mix values from different pairs in the same series or table.
