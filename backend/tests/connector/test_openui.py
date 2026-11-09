@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from app.connector.models import ConnectorError
-from app.connector.openui import DEFAULT_PROMPT_PATH, OpenUIConverter
+from app.connector.openui import CONVERSION_TASK, DEFAULT_PROMPT_PATH, OpenUIConverter
 from app.connector.settings import Settings
 
 
@@ -64,6 +64,20 @@ def test_default_openui_prompt_is_committed() -> None:
     assert DEFAULT_PROMPT_PATH.stat().st_size > 1000
 
 
+def test_default_openui_prompt_covers_visible_text_and_chart_rules() -> None:
+    prompt = DEFAULT_PROMPT_PATH.read_text(encoding="utf-8")
+    assert "Never render a bare label" in prompt
+    assert "never invent numbers or facts" in prompt
+    assert "at most 6 statements" in CONVERSION_TASK
+    assert "Do not invent facts" in CONVERSION_TASK
+    assert "at least two numeric values" in CONVERSION_TASK
+    assert "chart is mandatory" in CONVERSION_TASK
+    assert "raw queries" in CONVERSION_TASK
+    assert "Do not use FollowUpBlock" in CONVERSION_TASK
+    assert "HorizontalBarChart" in CONVERSION_TASK
+    assert "LineChart" in CONVERSION_TASK
+
+
 def test_converts_and_strips_fences(tmp_path: Path) -> None:
     completions = FakeCompletions("```\nroot = Card([])\n```")
     result = asyncio.run(_converter(tmp_path, completions).convert("answer"))
@@ -77,6 +91,9 @@ def test_spanish_conversion_instruction_is_passed(tmp_path: Path) -> None:
     asyncio.run(_converter(tmp_path, completions).convert("respuesta", "es"))
     system = str(completions.calls_args[0]["messages"][0]["content"])
     assert "español" in system
+    assert "Visible text rules" in system
+    assert "Chart rules" in system
+    assert "HorizontalBarChart" in system
 
 
 def test_empty_conversion_is_an_error(tmp_path: Path) -> None:
