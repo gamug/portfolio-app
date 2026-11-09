@@ -358,3 +358,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Widened the sidebar from 220–240 px to 260–280 px. The existing `max-width: 720px` single-column layout is unchanged, and the surface, border, text and active-highlight colours still use the light/dark theme tokens.
 - No behaviour, API, dependency or schema change; the active-session highlight, rename form, delete confirmation and every `aria-label` are unchanged. No test change was needed because the session logic is untouched.
 - Verification: frontend tests (89 passed), ESLint, Prettier and `tsc --noEmit` pass.
+
+## 2026-11-09 (session lock)
+
+### TASK-025 follow-up — Lock the session controls while an action is in progress (WI-009, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010)
+
+- The session list now disables session selection, **New session**, **Rename**, **Delete**, the rename form controls and both delete-confirmation buttons while `isLoading`, `isSendingChat` or `isGeneratingReport` is true. A visible note says "Wait for the current action to finish."
+- `SessionController.selectSession`, `createSession`, `renameSession` and `deleteSession` now no-op in the same three busy states, so the lock cannot be bypassed. The report **Cancel** control is unchanged.
+- Added controller tests for all three busy states and a `SessionList` test for the disabled controls and confirmation buttons.
+- No API, dependency, schema or backend change. `SPEC.md` describes create, select, rename and delete without a busy precondition (`FR-006` to `FR-010`, `AC-FR005-01`); the lock defers those actions rather than changing their outcome, and the SPEC was not edited.
+- Verification: frontend tests, ESLint, Prettier, `tsc --noEmit`, the production build and the SDD/consistency checks pass.
