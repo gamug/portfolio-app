@@ -164,6 +164,10 @@ export class SessionController {
     this.setState({ ...idleStreamingState() });
   }
 
+  private isBusy(): boolean {
+    return this.state.isLoading || this.state.isSendingChat || this.state.isGeneratingReport;
+  }
+
   async initialize(): Promise<void> {
     this.abortStreams();
     this.setState({ ...idleStreamingState(), isLoading: true, error: null });
@@ -189,6 +193,9 @@ export class SessionController {
   }
 
   async createSession(): Promise<void> {
+    if (this.isBusy()) {
+      return;
+    }
     this.abortStreams();
     this.setState({ ...idleStreamingState(), isLoading: true, error: null });
     try {
@@ -207,6 +214,9 @@ export class SessionController {
   }
 
   async selectSession(sessionId: string): Promise<void> {
+    if (this.isBusy()) {
+      return;
+    }
     if (!this.state.sessions.some((session) => session.id === sessionId)) {
       return;
     }
@@ -243,6 +253,9 @@ export class SessionController {
   }
 
   async renameSession(sessionId: string, title: string): Promise<void> {
+    if (this.isBusy()) {
+      return;
+    }
     const session = this.state.sessions.find((item) => item.id === sessionId);
     if (session === undefined || title.trim().length === 0) {
       return;
@@ -260,7 +273,7 @@ export class SessionController {
   }
 
   async deleteSession(sessionId: string, confirmed: boolean): Promise<void> {
-    if (!confirmed) {
+    if (this.isBusy() || !confirmed) {
       return;
     }
     const session = this.state.sessions.find((item) => item.id === sessionId);

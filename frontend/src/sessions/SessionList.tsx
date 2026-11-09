@@ -10,6 +10,30 @@ type SessionListProps = {
   onDismissError: () => void;
 };
 
+type SessionListDeleteConfirmationProps = {
+  disabled: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+export function SessionListDeleteConfirmation({
+  disabled,
+  onConfirm,
+  onCancel,
+}: SessionListDeleteConfirmationProps) {
+  return (
+    <div className="session-list__confirm" role="alertdialog">
+      <span>Delete this session and its history?</span>
+      <button type="button" onClick={onConfirm} disabled={disabled}>
+        Delete
+      </button>
+      <button type="button" onClick={onCancel} disabled={disabled}>
+        Cancel
+      </button>
+    </div>
+  );
+}
+
 export function SessionList({
   state,
   onCreate,
@@ -21,6 +45,7 @@ export function SessionList({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const isBusy = state.isLoading || state.isSendingChat || state.isGeneratingReport;
 
   const startRename = (sessionId: string, title: string) => {
     setEditingId(sessionId);
@@ -40,10 +65,16 @@ export function SessionList({
     <aside className="session-list" aria-label="Sessions">
       <div className="session-list__header">
         <h1>Sessions</h1>
-        <button type="button" onClick={onCreate} disabled={state.isLoading}>
+        <button type="button" onClick={onCreate} disabled={isBusy}>
           New session
         </button>
       </div>
+
+      {isBusy && (
+        <p className="session-list__lock" role="status">
+          Wait for the current action to finish.
+        </p>
+      )}
 
       {state.error !== null && (
         <div className="session-list__error" role="alert">
@@ -76,9 +107,12 @@ export function SessionList({
                     onChange={(event) => setDraftTitle(event.target.value)}
                     aria-label="Session name"
                     autoFocus
+                    disabled={isBusy}
                   />
-                  <button type="submit">Save</button>
-                  <button type="button" onClick={() => setEditingId(null)}>
+                  <button type="submit" disabled={isBusy}>
+                    Save
+                  </button>
+                  <button type="button" onClick={() => setEditingId(null)} disabled={isBusy}>
                     Cancel
                   </button>
                 </form>
@@ -89,6 +123,7 @@ export function SessionList({
                     className="session-list__select"
                     title={session.title}
                     onClick={() => onSelect(session.id)}
+                    disabled={isBusy}
                   >
                     {session.title}
                   </button>
@@ -97,6 +132,7 @@ export function SessionList({
                       type="button"
                       onClick={() => startRename(session.id, session.title)}
                       aria-label={`Rename ${session.title}`}
+                      disabled={isBusy}
                     >
                       Rename
                     </button>
@@ -107,6 +143,7 @@ export function SessionList({
                         setEditingId(null);
                       }}
                       aria-label={`Delete ${session.title}`}
+                      disabled={isBusy}
                     >
                       Delete
                     </button>
@@ -115,21 +152,14 @@ export function SessionList({
               )}
 
               {confirmingId === session.id && (
-                <div className="session-list__confirm" role="alertdialog">
-                  <span>Delete this session and its history?</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirmingId(null);
-                      onDelete(session.id);
-                    }}
-                  >
-                    Delete
-                  </button>
-                  <button type="button" onClick={() => setConfirmingId(null)}>
-                    Cancel
-                  </button>
-                </div>
+                <SessionListDeleteConfirmation
+                  disabled={isBusy}
+                  onConfirm={() => {
+                    setConfirmingId(null);
+                    onDelete(session.id);
+                  }}
+                  onCancel={() => setConfirmingId(null)}
+                />
               )}
             </li>
           ))}

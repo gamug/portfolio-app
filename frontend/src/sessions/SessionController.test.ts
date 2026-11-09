@@ -32,6 +32,8 @@ class FakeStorage implements ThreadStorage {
   failUpdate = false;
   failGetMessages = false;
   failList = false;
+  messagesStarted: (() => void) | null = null;
+  holdMessages: Promise<void> | null = null;
 
   async listThreads(): Promise<{ threads: Thread[] }> {
     if (this.failList) throw new Error("list failed");
@@ -48,6 +50,8 @@ class FakeStorage implements ThreadStorage {
 
   async getMessages(threadId: string): Promise<Message[]> {
     if (this.failGetMessages) throw new Error("history failed");
+    this.messagesStarted?.();
+    if (this.holdMessages !== null) await this.holdMessages;
     return this.messages.get(threadId) ?? [];
   }
 
@@ -111,6 +115,8 @@ class FakeChats implements ChatClient {
   chunks: string[] = [];
   error: Error | null = null;
   calls: Array<{ question: string; sessionId: string; signal?: AbortSignal }> = [];
+  started: (() => void) | null = null;
+  hold: Promise<void> | null = null;
 
   async *streamAnswer(
     question: string,
@@ -118,6 +124,8 @@ class FakeChats implements ChatClient {
     signal?: AbortSignal,
   ): AsyncIterable<string> {
     this.calls.push({ question, sessionId, signal });
+    this.started?.();
+    if (this.hold !== null) await this.hold;
     for (const chunk of this.chunks) {
       if (signal?.aborted) {
         throw new Error("aborted");
@@ -353,6 +361,98 @@ describe("SessionController", () => {
     expect(after.messages).toEqual(before.messages);
     expect(after.report).toEqual(before.report);
     expect(after.error).toBeTruthy();
+  });
+});
+
+describe("SessionController session lock", () => {
+  it("ignores select, create, rename and delete while a chat answer is pending", async () => {
+    const { storage, chats, controller } = makeController();
+    storage.threads = [session("s1", "One"), session("s2", "Two")];
+    await controller.initialize();
+    const started = deferred();
+    const gate = deferred();
+    chats.started = started.resolve;
+    chats.hold = gate.promise;
+
+    const sending = controller.sendQuestion("Question");
+    await started.promise;
+    const before = controller.getSnapshot();
+
+    await controller.selectSession("s2");
+    await controller.createSession();
+    await controller.renameSession("s1", "Renamed");
+    await controller.deleteSession("s1", true);
+
+    const after = controller.getSnapshot();
+    expect(after.activeSessionId).toBe("s1");
+    expect(after.sessions).toEqual(before.sessions);
+    expect(storage.created).toEqual([]);
+    expect(storage.deleted).toEqual([]);
+
+    gate.resolve();
+    await sending;
+  });
+
+  it("ignores select, create, rename and delete while a report is being generated", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1", "One"), session("s2", "Two")];
+    await controller.initialize();
+    const started = deferred();
+    const gate = deferred();
+    reports.generateImpl = async function* () {
+      yield { type: "progress", stage: "planning" };
+      started.resolve();
+      await gate.promise;
+      yield { type: "done", report: report("root = Card([])") };
+    };
+
+    const generation = controller.generateReport();
+    await started.promise;
+    const before = controller.getSnapshot();
+
+    await controller.selectSession("s2");
+    await controller.createSession();
+    await controller.renameSession("s1", "Renamed");
+    await controller.deleteSession("s1", true);
+
+    const after = controller.getSnapshot();
+    expect(after.activeSessionId).toBe("s1");
+    expect(after.sessions).toEqual(before.sessions);
+    expect(storage.created).toEqual([]);
+    expect(storage.deleted).toEqual([]);
+
+    gate.resolve();
+    await generation;
+  });
+
+  it("ignores select, create, rename and delete while a session is loading", async () => {
+    const { storage, controller } = makeController();
+    storage.threads = [session("s1", "One"), session("s2", "Two"), session("s3", "Three")];
+    await controller.initialize();
+    const started = deferred();
+    const gate = deferred();
+    storage.messagesStarted = started.resolve;
+    storage.holdMessages = gate.promise;
+
+    const selecting = controller.selectSession("s2");
+    await started.promise;
+    const before = controller.getSnapshot();
+    expect(before.isLoading).toBe(true);
+
+    await controller.selectSession("s3");
+    await controller.createSession();
+    await controller.renameSession("s1", "Renamed");
+    await controller.deleteSession("s1", true);
+
+    const after = controller.getSnapshot();
+    expect(after.activeSessionId).toBe("s1");
+    expect(after.sessions).toEqual(before.sessions);
+    expect(storage.created).toEqual([]);
+    expect(storage.deleted).toEqual([]);
+
+    gate.resolve();
+    await selecting;
+    expect(controller.getSnapshot().activeSessionId).toBe("s2");
   });
 });
 
