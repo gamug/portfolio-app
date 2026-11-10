@@ -87,6 +87,75 @@ def test_accepts_a_pie_and_a_table() -> None:
     assert [chart.type for chart in plan.charts] == ["pie", "table"]
 
 
+@pytest.mark.parametrize("chart_type", ["bar", "horizontal_bar", "stacked_bar", "line", "area"])
+def test_accepts_cartesian_types_and_axis_labels(chart_type: str) -> None:
+    document = _document()
+    document["charts"][0]["type"] = chart_type
+    document["charts"][0]["x_label"] = "Month"
+    document["charts"][0]["y_label"] = "Revenue"
+    plan = parse_chart_plan(document, [ANSWERS])
+    chart = plan.charts[0]
+    assert chart.type == chart_type
+    assert chart.x_label == "Month"
+    assert chart.y_label == "Revenue"
+
+
+def test_accepts_a_donut_chart() -> None:
+    document = _document()
+    document["charts"] = [
+        {
+            "type": "donut",
+            "title": "March mix",
+            "labels": ["Product", "Service"],
+            "values": [90, 60],
+            "takeaway": "Product is larger.",
+        }
+    ]
+    plan = parse_chart_plan(document, ["Product 90, Service 60."])
+    chart = plan.charts[0]
+    assert chart.type == "donut"
+    assert chart.values == (90.0, 60.0)
+    assert chart.x_label == ""
+    assert chart.y_label == ""
+
+
+def test_optional_axis_labels_default_to_empty_and_reject_non_strings() -> None:
+    document = _document()
+    document["charts"][0]["x_label"] = None
+    document["charts"][0]["y_label"] = "  Revenue  "
+    plan = parse_chart_plan(document, [ANSWERS])
+    assert plan.charts[0].x_label == ""
+    assert plan.charts[0].y_label == "Revenue"
+
+    document["charts"][0]["x_label"] = 5
+    with pytest.raises(ReportSkillError, match="x_label"):
+        parse_chart_plan(document, [ANSWERS])
+
+
+def test_rejects_negative_values_in_a_donut() -> None:
+    document = _document()
+    document["charts"] = [
+        {
+            "type": "donut",
+            "title": "Mix",
+            "labels": ["A", "B"],
+            "values": [-1, 2],
+            "takeaway": "Invalid.",
+        }
+    ]
+    with pytest.raises(ReportSkillError, match="negative"):
+        parse_chart_plan(document, ["A -1, B 2"])
+
+
+@pytest.mark.parametrize("chart_type", ["area", "horizontal_bar", "stacked_bar"])
+def test_rejects_invented_numbers_in_new_cartesian_types(chart_type: str) -> None:
+    document = _document()
+    document["charts"][0]["type"] = chart_type
+    document["charts"][0]["series"][0]["values"] = [100, 120, 999]
+    with pytest.raises(ReportSkillError, match="not in the answers"):
+        parse_chart_plan(document, [ANSWERS])
+
+
 def test_accepts_empty_table_cells_without_counting_them_as_numbers() -> None:
     document = _document()
     document["charts"] = [

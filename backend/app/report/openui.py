@@ -50,6 +50,10 @@ def plan_payload(plan: ChartPlan) -> dict[str, Any]:
             "title": chart.title,
             "takeaway": chart.takeaway,
         }
+        if chart.x_label:
+            item["x_label"] = chart.x_label
+        if chart.y_label:
+            item["y_label"] = chart.y_label
         if chart.labels:
             item["labels"] = list(chart.labels)
         if chart.series:

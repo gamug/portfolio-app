@@ -11,8 +11,8 @@ OUTPUT RULES
 - Return only OpenUI Lang statements, one per line, with no markdown fences, no comments and no
   prose before or after the program.
 - The first statement is: root = Card([...])
-- Use only these components: Card, CardHeader, TextContent, InlineHeader, BarChart, LineChart,
-  PieChart, Table, Col, Series.
+- Use only these components: Card, CardHeader, TextContent, InlineHeader, Callout, BarChart,
+  HorizontalBarChart, LineChart, AreaChart, PieChart, Table, Col, Series.
 - Never use Stack, Tabs, SectionBlock, Carousel, forms, buttons, images, FollowUpBlock, actions,
   state variables, queries or any component outside the list above. This is a static report.
 - Keep every number, label and visible string exactly as it appears in the plan. Do not translate,
@@ -26,11 +26,18 @@ OUTPUT RULES
 - Each chart section is a Card with an InlineHeader(chart title, takeaway) followed by the chart
   component. Do not add a section when the plan has no charts.
 - Map the plan charts exactly:
-  - "bar": BarChart(labels, [Series(category, values), ...], "grouped", "Category", "Value")
-  - "line": LineChart(labels, [Series(category, values), ...], "linear", "Category", "Value")
-  - "pie": PieChart(labels, values)
+  - "line": LineChart(labels, [Series(category, values), ...], "natural", x_label, y_label)
+  - "area": AreaChart(labels, [Series(category, values), ...], "natural", x_label, y_label)
+  - "bar": BarChart(labels, [Series(category, values), ...], "grouped", x_label, y_label)
+  - "stacked_bar": BarChart(labels, [Series(category, values), ...], "stacked", x_label, y_label)
+  - "horizontal_bar": HorizontalBarChart(labels, [Series(category, values), ...], "grouped",
+    x_label, y_label)
+  - "pie": PieChart(labels, values, "donut")
+  - "donut": PieChart(labels, values, "donut")
   - "table": Table([Col(label, values, "number" or "string"), ...])
-  Use "number" for a column whose values are all numbers and "string" otherwise.
+  Use "number" for a column whose values are all numbers and "string" otherwise. Omit x_label
+  and y_label when either is empty; never pass placeholder axis labels such as "Category" or
+  "Value".
 - Define root first so the report shell appears immediately while streaming. Every defined name
   must be reachable from root; do not leave orphan variables.
 - Do not add commentary, sources, citations, buttons, follow-up questions or a title other than

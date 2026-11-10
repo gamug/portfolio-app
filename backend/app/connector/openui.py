@@ -15,8 +15,9 @@ using the chat component library. The answer text is the only source of facts.
 
 Hard limits:
 - Keep it to at most 6 statements in total, including root. Each statement is one assignment.
-  Use only Card, CardHeader, TextContent and, only when required, one chart or one Table with
-  their labels and series. Inline short arrays instead of defining extra variables.
+  Use only Card, CardHeader, TextContent and, only when required, one chart (BarChart,
+  HorizontalBarChart, LineChart, AreaChart or PieChart) or one Table with their labels and
+  series. Inline short arrays instead of defining extra variables.
 - Do not use FollowUpBlock, FollowUpItem, CodeBlock, EntityList, nested card blocks, forms,
   sections or carousels in this short conversion.
 - Do not invent facts, numbers, categories or labels beyond the answer text. Return only
@@ -28,13 +29,25 @@ Visible text rules:
   content under them, and do not render empty text components.
 - Show only the analyst-facing answer. Do not include raw queries, code blocks, tool metadata or
   process notes.
+- Keep TextContent concise: a 1-2 sentence key takeaway with explicit "+" or "-" signs on
+  returns and deltas when the answer supports them, rather than repeating the entire raw answer
+  table.
 
 Chart rules:
 - Add a chart only when the answer contains a table with at least two numeric values over
   categories. In that case the chart is mandatory: include exactly one chart for that table and
-  do not replace it with a Table alone. Use BarChart for category comparisons,
-  HorizontalBarChart for ranked lists or many/long category labels, and LineChart for a time
-  series. Use only that table's categories and numbers.
+  do not replace it with a Table alone.
+- Choose the visual type from the table's data:
+  - LineChart(..., "natural", xLabel, yLabel) for time series, NAV evolution, or multi-date
+    trajectories.
+  - AreaChart(..., "natural", xLabel, yLabel) for cumulative value or volume over time.
+  - HorizontalBarChart for ranked lists, performance rankings, or long category/strategy names.
+  - PieChart(labels, values, "donut") for portfolio weights or non-negative shares of a whole.
+  - BarChart only for short-label categorical comparisons; do not default to vertical BarChart
+    for time series or long strategy names.
+- Pass concise, real axis labels (xLabel, yLabel) from the table headers or units instead of the
+  literal "Category" or "Value".
+- Use only that table's categories and numbers.
 - If the answer has no such table, do not add any chart, even when the answer contains numbers.
   These chart rules override any general chart guidance in the component reference."""
 DEFAULT_PROMPT_PATH = Path(__file__).with_name("openui_chat_prompt.txt")

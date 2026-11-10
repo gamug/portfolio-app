@@ -26,7 +26,18 @@ from .models import (
 )
 
 DEFAULT_PROMPT_PATH = Path(__file__).with_name("prompts") / "report_skill_1_chart_plan_prompt.txt"
-ALLOWED_TYPES: tuple[ChartType, ...] = ("bar", "line", "pie", "table")
+ALLOWED_TYPES: tuple[ChartType, ...] = (
+    "bar",
+    "horizontal_bar",
+    "stacked_bar",
+    "line",
+    "area",
+    "pie",
+    "donut",
+    "table",
+)
+CARTESIAN_TYPES: tuple[ChartType, ...] = ("bar", "horizontal_bar", "stacked_bar", "line", "area")
+CIRCULAR_TYPES: tuple[ChartType, ...] = ("pie", "donut")
 MAX_CHARTS = 8
 DEFAULT_MAX_TOKENS = 2500
 NUMBER_PATTERN = re.compile(r"(?<![\w.])-?\d[\d,]*(?:\.\d+)?")
@@ -70,6 +81,15 @@ def _require_text(document: dict[str, Any], key: str) -> str:
     value = document.get(key)
     if not isinstance(value, str) or not value.strip():
         raise ReportSkillError(f"The chart plan has no usable {key}.")
+    return value.strip()
+
+
+def _optional_text(document: dict[str, Any], key: str) -> str:
+    value = document.get(key)
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise ReportSkillError(f"The chart plan field {key} must be a string.")
     return value.strip()
 
 
@@ -166,11 +186,14 @@ def _chart(document: object, source_numbers: set[float]) -> ChartSpec:
         raise ReportSkillError("Each chart in the plan must be an object.")
     raw_type = document.get("type")
     if raw_type not in ALLOWED_TYPES:
-        raise ReportSkillError("Each chart type must be one of bar, line, pie or table.")
+        raise ReportSkillError(
+            "Each chart type must be one of bar, line, pie or table "
+            "(or horizontal_bar, stacked_bar, area, donut)."
+        )
     chart_type: ChartType = raw_type
     title = _require_text(document, "title")
     takeaway = _require_text(document, "takeaway")
-    if chart_type in ("bar", "line"):
+    if chart_type in CARTESIAN_TYPES:
         labels = _labels(document.get("labels"))
         series = _series(document.get("series"), len(labels), source_numbers)
         return ChartSpec(
@@ -179,17 +202,19 @@ def _chart(document: object, source_numbers: set[float]) -> ChartSpec:
             takeaway=takeaway,
             labels=labels,
             series=series,
+            x_label=_optional_text(document, "x_label"),
+            y_label=_optional_text(document, "y_label"),
         )
-    if chart_type == "pie":
+    if chart_type in CIRCULAR_TYPES:
         labels = _labels(document.get("labels"))
         values = _number_list(document.get("values"), "values")
         if len(values) != len(labels):
-            raise ReportSkillError("A pie chart needs one value per label.")
+            raise ReportSkillError("A pie or donut chart needs one value per label.")
         if any(value < 0 for value in values):
-            raise ReportSkillError("A pie chart cannot use a negative value.")
+            raise ReportSkillError("A pie or donut chart cannot use a negative value.")
         _source_check(values, source_numbers, "values")
         return ChartSpec(
-            type="pie",
+            type=chart_type,
             title=title,
             takeaway=takeaway,
             labels=labels,

@@ -6,7 +6,16 @@ from typing import Literal
 from app.connector.language import Language
 from app.storage.models import QuestionAnswerPair, Report
 
-ChartType = Literal["bar", "line", "pie", "table"]
+ChartType = Literal[
+    "bar",
+    "horizontal_bar",
+    "stacked_bar",
+    "line",
+    "area",
+    "pie",
+    "donut",
+    "table",
+]
 ReportStage = Literal["planning", "rendering"]
 ReportErrorKind = Literal["not_found", "no_history", "no_relevant"]
 
@@ -52,6 +61,8 @@ class ChartSpec:
     series: tuple[ChartSeries, ...] = ()
     values: tuple[float, ...] = ()
     columns: tuple[ChartColumn, ...] = ()
+    x_label: str = ""
+    y_label: str = ""
 
 
 @dataclass(frozen=True, slots=True)

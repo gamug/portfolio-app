@@ -76,6 +76,14 @@ def test_default_openui_prompt_covers_visible_text_and_chart_rules() -> None:
     assert "Do not use FollowUpBlock" in CONVERSION_TASK
     assert "HorizontalBarChart" in CONVERSION_TASK
     assert "LineChart" in CONVERSION_TASK
+    assert "AreaChart" in CONVERSION_TASK
+    assert "PieChart" in CONVERSION_TASK
+    assert "xLabel" in CONVERSION_TASK
+    assert "yLabel" in CONVERSION_TASK
+    assert '"natural"' in CONVERSION_TASK
+    assert '"donut"' in CONVERSION_TASK
+    assert "ranked lists" in CONVERSION_TASK
+    assert "short-label" in CONVERSION_TASK
 
 
 def test_converts_and_strips_fences(tmp_path: Path) -> None:
