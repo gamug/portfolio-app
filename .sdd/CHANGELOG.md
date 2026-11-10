@@ -380,3 +380,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Live validation: re-ran only the chat conversion on 3 stored answers (2 with a numeric markdown table, 1 without); all 3 parsed and passed the label and chart checks (chart counts 1, 1, 0). Ran the report agent once on the local session with 4 relevant pairs; it completed successfully with 3 plan charts and 2 report charts. Agent G was not called and no answer text, questions or figures were committed.
 - No API, dependency, schema or backend-behaviour change.
 - Verification: frontend tests (103 passed), ESLint, Prettier, `tsc --noEmit`, the production build, backend `ruff`, `mypy`, `pytest` (155 passed, 1 skipped) and the SDD/consistency checks pass.
+
+## 2026-11-09 (UI and theme refinement)
+
+### TASK-034 progress — Apply the portfolio theme and chart palettes (WI-014; FR-021, FR-022, FR-026)
+
+- Mounted the `@openuidev/react-ui` `ThemeProvider` around the app and around the exported report, with the effective `light` or `dark` mode resolved from the selected theme and the system preference.
+- Added `portfolioLightTheme` and `portfolioDarkTheme` with the five-colour categorical palette on every chart palette key and `oklch(...)` semantic tokens for surfaces, borders, accents, positive and negative metrics, and alert callouts.
+- `AnswerText` now highlights explicitly signed metrics (`+19.88%`, `-1.24%`, signed currency amounts) as positive or negative badges, while unsigned numbers, dates and code spans stay unchanged.
+- Restyled the sidebar, session cards, chat bubbles, composer, report controls and OpenUI cards, tables and charts with the navy/slate dark theme and the clean light theme. The report template still has 0 external references.
+- The end-to-end acceptance pass is still in progress, so `TASK-034` remains unchecked.
+- No dependency, API, schema or backend change.
+- Verification: frontend tests (109 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; the report template is 4,092,805 bytes with 0 external references. Backend `ruff`, `ruff format --check`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.

@@ -56,4 +56,28 @@ describe("AnswerText", () => {
     expect(html).not.toContain("<code>");
     expect(html).not.toContain("<em>");
   });
+
+  it("marks signed metrics as positive or negative badges", () => {
+    const html = renderToStaticMarkup(<AnswerText text={"Alpha +19.88% and Beta -1.24%."} />);
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--positive">+19.88%</span>',
+    );
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--negative">-1.24%</span>',
+    );
+  });
+
+  it("leaves unsigned numbers and dates as plain text", () => {
+    const html = renderToStaticMarkup(
+      <AnswerText text={"Revenue rose from 100 to 150 on 2026-11-05."} />,
+    );
+    expect(html).not.toContain("answer-text__metric");
+    expect(html).toContain("Revenue rose from 100 to 150 on 2026-11-05.");
+  });
+
+  it("keeps signed metrics inside code unstyled", () => {
+    const html = renderToStaticMarkup(<AnswerText text={"`+19.88%`"} />);
+    expect(html).toContain("<code>+19.88%</code>");
+    expect(html).not.toContain("answer-text__metric");
+  });
 });
