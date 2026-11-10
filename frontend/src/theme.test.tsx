@@ -154,4 +154,9 @@ describe("theme", () => {
       "#D97706",
     ]);
   });
+
+  it("uses surface colours for the openui foreground token", () => {
+    expect(portfolioDarkTheme.foreground).not.toBe(portfolioDarkTheme.textNeutralPrimary);
+    expect(portfolioLightTheme.foreground).not.toBe(portfolioLightTheme.textNeutralPrimary);
+  });
 });

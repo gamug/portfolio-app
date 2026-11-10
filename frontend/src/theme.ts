@@ -13,7 +13,7 @@ const DARK_CHART_PALETTE = ["#FB7185", "#34D399", "#60A5FA", "#A78BFA", "#FBBF24
 const LIGHT_CHART_PALETTE = ["#E11D48", "#10B981", "#2563EB", "#7C3AED", "#D97706"];
 
 const DARK_SEMANTIC_TOKENS = {
-  foreground: "oklch(0.93 0.012 255)",
+  foreground: "oklch(0.21 0.028 265)",
   textNeutralPrimary: "oklch(0.93 0.012 255)",
   textNeutralSecondary: "oklch(0.72 0.02 255)",
   textNeutralTertiary: "oklch(0.58 0.02 255)",
@@ -39,7 +39,7 @@ const DARK_SEMANTIC_TOKENS = {
 } as const;
 
 const LIGHT_SEMANTIC_TOKENS = {
-  foreground: "oklch(0.21 0.03 260)",
+  foreground: "oklch(1 0 0)",
   textNeutralPrimary: "oklch(0.21 0.03 260)",
   textNeutralSecondary: "oklch(0.48 0.02 255)",
   textNeutralTertiary: "oklch(0.62 0.02 255)",
