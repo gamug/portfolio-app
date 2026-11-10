@@ -1,7 +1,9 @@
 import { createRoot } from "react-dom/client";
 import { Renderer } from "@openuidev/react-lang";
+import { ThemeProvider } from "@openuidev/react-ui";
 import { openuiLibrary } from "@openuidev/react-ui/genui-lib";
 import "@openuidev/react-ui/styles/index.css";
+import { portfolioDarkTheme, portfolioLightTheme, useResolvedThemeMode } from "../src/theme";
 import "./export.css";
 
 type ReportMeta = {
@@ -25,14 +27,26 @@ const openuiLang = typeof report === "string" ? report : "";
 
 document.title = title;
 
-createRoot(rootElement).render(
-  <main className="export-shell">
-    <header className="export-header">
-      <h1>{title}</h1>
-      {date.length > 0 ? <p className="export-date">{date}</p> : null}
-    </header>
-    <div className="export-report">
-      <Renderer response={openuiLang} library={openuiLibrary} />
-    </div>
-  </main>,
-);
+function ReportExport() {
+  const resolvedMode = useResolvedThemeMode();
+
+  return (
+    <ThemeProvider
+      mode={resolvedMode}
+      lightTheme={portfolioLightTheme}
+      darkTheme={portfolioDarkTheme}
+    >
+      <main className="export-shell">
+        <header className="export-header">
+          <h1>{title}</h1>
+          {date.length > 0 ? <p className="export-date">{date}</p> : null}
+        </header>
+        <div className="export-report">
+          <Renderer response={openuiLang} library={openuiLibrary} />
+        </div>
+      </main>
+    </ThemeProvider>
+  );
+}
+
+createRoot(rootElement).render(<ReportExport />);

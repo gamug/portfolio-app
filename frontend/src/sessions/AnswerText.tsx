@@ -10,6 +10,42 @@ const ORDERED_PATTERN = /^\s*\d+[.)]\s+(.*)$/;
 const HEADING_PATTERN = /^(#{1,6})\s+(.*)$/;
 const TABLE_DIVIDER_PATTERN = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/;
 
+function renderMetrics(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  const pattern = /(^|[\s(])([+-]\$?\d[\d,]*(?:\.\d+)?%?)/g;
+  let lastIndex = 0;
+  let match = pattern.exec(text);
+
+  while (match !== null) {
+    const boundary = match[1] ?? "";
+    const metric = match[2];
+    if (metric === undefined) {
+      match = pattern.exec(text);
+      continue;
+    }
+    const start = match.index + boundary.length;
+    if (start > lastIndex) {
+      nodes.push(text.slice(lastIndex, start));
+    }
+    const direction = metric.startsWith("+") ? "positive" : "negative";
+    nodes.push(
+      <span
+        key={`metric-${start}`}
+        className={`answer-text__metric answer-text__metric--${direction}`}
+      >
+        {metric}
+      </span>,
+    );
+    lastIndex = start + metric.length;
+    match = pattern.exec(text);
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+  return nodes;
+}
+
 function renderInline(text: string): ReactNode[] {
   return text.split(INLINE_PATTERN).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
@@ -21,7 +57,7 @@ function renderInline(text: string): ReactNode[] {
     if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
       return <em key={index}>{part.slice(1, -1)}</em>;
     }
-    return <Fragment key={index}>{part}</Fragment>;
+    return <Fragment key={index}>{renderMetrics(part)}</Fragment>;
   });
 }
 

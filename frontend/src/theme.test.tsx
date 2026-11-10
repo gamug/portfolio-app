@@ -1,7 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThemeToggle } from "./ThemeToggle";
-import { applyTheme, readTheme, saveTheme } from "./theme";
+import {
+  applyTheme,
+  portfolioDarkTheme,
+  portfolioLightTheme,
+  readTheme,
+  resolveThemeMode,
+  saveTheme,
+  subscribeTheme,
+} from "./theme";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -66,5 +74,84 @@ describe("theme", () => {
   it("ignores an unknown stored value", () => {
     vi.stubGlobal("localStorage", storage({ "portfolio-theme": "sepia" }));
     expect(readTheme()).toBe("system");
+  });
+
+  it("notifies subscribers when the applied theme changes", () => {
+    const root = { dataset: {} as Record<string, string>, removeAttribute: vi.fn() };
+    vi.stubGlobal("document", { documentElement: root });
+    const listener = vi.fn();
+    const unsubscribe = subscribeTheme(listener);
+
+    applyTheme("dark");
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    applyTheme("light");
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("resolves the effective mode from an explicit theme or the system preference", () => {
+    expect(resolveThemeMode("light")).toBe("light");
+    expect(resolveThemeMode("dark")).toBe("dark");
+    expect(resolveThemeMode("system")).toBe("light");
+
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
+    expect(resolveThemeMode("system")).toBe("dark");
+  });
+
+  it("defines five categorical colours and semantic tokens in both modes", () => {
+    const paletteKeys = [
+      "defaultChartPalette",
+      "barChartPalette",
+      "lineChartPalette",
+      "areaChartPalette",
+      "pieChartPalette",
+      "radarChartPalette",
+      "radialChartPalette",
+      "horizontalBarChartPalette",
+    ] as const;
+    const tokenKeys = [
+      "foreground",
+      "background",
+      "sunk",
+      "elevated",
+      "borderDefault",
+      "interactiveAccentDefault",
+      "textSuccessPrimary",
+      "successBackground",
+      "textDangerPrimary",
+      "dangerBackground",
+      "textAlertPrimary",
+      "alertBackground",
+      "borderAlert",
+      "borderAlertEmphasis",
+    ] as const;
+
+    for (const theme of [portfolioLightTheme, portfolioDarkTheme]) {
+      for (const key of paletteKeys) {
+        expect(theme[key]).toHaveLength(5);
+      }
+      for (const key of tokenKeys) {
+        expect(theme[key]).toMatch(/^oklch\(/);
+      }
+    }
+
+    expect(portfolioDarkTheme.defaultChartPalette).toEqual([
+      "#FB7185",
+      "#34D399",
+      "#60A5FA",
+      "#A78BFA",
+      "#FBBF24",
+    ]);
+    expect(portfolioLightTheme.defaultChartPalette).toEqual([
+      "#E11D48",
+      "#10B981",
+      "#2563EB",
+      "#7C3AED",
+      "#D97706",
+    ]);
   });
 });
