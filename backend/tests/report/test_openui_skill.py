@@ -10,13 +10,14 @@ import pytest
 
 from app.connector.settings import Settings
 from app.report.chart_plan import DEFAULT_PROMPT_PATH as PLAN_PROMPT_PATH
-from app.report.models import ChartPlan, ReportSkillError
+from app.report.models import ChartPlan, ChartSeries, ChartSpec, ReportSkillError
 from app.report.openui import (
     DEFAULT_PROMPT_PATH,
     DEFAULT_REFERENCE_PATH,
     DEFAULT_VALIDATOR_PATH,
     NodeOpenUIParser,
     OpenUIReportSkill,
+    plan_payload,
 )
 
 PLAN = ChartPlan(
@@ -137,6 +138,65 @@ def test_prompt_files_are_drafts_and_exist() -> None:
     assert '"Report" as the subtitle' in report_prompt
 
 
+def test_prompts_document_portfolio_chart_types_and_axis_labels() -> None:
+    plan_prompt = PLAN_PROMPT_PATH.read_text(encoding="utf-8")
+    report_prompt = DEFAULT_PROMPT_PATH.read_text(encoding="utf-8")
+    for phrase in (
+        '"horizontal_bar"',
+        '"stacked_bar"',
+        '"area"',
+        '"donut"',
+        '"x_label"',
+        '"y_label"',
+        "+19.88%",
+    ):
+        assert phrase in plan_prompt
+    for phrase in (
+        "AreaChart",
+        "HorizontalBarChart",
+        'PieChart(labels, values, "donut")',
+        '"natural"',
+        "x_label",
+        "y_label",
+    ):
+        assert phrase in report_prompt
+
+
+def test_plan_payload_serializes_axis_labels_and_circular_type() -> None:
+    plan = ChartPlan(
+        title="Portfolio",
+        summary="Ranking and allocation.",
+        charts=(
+            ChartSpec(
+                type="horizontal_bar",
+                title="Strategy ranking",
+                takeaway="Alpha leads.",
+                labels=("Alpha", "Beta"),
+                series=(ChartSeries(category="Return", values=(1.0, 2.0)),),
+                x_label="Return (%)",
+                y_label="Strategy",
+            ),
+            ChartSpec(
+                type="donut",
+                title="Allocation",
+                takeaway="Alpha has more weight.",
+                labels=("Alpha", "Beta"),
+                values=(60.0, 40.0),
+            ),
+        ),
+        conclusions="Alpha leads the ranking and the allocation.",
+    )
+
+    payload = plan_payload(plan)
+
+    assert payload["charts"][0]["type"] == "horizontal_bar"
+    assert payload["charts"][0]["x_label"] == "Return (%)"
+    assert payload["charts"][0]["y_label"] == "Strategy"
+    assert payload["charts"][1]["type"] == "donut"
+    assert "x_label" not in payload["charts"][1]
+    assert "y_label" not in payload["charts"][1]
+
+
 def test_stream_uses_the_chat_prompt_as_reference(tmp_path: Path) -> None:
     completions = FakeCompletions(["root = Card([])"])
     skill = _skill(tmp_path, completions)
@@ -205,6 +265,15 @@ def test_node_parser_accepts_valid_openui_and_rejects_invalid() -> None:
             "root = Card([title, chart])\n"
             'title = CardHeader("Synthetic", "Report")\n'
             'chart = BarChart(["A", "B"], [Series("S", [1, 2])])'
+        )
+    )
+    asyncio.run(
+        parser.validate(
+            "root = Card([areaChart, ranking, weights])\n"
+            'areaChart = AreaChart(["A", "B"], [Series("S", [1, 2])], "natural", "Date", "NAV")\n'
+            'ranking = HorizontalBarChart(["A", "B"], [Series("S", [1, 2])], "grouped", '
+            '"Return (%)", "Strategy")\n'
+            'weights = PieChart(["A", "B"], [1, 2], "donut")'
         )
     )
     with pytest.raises(ReportSkillError, match="not valid OpenUI Lang"):

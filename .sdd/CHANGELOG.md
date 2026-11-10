@@ -392,3 +392,17 @@ Record completed Work Items and their associated tasks here after verification. 
 - The end-to-end acceptance pass is still in progress, so `TASK-034` remains unchecked.
 - No dependency, API, schema or backend change.
 - Verification: frontend tests (109 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; the report template is 4,092,805 bytes with 0 external references. Backend `ruff`, `ruff format --check`, `mypy`, `pytest`, `check_sdd.py` and `check_consistency.py` pass.
+
+## 2026-11-10 (report chart quality)
+
+### TASK-034 progress — Improve portfolio chart selection in the report and chat prompts (WI-014; FR-021, FR-022, FR-025)
+
+- Expanded `ChartType` to `bar`, `horizontal_bar`, `stacked_bar`, `line`, `area`, `pie`, `donut` and `table`, and added optional `x_label`/`y_label` fields to `ChartSpec`.
+- `parse_chart_plan` now validates the new cartesian and circular types, parses optional axis labels, rejects non-string labels and negative donut values, and keeps the strict `extract_numbers` / `_source_check` rule that every chart or table number must appear verbatim in the answer text. `plan_payload` serializes non-empty axis labels.
+- Report skill 1 now documents the portfolio chart catalogue, axis labels, donut allocations, horizontal rankings, smooth time series and explicit `+`/`-` signs on supported returns and changes.
+- Report skill 2 now maps every plan type to its OpenUI component with `"natural"` lines and areas, grouped or stacked bars, grouped horizontal rankings, donut pies and real axis labels instead of literal `"Category"` / `"Value"`.
+- The chat conversion now allows `AreaChart` and `PieChart`, selects chart types by portfolio data shape, passes real axis labels, keeps a concise 1-2 sentence takeaway and preserves the 6-statement limit.
+- Tests cover the new chart types, axis-label parsing and serialization, negative donut values, invented values in area/horizontal/stacked charts, and the Node parser accepts `AreaChart`, `HorizontalBarChart` and `PieChart(..., "donut")`.
+- `TASK-034` remains unchecked because the end-to-end acceptance pass is still in progress.
+- No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: backend `pytest` (168 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (110 passed), SDD/consistency checks and `pre-commit run --all-files` pass.

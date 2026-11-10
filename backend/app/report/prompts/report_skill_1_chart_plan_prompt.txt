@@ -28,17 +28,21 @@ Return exactly one JSON object with no markdown fences, no comments and no text 
           "title": "short chart title",
           "labels": ["category 1", "category 2"],
           "series": [{"category": "series name", "values": [1, 2]}],
+          "x_label": "Date",
+          "y_label": "NAV",
           "takeaway": "one sentence about what this chart shows"
         },
         {
-          "type": "bar",
+          "type": "horizontal_bar",
           "title": "short chart title",
           "labels": ["category 1", "category 2"],
           "series": [{"category": "series name", "values": [1, 2]}],
+          "x_label": "Return (%)",
+          "y_label": "Strategy",
           "takeaway": "one sentence about what this chart shows"
         },
         {
-          "type": "pie",
+          "type": "donut",
           "title": "short chart title",
           "labels": ["part 1", "part 2"],
           "values": [1, 2],
@@ -67,16 +71,32 @@ RULES
    "charts": [] and say in the summary that the marked answers contain no numeric data.
 3. Use at most 6 charts. Use at least 1 chart when numeric content exists.
 4. Choose the chart type from what the data supports:
-   - "line" for a trend or a change over time.
-   - "bar" for a comparison between categories or between series.
-   - "pie" for shares of one whole; values must be non-negative.
-   - "table" for several attributes or many rows that do not fit a chart.
-5. Every chart has "type", "title" and "takeaway". For "line" and "bar", also include "labels"
-   and a non-empty "series" array; every series values array has the same length as labels.
-   For "pie", include "labels" and "values" with the same length. For "table", include a
-   non-empty "columns" array; every column has the same number of values, and at least one
-   column is numeric. The first table column is usually the row label. For a missing table
-   value use the string "–", never null.
+   - "line": time series, NAV trajectories, cumulative returns, or multi-period performance
+     comparisons with 3+ time points. Include "x_label" (for example "Date", "Fecha" or "Month")
+     and "y_label" (for example "NAV" or "Return (%)").
+   - "area": cumulative portfolio value, AUM/exposure evolution, or single-series magnitude over
+     time with 3+ time points. Include "x_label" and "y_label".
+   - "horizontal_bar": rankings of assets or strategies, attribution breakdowns, or comparisons
+     where category labels are long (>12 characters) or numerous (5+ items). Include "x_label"
+     and "y_label".
+   - "bar": discrete comparisons across a small number of short category labels (3-6 categories).
+     Do NOT default to "bar" for time series, rankings with long names, or simple 2-point
+     start/end snapshots. Include "x_label" and "y_label".
+   - "stacked_bar": multi-series composition across periods or categories where the stacked parts
+     form a group. Include "x_label" and "y_label".
+   - "donut" or "pie": portfolio allocation, asset weights, or non-negative shares of one whole.
+     Prefer "donut" for portfolio weights and shares. Include "labels" and "values"; do not add
+     axis labels.
+   - "table": multi-metric comparisons (for example NAV, return %, volatility, Sharpe, drawdown)
+     or 2-point start-vs-end snapshots where a bar chart adds little visual value.
+5. Every chart has "type", "title" and "takeaway". For "bar", "horizontal_bar", "stacked_bar",
+   "line" and "area", also include "labels" and a non-empty "series" array; every series values
+   array has the same length as labels. Include "x_label" and "y_label" when the answer provides
+   the axis meaning. Axis labels must describe the answers' headers, periods or units and must
+   never be the literal words "Category" or "Value". For "pie" and "donut", include "labels" and
+   "values" with the same length. For "table", include a non-empty "columns" array; every column
+   has the same number of values, and at least one column is numeric. The first table column is
+   usually the row label. For a missing table value use the string "–", never null.
 6. Labels and titles must describe what is in the answers. Do not add facts, entities, periods
    or categories that are not in the pairs. Keep proper names unchanged.
 7. Write the title, summary, chart titles, takeaways and conclusions in the analyst's language:
@@ -88,3 +108,8 @@ RULES
     them into one chart, table or comparison. Use only the most recent pair (the later entry in
     the "pairs" array) and add a short note in the summary that an earlier answer with different
     figures exists. Never mix values from different pairs in the same series or table.
+11. In the summary, takeaways and conclusions, when stating positive percentage returns or
+    positive changes that the answers support, write the explicit leading "+" (for example
+    "+19.88%") and use "-" for negative values, so the UI can highlight them. Only add a sign
+    when the answer supports a positive or negative change; never change the value or invent a
+    sign. Keep methodological caveats (such as in-sample notes) concise.
