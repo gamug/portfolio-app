@@ -1,7 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { Renderer } from "@openuidev/react-lang";
-import { ThemeProvider } from "@openuidev/react-ui";
-import { openuiLibrary } from "@openuidev/react-ui/genui-lib";
+import { openuiLibrary, ThemeProvider } from "@openuidev/react-ui";
 import "@openuidev/react-ui/styles/index.css";
 import { portfolioDarkTheme, portfolioLightTheme, useResolvedThemeMode } from "../src/theme";
 import "./export.css";

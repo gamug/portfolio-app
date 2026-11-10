@@ -149,6 +149,10 @@ def test_prompts_document_portfolio_chart_types_and_axis_labels() -> None:
         '"x_label"',
         '"y_label"',
         "+19.88%",
+        "at least 3 time points",
+        "2-point start/end comparison",
+        "single-series periodic counts",
+        "Retorno acum.",
     ):
         assert phrase in plan_prompt
     for phrase in (

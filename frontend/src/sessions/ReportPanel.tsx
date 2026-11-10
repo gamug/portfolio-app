@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Renderer } from "@openuidev/react-lang";
-import { openuiLibrary } from "@openuidev/react-ui/genui-lib";
+import { openuiLibrary } from "@openuidev/react-ui";
 import type { SessionState } from "./SessionController";
 
 type ReportPanelProps = {

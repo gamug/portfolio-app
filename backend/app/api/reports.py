@@ -1,5 +1,6 @@
 """Streamed report generation endpoint over the report agent."""
 
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from typing import Literal
@@ -19,6 +20,8 @@ from app.report.models import (
 )
 
 router = APIRouter(prefix="/api/threads", tags=["reports"])
+REPORT_KEEP_ALIVE_SECONDS = 5.0
+REPORT_KEEP_ALIVE = b": keep-alive\n\n"
 
 
 class ReportGenerateRequest(BaseModel):
@@ -61,8 +64,22 @@ async def generate_report(
         )
 
     async def events() -> AsyncIterator[bytes]:
+        iterator = agent.stream(context)
+        pending: asyncio.Task[ReportEvent] | None = None
         try:
-            async for event in agent.stream(context):
+            while True:
+                if pending is None:
+                    pending = asyncio.ensure_future(anext(iterator))
+                done, _ = await asyncio.wait({pending}, timeout=REPORT_KEEP_ALIVE_SECONDS)
+                if not done:
+                    yield REPORT_KEEP_ALIVE
+                    continue
+                try:
+                    event = pending.result()
+                except StopAsyncIteration:
+                    pending = None
+                    break
+                pending = None
                 yield _encode(event)
         except ReportError as error:
             yield _sse(
@@ -72,6 +89,16 @@ async def generate_report(
                     "incomplete": False,
                 },
             )
+        finally:
+            if pending is not None and not pending.done():
+                pending.cancel()
+                try:
+                    await pending
+                except (asyncio.CancelledError, StopAsyncIteration):
+                    pass
+            close = getattr(iterator, "aclose", None)
+            if callable(close):
+                await close()
 
     return StreamingResponse(
         events(),
