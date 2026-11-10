@@ -72,10 +72,13 @@ RULES
 3. Use at most 6 charts. Use at least 1 chart when numeric content exists.
 4. Choose the chart type from what the data supports:
    - "line": time series, NAV trajectories, cumulative returns, or multi-period performance
-     comparisons with 3+ time points. Include "x_label" (for example "Date", "Fecha" or "Month")
-     and "y_label" (for example "NAV" or "Return (%)").
+     comparisons. A line chart requires at least 3 time points (3+ time points). Never use
+     "line" for a 2-point start/end comparison such as Inicio vs Fin. Include "x_label" (for
+     example "Date", "Fecha" or "Month") and "y_label" (for example "NAV" or "Return (%)").
    - "area": cumulative portfolio value, AUM/exposure evolution, or single-series magnitude over
-     time with 3+ time points. Include "x_label" and "y_label".
+     time with 3+ time points. Prefer "area" over "bar" for single-series periodic counts,
+     activity, alerts, or cumulative volume over time (for example monthly alert counts across
+     6+ months). Include "x_label" and "y_label".
    - "horizontal_bar": rankings of assets or strategies, attribution breakdowns, or comparisons
      where category labels are long (>12 characters) or numerous (5+ items). Include "x_label"
      and "y_label".
@@ -88,7 +91,10 @@ RULES
      Prefer "donut" for portfolio weights and shares. Include "labels" and "values"; do not add
      axis labels.
    - "table": multi-metric comparisons (for example NAV, return %, volatility, Sharpe, drawdown)
-     or 2-point start-vs-end snapshots where a bar chart adds little visual value.
+     or 2-point start-vs-end snapshots where a bar chart adds little visual value. When an answer
+     table mixes start/end snapshots with summary metrics such as Inicio, Fin, Retorno acum.,
+     Mín., Máx., Sharpe or drawdown, you MUST choose "table" so all numeric columns are
+     preserved; never reduce that table to a 2-point "line" or "bar" chart.
 5. Every chart has "type", "title" and "takeaway". For "bar", "horizontal_bar", "stacked_bar",
    "line" and "area", also include "labels" and a non-empty "series" array; every series values
    array has the same length as labels. Include "x_label" and "y_label" when the answer provides

@@ -114,6 +114,9 @@ function idleStreamingState(): Pick<
 }
 
 function errorText(error: unknown, fallback: string): string {
+  if (error instanceof TypeError) {
+    return fallback;
+  }
   return error instanceof Error && error.message.trim().length > 0 ? error.message : fallback;
 }
 

@@ -631,6 +631,20 @@ describe("SessionController chat", () => {
     expect(after.chatError).toBe("No se pudo generar la respuesta. Inténtalo de nuevo.");
   });
 
+  it("hides raw TypeError stream errors behind the chat fallback", async () => {
+    const { storage, chats, controller } = makeController();
+    storage.threads = [session("s1")];
+    await controller.initialize();
+    chats.error = new TypeError("Error in input stream");
+
+    await controller.sendQuestion("Question");
+
+    const state = controller.getSnapshot();
+    expect(state.chatError).toBe("Could not send the question. Please try again.");
+    expect(state.isSendingChat).toBe(false);
+    expect(state.chatStream).toBeNull();
+  });
+
   it("does not send a question while a report is being generated", async () => {
     const { storage, reports, chats, controller } = makeController();
     storage.threads = [session("s1")];
@@ -764,6 +778,24 @@ describe("SessionController report generation", () => {
     expect(state.reportError).toBe(
       "This session has no history. Start the data exploration first.",
     );
+  });
+
+  it("hides raw TypeError stream errors behind the report fallback", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+    // eslint-disable-next-line require-yield -- the rejected request is the only outcome.
+    reports.generateImpl = async function* () {
+      throw new TypeError("Error in input stream");
+    };
+
+    await controller.generateReport();
+
+    const state = controller.getSnapshot();
+    expect(state.isGeneratingReport).toBe(false);
+    expect(state.report?.openui_lang).toBe("previous");
+    expect(state.reportError).toBe("Could not generate the report. Please try again.");
   });
 
   it("shows the nothing-marked message without replacing the report", async () => {

@@ -1,7 +1,6 @@
 import { useReducer, useState } from "react";
 import { Renderer } from "@openuidev/react-lang";
-import type { Message } from "@openuidev/react-ui";
-import { openuiChatLibrary } from "@openuidev/react-ui/genui-lib";
+import { openuiChatLibrary, type Message } from "@openuidev/react-ui";
 import { AnswerText } from "./AnswerText";
 import { extractAnswerText, messageText } from "./answerText";
 import type { SessionState } from "./SessionController";

@@ -6,6 +6,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+import app.api.reports as reports_api
 from app.connector.settings import Settings
 from app.main import create_app
 from app.report.agent import ReportAgent
@@ -29,6 +30,15 @@ class FakeConnector:
 @dataclass
 class FakePlanSkill:
     async def build(self, pairs: Any, language: str = "en") -> ChartPlan:
+        return PLAN
+
+
+@dataclass
+class SlowPlanSkill(FakePlanSkill):
+    delay: float = 0.1
+
+    async def build(self, pairs: Any, language: str = "en") -> ChartPlan:
+        await asyncio.sleep(self.delay)
         return PLAN
 
 
@@ -75,11 +85,12 @@ class FailingRenderSkill(FakeRenderSkill):
 def _agent(
     store: SQLiteQuestionAnswerStore,
     render: FakeRenderSkill | None = None,
+    plan: FakePlanSkill | None = None,
 ) -> ReportAgent:
     return ReportAgent(
         _settings(),
         store,
-        plan_skill=FakePlanSkill(),  # type: ignore[arg-type]
+        plan_skill=(plan or FakePlanSkill()),  # type: ignore[arg-type]
         render_skill=(render or FakeRenderSkill()),  # type: ignore[arg-type]
     )
 
@@ -133,6 +144,29 @@ def test_generation_streams_progress_deltas_and_done(tmp_path: Path) -> None:
     assert events[-1][1]["report"]["incomplete"] is False
     assert report is not None
     assert report.openui_lang == "".join(FakeRenderSkill().chunks)
+
+
+def test_generation_streams_keep_alive_while_waiting_for_the_next_event(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    monkeypatch.setattr(reports_api, "REPORT_KEEP_ALIVE_SECONDS", 0.02)
+    store = SQLiteQuestionAnswerStore(tmp_path / "app.sqlite3")
+    asyncio.run(store.save(_pair()))
+    app = create_app(
+        connector=FakeConnector(),  # type: ignore[arg-type]
+        store=store,
+        report_agent=_agent(store, plan=SlowPlanSkill(delay=0.1)),
+    )
+    with TestClient(app) as client:
+        with client.stream(
+            "POST", "/api/threads/s1/report/generate", json={"language": "en"}
+        ) as response:
+            assert response.status_code == 200
+            body = "".join(response.iter_text())
+
+    assert ": keep-alive\n\n" in body
+    assert body.index(": keep-alive") < body.index('"stage": "rendering"')
+    assert "event: done" in body
 
 
 def test_failure_streams_a_safe_error_and_stores_the_partial_report(tmp_path: Path) -> None:

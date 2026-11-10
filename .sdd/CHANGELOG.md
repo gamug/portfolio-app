@@ -406,3 +406,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - `TASK-034` remains unchecked because the end-to-end acceptance pass is still in progress.
 - No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: backend `pytest` (168 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (110 passed), SDD/consistency checks and `pre-commit run --all-files` pass.
+
+## 2026-11-10 (chart theme context and report stream)
+
+### TASK-034 progress — Unify the OpenUI theme context and harden report streaming (WI-014; FR-013, FR-021, FR-022, FR-026)
+
+- Imported `ThemeProvider`, `openuiLibrary` and `openuiChatLibrary` from the same `@openuidev/react-ui` entrypoint in the app and the report export, so chart components read the mounted theme instead of the isolated `genui-lib` context and use the portfolio chart palettes.
+- Refined report skill 1: `line` requires at least 3 time points and never replaces a 2-point start/end comparison; `area` is preferred over `bar` for single-series periodic counts, activity, alerts or cumulative volume; mixed start/end and summary-metric tables must use `table` so every numeric column is preserved.
+- Added an SSE `: keep-alive` comment every 5 seconds while the report agent waits for its next event, using a pending `anext` task that is reused across heartbeats, then cancelled and closed in `finally`.
+- `SessionController.errorText` now returns the user-safe fallback for raw browser `TypeError`s such as `Error in input stream` and `Failed to fetch`, for both chat streaming and report generation.
+- Added the missing `format:check` and `typecheck` frontend script aliases used by the verification commands.
+- The report template still builds with 0 external references. No dependency, SQLite schema, HTTP endpoint or API change; `TASK-034` remains unchecked.
+- Verification: frontend tests (113 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,810,422 bytes with 0 external references; backend `pytest` (169 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; SDD/consistency checks and `pre-commit run --all-files` pass.

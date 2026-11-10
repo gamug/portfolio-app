@@ -1,4 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { Renderer } from "@openuidev/react-lang";
+import { openuiLibrary, ThemeProvider } from "@openuidev/react-ui";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThemeToggle } from "./ThemeToggle";
 import {
@@ -158,5 +160,23 @@ describe("theme", () => {
   it("uses surface colours for the openui foreground token", () => {
     expect(portfolioDarkTheme.foreground).not.toBe(portfolioDarkTheme.textNeutralPrimary);
     expect(portfolioLightTheme.foreground).not.toBe(portfolioLightTheme.textNeutralPrimary);
+  });
+
+  it("provides the portfolio chart palette to the OpenUI library", () => {
+    const html = renderToStaticMarkup(
+      <ThemeProvider mode="dark" lightTheme={portfolioLightTheme} darkTheme={portfolioDarkTheme}>
+        <Renderer
+          response={
+            'root = Card([c])\nc = BarChart(["A", "B"], [Series("S1", [1, 2]), Series("S2", [3, 4])])'
+          }
+          library={openuiLibrary}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(html).toContain("#34D399");
+    expect(html).toContain("#A78BFA");
+    expect(html).not.toContain("#1E88E5");
+    expect(html).not.toContain("#42A5F5");
   });
 });
