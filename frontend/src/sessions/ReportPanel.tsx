@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Renderer } from "@openuidev/react-lang";
-import { openuiLibrary } from "@openuidev/react-ui";
+import { portfolioReportLibrary } from "../openui/portfolioLibrary";
 import type { SessionState } from "./SessionController";
 
 type ReportPanelProps = {
@@ -139,9 +139,9 @@ export function ReportPanel({
 
       <div className="report-panel__body" data-report-view={view}>
         {view === "stream" ? (
-          <Renderer response={state.reportStream} library={openuiLibrary} />
+          <Renderer response={state.reportStream} library={portfolioReportLibrary} />
         ) : view === "current" && state.report !== null ? (
-          <Renderer response={state.report.openui_lang} library={openuiLibrary} />
+          <Renderer response={state.report.openui_lang} library={portfolioReportLibrary} />
         ) : (
           <p>No report yet.</p>
         )}

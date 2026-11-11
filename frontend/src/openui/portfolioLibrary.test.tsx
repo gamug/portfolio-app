@@ -1,0 +1,86 @@
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { Renderer } from "@openuidev/react-lang";
+import { ThemeProvider } from "@openuidev/react-ui";
+import { portfolioDarkTheme, portfolioLightTheme } from "../theme";
+import { portfolioChatLibrary, portfolioReportLibrary } from "./portfolioLibrary";
+
+function render(response: string, library = portfolioReportLibrary) {
+  return renderToStaticMarkup(<Renderer response={response} library={library} />);
+}
+
+function yTicks(html: string): number[] {
+  return [...html.matchAll(/data-chart-tick="y"[^>]*>([^<]+)</g)].map((match) =>
+    Number((match[1] ?? "").replaceAll(",", "")),
+  );
+}
+
+describe("portfolioReportLibrary", () => {
+  it("renders signed metrics inside TextContent", () => {
+    const html = render('root = Card([t])\nt = TextContent("Return +19.88% and drawdown -1.24%.")');
+
+    expect(html).toContain("answer-text__metric--positive");
+    expect(html).toContain("answer-text__metric--negative");
+    expect(html).toContain("+19.88%");
+    expect(html).toContain("-1.24%");
+  });
+
+  it("renders signed metrics inside InlineHeader", () => {
+    const html = render('root = Card([h])\nh = InlineHeader("Takeaway +19.88%", "Versus -1.24%")');
+
+    expect(html).toContain("openui-inline-header");
+    expect(html).toContain("answer-text__metric--positive");
+    expect(html).toContain("answer-text__metric--negative");
+  });
+
+  it("renders signed metrics inside table cells", () => {
+    const html = render(
+      "root = Card([t])\nt = Table([c1, c2])\n" +
+        'c1 = Col("Metric", ["Return", "Drawdown"])\n' +
+        'c2 = Col("Result", ["+19.88%", "-1.24%"])',
+    );
+
+    expect(html).toContain("openui-table");
+    expect(html).toContain("answer-text__metric--positive");
+    expect(html).toContain("answer-text__metric--negative");
+    expect(html).toContain("+19.88%");
+    expect(html).toContain("-1.24%");
+  });
+
+  it("scales NAV line charts around the data and explains the axes", () => {
+    const html = renderToStaticMarkup(
+      <ThemeProvider mode="dark" lightTheme={portfolioLightTheme} darkTheme={portfolioDarkTheme}>
+        <Renderer
+          response={
+            'root = Card([c])\nc = LineChart(["2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06"], [Series("Portfolio", [0.8213, 0.874, 0.903, 0.951, 0.982, 1.0087])], "natural", "Fecha", "NAV")'
+          }
+          library={portfolioReportLibrary}
+        />
+      </ThemeProvider>,
+    );
+
+    const ticks = yTicks(html);
+    expect(ticks.length).toBeGreaterThanOrEqual(4);
+    expect(Math.min(...ticks)).toBeGreaterThan(0.75);
+    expect(Math.max(...ticks)).toBeLessThan(1.1);
+    expect(html).not.toContain(">0.000<");
+    expect(html).toContain("Eje Y: NAV");
+    expect(html).toContain("Rango: 0.8213 – 1.0087");
+    expect(html).toContain("Eje X: Fecha");
+    expect(html).toContain('data-series-legend="Portfolio"');
+    expect(html).toContain("0.8213 → 1.0087");
+    expect(html).toContain('data-chart-kind="line"');
+    expect(html).toContain('height="360"');
+    expect(html).toContain("#FB7185");
+  });
+
+  it("provides the same signed-metric overrides to chat charts", () => {
+    const html = render(
+      'root = Card([t])\nt = TextContent("Return +19.88% and drawdown -1.24%.")',
+      portfolioChatLibrary,
+    );
+
+    expect(html).toContain("answer-text__metric--positive");
+    expect(html).toContain("answer-text__metric--negative");
+  });
+});

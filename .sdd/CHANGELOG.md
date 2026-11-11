@@ -418,3 +418,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added the missing `format:check` and `typecheck` frontend script aliases used by the verification commands.
 - The report template still builds with 0 external references. No dependency, SQLite schema, HTTP endpoint or API change; `TASK-034` remains unchecked.
 - Verification: frontend tests (113 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,810,422 bytes with 0 external references; backend `pytest` (169 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; SDD/consistency checks and `pre-commit run --all-files` pass.
+
+## 2026-11-11 (report visual precision)
+
+### TASK-034 progress — Highlight report metrics and scale financial charts (WI-014; FR-015, FR-021, FR-022)
+
+- Exported `renderMetrics` and `renderInline` from `AnswerText` and added `portfolioReportLibrary` / `portfolioChatLibrary`, which override `TextContent`, `InlineHeader` and `Table` so report paragraphs, chart takeaways and table cells reuse the emerald/coral signed-metric badges from the chat.
+- Replaced the built-in OpenUI line and area charts with a responsive SVG `PortfolioChart`: tight positive domains no longer anchor at zero, Y ticks are generated from the data range, the context strip explains the Y unit and range plus the X axis, and the legend shows each series colour, name and start → end values. Data points, hover/focus tooltips and legend visibility toggles are also included.
+- Wired `portfolioReportLibrary` into `ReportPanel` and the exported report, `portfolioChatLibrary` into `PairAnswer`, and kept the report validation script on the same schema through the root `@openuidev/react-ui` entrypoint.
+- Added chart, legend, tooltip and pagination styles for the app and the exported report, with `--app-*` aliases mapped to the OpenUI tokens in the export so the same signed-metric badges work offline.
+- Skill 1 now requires non-empty `x_label` and `y_label` on every cartesian chart, and `_chart()` coerces any 2-point `line` or `area` plan to `bar` while preserving 3+ point lines.
+- `TASK-034` remains unchecked because the end-to-end acceptance pass is still in progress. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: frontend tests (119 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; backend `pytest` (172 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; SDD/consistency checks and `pre-commit run --all-files` pass.

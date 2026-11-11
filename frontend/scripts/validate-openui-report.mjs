@@ -3,7 +3,9 @@
 // Validate one OpenUI Lang report with the same parser the TASK-019 spike used.
 // Reads the program from stdin and writes one JSON result to stdout. Exit code 0 means valid.
 import { createParser } from "@openuidev/react-lang";
-import { openuiLibrary } from "@openuidev/react-ui/genui-lib";
+// portfolioReportLibrary extends this library with renderer-only overrides, so
+// the schema used for validation is identical for both.
+import { openuiLibrary } from "@openuidev/react-ui";
 
 const chunks = [];
 for await (const chunk of process.stdin) {

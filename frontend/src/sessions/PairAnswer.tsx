@@ -1,6 +1,7 @@
 import { useReducer, useState } from "react";
 import { Renderer } from "@openuidev/react-lang";
-import { openuiChatLibrary, type Message } from "@openuidev/react-ui";
+import type { Message } from "@openuidev/react-ui";
+import { portfolioChatLibrary } from "../openui/portfolioLibrary";
 import { AnswerText } from "./AnswerText";
 import { extractAnswerText, messageText } from "./answerText";
 import type { SessionState } from "./SessionController";
@@ -51,7 +52,7 @@ export function PairAnswer({
 
       {showChart && (
         <div className="message__chart" data-chart-view="open">
-          <Renderer response={rawContent} library={openuiChatLibrary} />
+          <Renderer response={rawContent} library={portfolioChatLibrary} />
         </div>
       )}
 

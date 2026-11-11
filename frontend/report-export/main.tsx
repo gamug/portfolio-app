@@ -1,7 +1,8 @@
 import { createRoot } from "react-dom/client";
 import { Renderer } from "@openuidev/react-lang";
-import { openuiLibrary, ThemeProvider } from "@openuidev/react-ui";
+import { ThemeProvider } from "@openuidev/react-ui";
 import "@openuidev/react-ui/styles/index.css";
+import { portfolioReportLibrary } from "../src/openui/portfolioLibrary";
 import { portfolioDarkTheme, portfolioLightTheme, useResolvedThemeMode } from "../src/theme";
 import "./export.css";
 
@@ -41,7 +42,7 @@ function ReportExport() {
           {date.length > 0 ? <p className="export-date">{date}</p> : null}
         </header>
         <div className="export-report">
-          <Renderer response={openuiLang} library={openuiLibrary} />
+          <Renderer response={openuiLang} library={portfolioReportLibrary} />
         </div>
       </main>
     </ThemeProvider>

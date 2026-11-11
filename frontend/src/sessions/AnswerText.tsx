@@ -10,7 +10,7 @@ const ORDERED_PATTERN = /^\s*\d+[.)]\s+(.*)$/;
 const HEADING_PATTERN = /^(#{1,6})\s+(.*)$/;
 const TABLE_DIVIDER_PATTERN = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/;
 
-function renderMetrics(text: string): ReactNode[] {
+export function renderMetrics(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
   const pattern = /(^|[\s(])([+-]\$?\d[\d,]*(?:\.\d+)?%?)/g;
   let lastIndex = 0;
@@ -46,7 +46,7 @@ function renderMetrics(text: string): ReactNode[] {
   return nodes;
 }
 
-function renderInline(text: string): ReactNode[] {
+export function renderInline(text: string): ReactNode[] {
   return text.split(INLINE_PATTERN).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
       return <strong key={index}>{renderInline(part.slice(2, -2))}</strong>;

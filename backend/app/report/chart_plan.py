@@ -196,6 +196,8 @@ def _chart(document: object, source_numbers: set[float]) -> ChartSpec:
     if chart_type in CARTESIAN_TYPES:
         labels = _labels(document.get("labels"))
         series = _series(document.get("series"), len(labels), source_numbers)
+        if chart_type in ("line", "area") and len(labels) == 2:
+            chart_type = "bar"
         return ChartSpec(
             type=chart_type,
             title=title,

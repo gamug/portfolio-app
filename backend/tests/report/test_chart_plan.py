@@ -87,6 +87,23 @@ def test_accepts_a_pie_and_a_table() -> None:
     assert [chart.type for chart in plan.charts] == ["pie", "table"]
 
 
+@pytest.mark.parametrize("chart_type", ["line", "area"])
+def test_coerces_two_point_line_and_area_charts_to_bar(chart_type: str) -> None:
+    document = _document()
+    document["charts"][0]["type"] = chart_type
+    document["charts"][0]["labels"] = ["January", "February"]
+    document["charts"][0]["series"][0]["values"] = [100, 120]
+    plan = parse_chart_plan(document, [ANSWERS])
+    assert plan.charts[0].type == "bar"
+    assert plan.charts[0].labels == ("January", "February")
+
+
+def test_keeps_a_three_point_line_chart() -> None:
+    plan = parse_chart_plan(_document(), [ANSWERS])
+    assert plan.charts[0].type == "line"
+    assert len(plan.charts[0].labels) == 3
+
+
 @pytest.mark.parametrize("chart_type", ["bar", "horizontal_bar", "stacked_bar", "line", "area"])
 def test_accepts_cartesian_types_and_axis_labels(chart_type: str) -> None:
     document = _document()
