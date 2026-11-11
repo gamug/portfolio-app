@@ -440,3 +440,16 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added an integer `AreaChart` regression test alongside the existing NAV `LineChart` precision test.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: frontend tests (120 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,830,780 bytes with 0 external references.
+
+## 2026-11-11 (UI polish)
+
+### TASK-034 progress — Polish report cards, chat footer and empty states (WI-014; FR-015, FR-021, FR-022)
+
+- Styled the top-level report card as an executive canvas with a subtle accent rule, generous spacing and a refined header, and made nested section cards distinct elevated cards in both the app and the exported report.
+- `PortfolioTable` now detects numeric and signed-metric columns and adds `data-col-align` plus `portfolio-table__col--numeric` to headers and cells, with right alignment, tabular numerals, zebra rows and hover highlighting.
+- Replaced the stacked chat controls with a single `.message__footer` containing the chart toggle, relevance pill chip and right-aligned delete action; the expanded chart sits directly above the footer and the delete confirmation remains a separate alert dialog.
+- Streamed chat answers now render through `AnswerText`, so markdown, tables and signed metrics format as tokens arrive. Chat and report progress use animated status pills, and empty chat/report/session panels use intentional dashed empty-state cards.
+- Grouped primary report actions apart from destructive erase actions with a divider, and compacted session cards with actions that strengthen on hover, focus-within or active state.
+- Tests cover numeric column alignment, the compact answer footer and live formatted chat streaming.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: frontend tests (124 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,833,197 bytes with 0 external references.

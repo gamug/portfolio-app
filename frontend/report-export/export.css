@@ -12,10 +12,12 @@ body {
   --app-text: var(--openui-text-neutral-primary, #0f172a);
   --app-text-muted: var(--openui-text-neutral-secondary, #64748b);
   --app-border: var(--openui-border-default, #e2e8f0);
+  --app-border-strong: var(--openui-border-default, #cbd5e1);
   --app-surface: var(--openui-elevated, #ffffff);
   --app-surface-muted: var(--openui-sunk, #f8fafc);
   --app-surface-elevated: var(--openui-elevated, #ffffff);
   --app-surface-inset: var(--openui-sunk-deep, #f1f5f9);
+  --app-shadow-card: var(--openui-shadow-m, 0 8px 22px rgba(15, 23, 42, 0.06));
   --app-accent: var(--openui-interactive-accent-default, #2563eb);
   --app-accent-strong: var(--openui-interactive-accent-default, #1d4ed8);
   --app-accent-soft: var(--openui-highlight-subtle, rgba(37, 99, 235, 0.1));
@@ -115,6 +117,83 @@ body {
 
 .export-report [class*="--animated"] {
   opacity: 1 !important;
+}
+
+.export-report > .openui-card,
+.export-report > .openui-stack > .openui-card {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  gap: 1.15rem;
+  padding: 1.25rem;
+  overflow: hidden;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  box-shadow: var(--app-shadow-card);
+}
+
+.export-report > .openui-card::before,
+.export-report > .openui-stack > .openui-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 1.25rem;
+  left: 1.25rem;
+  height: 2px;
+  background: linear-gradient(90deg, var(--app-accent), transparent 78%);
+  opacity: 0.75;
+}
+
+.export-report .openui-card .openui-card {
+  width: 100%;
+  max-width: none;
+  gap: 0.9rem;
+  padding: 1.05rem 1.15rem;
+  background: var(--app-surface-elevated);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  box-shadow: var(--app-shadow-card);
+}
+
+.export-report .openui-header {
+  gap: 0.35rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.export-report .openui-header-top-left {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.export-report .openui-card .openui-card .openui-header-top-left {
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+}
+
+.export-report .openui-header-bottom {
+  align-self: flex-start;
+  padding: 0.2rem 0.55rem;
+  color: var(--app-text-muted);
+  font-size: 0.76rem;
+  background: var(--app-surface-inset);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+}
+
+.export-report .portfolio-table__col--numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.export-report .openui-table-body .openui-table-row:nth-child(even) .openui-table-cell {
+  background: color-mix(in srgb, var(--app-surface-inset) 62%, transparent);
+}
+
+.export-report .openui-table-body .openui-table-row:hover .openui-table-cell {
+  background: var(--app-accent-soft);
 }
 
 .export-report .answer-text {

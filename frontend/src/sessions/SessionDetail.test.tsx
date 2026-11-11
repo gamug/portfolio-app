@@ -178,4 +178,16 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain("¿Pregunta?");
     expect(html).toContain("Respuesta parcial");
   });
+
+  it("formats the streamed answer as markdown with signed metrics", () => {
+    const html = renderDetail({
+      chatStream: {
+        question: "Question",
+        answer: "Revenue +19.88% and **March was strong**.",
+      },
+    });
+    expect(html).toContain('class="chat-panel__raw"');
+    expect(html).toContain("<strong>March was strong</strong>");
+    expect(html).toContain("answer-text__metric--positive");
+  });
 });

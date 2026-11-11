@@ -32,7 +32,9 @@ export function SessionDetail({
   if (active === undefined) {
     return (
       <main className="session-detail session-detail--empty">
-        <p>Create a session to start exploring the knowledge graph.</p>
+        <div className="empty-state empty-state--session">
+          <p>Create a session to start exploring the knowledge graph.</p>
+        </div>
       </main>
     );
   }
