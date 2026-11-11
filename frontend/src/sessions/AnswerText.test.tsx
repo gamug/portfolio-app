@@ -75,6 +75,13 @@ describe("AnswerText", () => {
     expect(html).toContain("Revenue rose from 100 to 150 on 2026-11-05.");
   });
 
+  it("marks a standalone signed metric cell", () => {
+    const positive = renderToStaticMarkup(<AnswerText text="+19.88%" />);
+    const negative = renderToStaticMarkup(<AnswerText text="-4.12%" />);
+    expect(positive).toContain('answer-text__metric--positive">+19.88%</span>');
+    expect(negative).toContain('answer-text__metric--negative">-4.12%</span>');
+  });
+
   it("keeps signed metrics inside code unstyled", () => {
     const html = renderToStaticMarkup(<AnswerText text={"`+19.88%`"} />);
     expect(html).toContain("<code>+19.88%</code>");

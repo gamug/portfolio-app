@@ -97,12 +97,14 @@ RULES
      preserved; never reduce that table to a 2-point "line" or "bar" chart.
 5. Every chart has "type", "title" and "takeaway". For "bar", "horizontal_bar", "stacked_bar",
    "line" and "area", also include "labels" and a non-empty "series" array; every series values
-   array has the same length as labels. Include "x_label" and "y_label" when the answer provides
-   the axis meaning. Axis labels must describe the answers' headers, periods or units and must
-   never be the literal words "Category" or "Value". For "pie" and "donut", include "labels" and
-   "values" with the same length. For "table", include a non-empty "columns" array; every column
-   has the same number of values, and at least one column is numeric. The first table column is
-   usually the row label. For a missing table value use the string "–", never null.
+   array has the same length as labels. Every "bar", "horizontal_bar", "stacked_bar", "line" and
+   "area" chart MUST include non-empty "x_label" and "y_label" strings (for example
+   "x_label": "Fecha", "y_label": "NAV"). Axis labels must describe the answers' headers,
+   periods or units and must never be the literal words "Category" or "Value". For "pie" and
+   "donut", include "labels" and "values" with the same length. For "table", include a non-empty
+   "columns" array; every column has the same number of values, and at least one column is
+   numeric. The first table column is usually the row label. For a missing table value use the
+   string "–", never null.
 6. Labels and titles must describe what is in the answers. Do not add facts, entities, periods
    or categories that are not in the pairs. Keep proper names unchanged.
 7. Write the title, summary, chart titles, takeaways and conclusions in the analyst's language:

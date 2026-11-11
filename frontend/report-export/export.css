@@ -9,6 +9,21 @@ body {
 }
 
 body {
+  --app-text: var(--openui-text-neutral-primary, #0f172a);
+  --app-text-muted: var(--openui-text-neutral-secondary, #64748b);
+  --app-border: var(--openui-border-default, #e2e8f0);
+  --app-surface: var(--openui-elevated, #ffffff);
+  --app-surface-muted: var(--openui-sunk, #f8fafc);
+  --app-surface-elevated: var(--openui-elevated, #ffffff);
+  --app-surface-inset: var(--openui-sunk-deep, #f1f5f9);
+  --app-accent: var(--openui-interactive-accent-default, #2563eb);
+  --app-accent-strong: var(--openui-interactive-accent-default, #1d4ed8);
+  --app-accent-soft: var(--openui-highlight-subtle, rgba(37, 99, 235, 0.1));
+  --app-accent-border: var(--openui-border-default, #cbd5e1);
+  --app-positive-text: var(--openui-text-success-primary, #047857);
+  --app-positive-bg: var(--openui-success-background, rgba(16, 185, 129, 0.12));
+  --app-negative-text: var(--openui-text-danger-primary, #b91c1c);
+  --app-negative-bg: var(--openui-danger-background, rgba(239, 68, 68, 0.12));
   background:
     radial-gradient(
       1100px 700px at 100% -10%,
@@ -100,6 +115,254 @@ body {
 
 .export-report [class*="--animated"] {
   opacity: 1 !important;
+}
+
+.export-report .answer-text {
+  color: var(--app-text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.export-report .answer-text p {
+  margin: 0 0 0.65rem;
+  white-space: pre-wrap;
+}
+
+.export-report .answer-text p:last-child {
+  margin-bottom: 0;
+}
+
+.export-report .answer-text h4 {
+  margin: 0.55rem 0 0.35rem;
+  font-size: 0.98rem;
+}
+
+.export-report .answer-text ul,
+.export-report .answer-text ol {
+  margin: 0.4rem 0 0.65rem;
+  padding-left: 1.25rem;
+}
+
+.export-report .answer-text li {
+  margin: 0.15rem 0;
+  overflow-wrap: anywhere;
+}
+
+.export-report .answer-text code {
+  padding: 0.08rem 0.3rem;
+  color: var(--app-accent-strong);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.88em;
+  background: var(--app-surface-inset);
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+}
+
+.export-report .answer-text__metric {
+  display: inline-block;
+  padding: 0.02rem 0.32rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.005em;
+  border-radius: 6px;
+}
+
+.export-report .answer-text__metric--positive {
+  color: var(--app-positive-text);
+  background: var(--app-positive-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-positive-text) 26%, transparent);
+}
+
+.export-report .answer-text__metric--negative {
+  color: var(--app-negative-text);
+  background: var(--app-negative-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-negative-text) 26%, transparent);
+}
+
+.export-report .answer-text__table-wrap {
+  max-width: 100%;
+  margin: 0.6rem 0 0.7rem;
+  overflow-x: auto;
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.export-report .answer-text table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: collapse;
+}
+
+.export-report .answer-text th,
+.export-report .answer-text td {
+  padding: 0.42rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.export-report .answer-text th {
+  font-size: 0.8rem;
+  font-weight: 650;
+  background: var(--app-surface-inset);
+}
+
+.export-report .answer-text tr:last-child td {
+  border-bottom: 0;
+}
+
+.export-report .portfolio-chart {
+  margin: 0;
+  padding: 1rem 1rem 0.75rem;
+  color: var(--app-text);
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+}
+
+.export-report .portfolio-chart__context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+
+.export-report .portfolio-chart__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.52rem;
+  color: var(--app-text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: var(--app-surface-inset);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+}
+
+.export-report .portfolio-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.export-report .portfolio-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.58rem;
+  color: var(--app-text);
+  font: inherit;
+  text-align: left;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.export-report .portfolio-chart__legend-item.is-hidden {
+  opacity: 0.42;
+}
+
+.export-report .portfolio-chart__swatch {
+  flex: none;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+}
+
+.export-report .portfolio-chart__legend-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.export-report .portfolio-chart__legend-name {
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.export-report .portfolio-chart__legend-range {
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.export-report .portfolio-chart__plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 300px;
+  overflow: visible;
+}
+
+.export-report .portfolio-chart__grid {
+  stroke: var(--app-border);
+  stroke-width: 1;
+  opacity: 0.8;
+}
+
+.export-report .portfolio-chart__axis-label {
+  fill: var(--app-text-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.export-report .portfolio-chart__axis-label--x {
+  font-size: 11px;
+}
+
+.export-report .portfolio-chart__crosshair {
+  stroke: var(--app-accent);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.65;
+}
+
+.export-report .portfolio-chart__tooltip rect {
+  fill: var(--app-surface-elevated);
+  stroke: var(--app-border);
+  stroke-width: 1;
+}
+
+.export-report .portfolio-chart__tooltip text {
+  fill: var(--app-text);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.export-report .portfolio-chart__tooltip-title {
+  font-weight: 650;
+}
+
+.export-report .portfolio-chart__empty {
+  margin: 0;
+  padding: 1rem;
+  color: var(--app-text-muted);
+  font-size: 0.85rem;
+}
+
+.export-report .portfolio-table__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding-top: 0.55rem;
+  color: var(--app-text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.export-report .portfolio-table__pagination button {
+  padding: 0.15rem 0.48rem;
+  color: var(--app-text-muted);
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
 }
 
 @media (max-width: 720px) {
