@@ -41,35 +41,50 @@ export function PairAnswer({
         </p>
       )}
 
-      <button
-        type="button"
-        className="message__chart-toggle"
-        aria-expanded={showChart}
-        onClick={() => toggleChart()}
-      >
-        {showChart ? "Hide chart" : "Show chart"}
-      </button>
-
       {showChart && (
         <div className="message__chart" data-chart-view="open">
           <Renderer response={rawContent} library={portfolioChatLibrary} />
         </div>
       )}
 
-      <div className="message__relevance">
-        <label>
-          <input
-            type="checkbox"
-            data-pair-id={message.id}
-            checked={state.relevance[message.id] ?? true}
+      <div className="message__footer">
+        <div className="message__footer-left">
+          <button
+            type="button"
+            className="message__chart-toggle"
+            aria-expanded={showChart}
+            onClick={() => toggleChart()}
+          >
+            {showChart ? "Hide chart" : "Show chart"}
+          </button>
+
+          <div className="message__relevance">
+            <label>
+              <input
+                type="checkbox"
+                data-pair-id={message.id}
+                checked={state.relevance[message.id] ?? true}
+                disabled={controlsDisabled}
+                onChange={() => onToggleRelevance(message.id)}
+              />
+              Relevant for report
+            </label>
+          </div>
+        </div>
+
+        {!confirming && (
+          <button
+            type="button"
+            data-delete-pair-id={message.id}
             disabled={controlsDisabled}
-            onChange={() => onToggleRelevance(message.id)}
-          />
-          Relevant for report
-        </label>
+            onClick={() => setConfirming(true)}
+          >
+            Delete pair
+          </button>
+        )}
       </div>
 
-      {confirming ? (
+      {confirming && (
         <div className="message__confirm" role="alertdialog">
           <span>Delete this question-answer pair?</span>
           <button
@@ -86,15 +101,6 @@ export function PairAnswer({
             Cancel
           </button>
         </div>
-      ) : (
-        <button
-          type="button"
-          data-delete-pair-id={message.id}
-          disabled={controlsDisabled}
-          onClick={() => setConfirming(true)}
-        >
-          Delete pair
-        </button>
       )}
     </>
   );

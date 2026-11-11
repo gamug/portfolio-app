@@ -53,19 +53,35 @@ export function ReportPanel({
           )}
         </h3>
         <div className="report-panel__actions">
-          <button type="button" onClick={onGenerate} disabled={controlsDisabled}>
+          <button
+            type="button"
+            className="report-panel__action report-panel__action--primary"
+            onClick={onGenerate}
+            disabled={controlsDisabled}
+          >
             {state.report === null ? "Generate Report" : "Regenerate Report"}
           </button>
-          <button type="button" onClick={onDownload} disabled={downloadDisabled}>
+          <button
+            type="button"
+            className="report-panel__action report-panel__action--secondary"
+            onClick={onDownload}
+            disabled={downloadDisabled}
+          >
             Download Report
           </button>
           {state.isGeneratingReport && (
-            <button type="button" onClick={onCancel}>
+            <button
+              type="button"
+              className="report-panel__action report-panel__action--cancel"
+              onClick={onCancel}
+            >
               Cancel
             </button>
           )}
+          <span className="report-panel__actions-divider" aria-hidden="true" />
           <button
             type="button"
+            className="report-panel__action report-panel__action--danger"
             onClick={() => setConfirmingErase("history")}
             disabled={historyEraseDisabled}
           >
@@ -73,6 +89,7 @@ export function ReportPanel({
           </button>
           <button
             type="button"
+            className="report-panel__action report-panel__action--danger"
             onClick={() => setConfirmingErase("report")}
             disabled={reportEraseDisabled}
           >
@@ -119,7 +136,7 @@ export function ReportPanel({
       )}
 
       {state.isGeneratingReport && (
-        <p className="report-panel__progress" role="status">
+        <p className="report-panel__progress status-pill" role="status">
           {progress}
         </p>
       )}
@@ -143,7 +160,9 @@ export function ReportPanel({
         ) : view === "current" && state.report !== null ? (
           <Renderer response={state.report.openui_lang} library={portfolioReportLibrary} />
         ) : (
-          <p>No report yet.</p>
+          <div className="empty-state empty-state--report">
+            <p>No report yet.</p>
+          </div>
         )}
       </div>
     </section>

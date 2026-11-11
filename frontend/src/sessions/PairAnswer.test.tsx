@@ -57,6 +57,19 @@ describe("PairAnswer", () => {
     expect(html).toContain('data-chart-view="open"');
   });
 
+  it("groups the chart toggle, relevance chip and delete action in a compact footer", () => {
+    const html = renderPair();
+    expect(html).toContain('class="message__footer"');
+    expect(html).toContain('class="message__footer-left"');
+    expect(html).toMatch(/message__footer-left[\s\S]*Show chart[\s\S]*Relevant for report/);
+    expect(html).toMatch(/message__footer[\s\S]*Delete pair/);
+  });
+
+  it("keeps the expanded chart above the footer", () => {
+    const html = renderPair(true);
+    expect(html.indexOf('data-chart-view="open"')).toBeLessThan(html.indexOf("message__footer"));
+  });
+
   it("toggles the chart state", () => {
     expect(chartReducer(false)).toBe(true);
     expect(chartReducer(true)).toBe(false);

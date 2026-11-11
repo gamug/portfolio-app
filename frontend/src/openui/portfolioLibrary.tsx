@@ -94,11 +94,37 @@ function PortfolioInlineHeader({
 }
 
 const TABLE_PAGE_SIZE = 10;
+const NUMERIC_CELL_PATTERN = /^([+-]?\$?\d[\d,]*(?:\.\d+)?%?|[–—-])$/;
 
 type TableColumn = {
   label: string;
   data: unknown[];
+  type?: string;
+  isNumeric: boolean;
 };
+
+function isNumericCell(cell: unknown): boolean {
+  if (typeof cell === "number") {
+    return Number.isFinite(cell);
+  }
+  if (typeof cell === "string") {
+    return NUMERIC_CELL_PATTERN.test(cell.trim());
+  }
+  return false;
+}
+
+function isNumericColumn(type: string | undefined, data: unknown[]): boolean {
+  if (type === "number") {
+    return true;
+  }
+  const populated = data.filter(
+    (cell) =>
+      cell !== null &&
+      cell !== undefined &&
+      !(typeof cell === "string" && cell.trim().length === 0),
+  );
+  return populated.length > 0 && populated.every(isNumericCell);
+}
 
 function PortfolioTable({
   columns,
@@ -112,10 +138,20 @@ function PortfolioTable({
   const definitions: TableColumn[] = (Array.isArray(columns) ? columns : [])
     .map((column) => elementProps(column))
     .filter((column): column is Record<string, unknown> => column !== null)
-    .map((column) => ({
-      label: String(column.label ?? ""),
-      data: Array.isArray(column.data) ? column.data : column.data == null ? [] : [column.data],
-    }))
+    .map((column) => {
+      const data = Array.isArray(column.data)
+        ? column.data
+        : column.data == null
+          ? []
+          : [column.data];
+      const type = typeof column.type === "string" ? column.type : undefined;
+      return {
+        label: String(column.label ?? ""),
+        data,
+        type,
+        isNumeric: isNumericColumn(type, data),
+      };
+    })
     .filter((column) => column.label.length > 0);
   const rowCount =
     definitions.length === 0 ? 0 : Math.max(...definitions.map((column) => column.data.length));
@@ -138,7 +174,14 @@ function PortfolioTable({
         <TableHeader>
           <TableRow>
             {definitions.map((column, index) => (
-              <TableHead key={`${column.label}-${index}`}>{column.label}</TableHead>
+              <TableHead
+                key={`${column.label}-${index}`}
+                className={column.isNumeric ? "portfolio-table__col--numeric" : undefined}
+                align={column.isNumeric ? "right" : undefined}
+                data-col-align={column.isNumeric ? "right" : "left"}
+              >
+                {column.label}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -150,7 +193,12 @@ function PortfolioTable({
                 {definitions.map((column, columnIndex) => {
                   const cell = column.data[actualRow];
                   return (
-                    <TableCell key={columnIndex}>
+                    <TableCell
+                      key={columnIndex}
+                      className={column.isNumeric ? "portfolio-table__col--numeric" : undefined}
+                      align={column.isNumeric ? "right" : undefined}
+                      data-col-align={column.isNumeric ? "right" : "left"}
+                    >
                       {typeof cell === "object" && cell !== null
                         ? renderNode(cell)
                         : renderInline(String(cell ?? ""))}

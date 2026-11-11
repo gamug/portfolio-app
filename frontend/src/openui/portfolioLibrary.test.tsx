@@ -50,6 +50,21 @@ describe("portfolioReportLibrary", () => {
     expect(html).toContain("-1.24%");
   });
 
+  it("right-aligns numeric and signed-metric table columns", () => {
+    const html = render(
+      "root = Card([t])\nt = Table([c1, c2, c3])\n" +
+        'c1 = Col("Month", ["January", "February"])\n' +
+        'c2 = Col("Revenue", [1200, 1500], "number")\n' +
+        'c3 = Col("Return", ["+19.88%", "-1.24%"])',
+    );
+
+    expect(html.match(/data-col-align="right"/g) ?? []).toHaveLength(6);
+    expect(html.match(/data-col-align="left"/g) ?? []).toHaveLength(3);
+    expect(html).toContain("portfolio-table__col--numeric");
+    expect(html).toContain("answer-text__metric--positive");
+    expect(html).toContain("answer-text__metric--negative");
+  });
+
   it("scales NAV line charts around the data and explains the axes", () => {
     const html = renderToStaticMarkup(
       <ThemeProvider mode="dark" lightTheme={portfolioLightTheme} darkTheme={portfolioDarkTheme}>

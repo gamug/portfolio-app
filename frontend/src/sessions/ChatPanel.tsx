@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { AnswerText } from "./AnswerText";
 import { PairAnswer } from "./PairAnswer";
 import { messageText } from "./answerText";
 import type { SessionState } from "./SessionController";
@@ -34,7 +35,11 @@ export function ChatPanel({
     <section className="chat-panel" aria-label="Chat">
       <div className="panel-header">
         <h3>Chat</h3>
-        {state.isSendingChat && <span role="status">Waiting for the answer…</span>}
+        {state.isSendingChat && (
+          <span className="status-pill" role="status">
+            Waiting for the answer…
+          </span>
+        )}
       </div>
 
       {state.isGeneratingReport && (
@@ -50,7 +55,9 @@ export function ChatPanel({
         <div className="chat-panel__history">
           <h4>History</h4>
           {state.messages.length === 0 ? (
-            <p>No questions yet in this session.</p>
+            <div className="empty-state empty-state--chat">
+              <p>No questions yet in this session.</p>
+            </div>
           ) : (
             <ol>
               {state.messages.map((message) => (
@@ -78,7 +85,9 @@ export function ChatPanel({
             </div>
             <div className="message message--assistant">
               {state.chatStream.answer.length > 0 ? (
-                <p className="chat-panel__raw">{state.chatStream.answer}</p>
+                <div className="chat-panel__raw">
+                  <AnswerText text={state.chatStream.answer} />
+                </div>
               ) : (
                 <p>Waiting for the answer…</p>
               )}
