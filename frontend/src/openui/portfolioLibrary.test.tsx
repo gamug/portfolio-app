@@ -9,10 +9,13 @@ function render(response: string, library = portfolioReportLibrary) {
   return renderToStaticMarkup(<Renderer response={response} library={library} />);
 }
 
+function axisTickLabels(html: string, axis: "x" | "y"): string[] {
+  const pattern = new RegExp(`data-chart-tick="${axis}"[^>]*>([^<]+)<`, "g");
+  return [...html.matchAll(pattern)].map((match) => (match[1] ?? "").trim());
+}
+
 function yTicks(html: string): number[] {
-  return [...html.matchAll(/data-chart-tick="y"[^>]*>([^<]+)</g)].map((match) =>
-    Number((match[1] ?? "").replaceAll(",", "")),
-  );
+  return axisTickLabels(html, "y").map((label) => Number(label.replaceAll(",", "")));
 }
 
 describe("portfolioReportLibrary", () => {
@@ -63,6 +66,7 @@ describe("portfolioReportLibrary", () => {
     expect(ticks.length).toBeGreaterThanOrEqual(4);
     expect(Math.min(...ticks)).toBeGreaterThan(0.75);
     expect(Math.max(...ticks)).toBeLessThan(1.1);
+    expect(axisTickLabels(html, "y")).toEqual(["0.800", "0.850", "0.900", "0.950", "1.000"]);
     expect(html).not.toContain(">0.000<");
     expect(html).toContain("Eje Y: NAV");
     expect(html).toContain("Rango: 0.8213 – 1.0087");
@@ -72,6 +76,24 @@ describe("portfolioReportLibrary", () => {
     expect(html).toContain('data-chart-kind="line"');
     expect(html).toContain('height="360"');
     expect(html).toContain("#FB7185");
+  });
+
+  it("formats integer area chart y-axis ticks without trailing decimals", () => {
+    const html = renderToStaticMarkup(
+      <ThemeProvider mode="dark" lightTheme={portfolioLightTheme} darkTheme={portfolioDarkTheme}>
+        <Renderer
+          response={
+            'root = Card([c])\nc = AreaChart(["2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10"], [Series("Alerts", [107, 110, 93, 66, 168, 100, 79, 86, 111, 58])], "natural", "Fecha", "Alertas")'
+          }
+          library={portfolioReportLibrary}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(axisTickLabels(html, "y")).toEqual(["0", "50", "100", "150"]);
+    expect(axisTickLabels(html, "y").some((label) => label.includes("."))).toBe(false);
+    expect(axisTickLabels(html, "x")).not.toContain("2022-09");
+    expect(axisTickLabels(html, "x")).toContain("2022-10");
   });
 
   it("provides the same signed-metric overrides to chat charts", () => {

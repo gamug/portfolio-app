@@ -306,13 +306,18 @@ function buildYAxis(values: number[]): YAxis {
     max = Math.max(1, rawMax + 0.5);
   }
 
-  const decimals = Math.min(3, Math.max(2, ...finite.map((value) => decimalPlaces(value))));
   const roughStep = (max - min) / 5;
   const magnitude = 10 ** Math.floor(Math.log10(roughStep));
   const normalized = roughStep / magnitude;
   const nice =
     normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
   const step = nice * magnitude;
+  const dataDecimals = Math.max(0, ...finite.map((value) => decimalPlaces(value)));
+  const stepDecimals = decimalPlaces(step);
+  const decimals =
+    dataDecimals === 0 && stepDecimals === 0
+      ? 0
+      : Math.min(3, Math.max(2, dataDecimals, stepDecimals));
   const ticks: number[] = [];
   const start = Math.ceil((min - step * 1e-9) / step) * step;
   const end = Math.floor((max + step * 1e-9) / step) * step;
@@ -494,6 +499,9 @@ function PortfolioChart({ kind, ...props }: ChartProps & { kind: ChartKind }) {
   const stride = Math.max(1, Math.ceil(labels.length / 8));
   for (let index = 0; index < labels.length; index += stride) {
     xTickIndices.add(index);
+  }
+  if (stride > 1 && xTickIndices.has(labels.length - 2)) {
+    xTickIndices.delete(labels.length - 2);
   }
   xTickIndices.add(labels.length - 1);
 

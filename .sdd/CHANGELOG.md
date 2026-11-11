@@ -430,3 +430,13 @@ Record completed Work Items and their associated tasks here after verification. 
 - Skill 1 now requires non-empty `x_label` and `y_label` on every cartesian chart, and `_chart()` coerces any 2-point `line` or `area` plan to `bar` while preserving 3+ point lines.
 - `TASK-034` remains unchecked because the end-to-end acceptance pass is still in progress. No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: frontend tests (119 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; backend `pytest` (172 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; SDD/consistency checks and `pre-commit run --all-files` pass.
+
+## 2026-11-11 (integer chart axes)
+
+### TASK-034 progress — Format integer Y-axis ticks and avoid crowded X labels (WI-014; FR-015)
+
+- `buildYAxis()` now computes the tick step before choosing label precision and uses both `dataDecimals` and `stepDecimals`. When every data point and the tick step are integers, the axis renders `0`, `50`, `100`, `150` without trailing decimals; fractional NAV series keep clean three-decimal ticks such as `0.850`, `0.900`, `0.950`, `1.000`.
+- X-axis tick selection drops the penultimate label when adding the final label would place two ticks next to each other, so a 10-month `2022-01`..`2022-10` series ends with `2022-07` and `2022-10`.
+- Added an integer `AreaChart` regression test alongside the existing NAV `LineChart` precision test.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: frontend tests (120 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,830,780 bytes with 0 external references.
