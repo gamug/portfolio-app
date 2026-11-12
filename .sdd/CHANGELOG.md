@@ -453,3 +453,16 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests cover numeric column alignment, the compact answer footer and live formatted chat streaming.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: frontend tests (124 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,833,197 bytes with 0 external references.
+
+## 2026-11-12 (localized metrics and report recovery)
+
+### TASK-034 progress — Handle Unicode minus, decimal commas and text-only tables (WI-014; FR-015)
+
+- `AnswerText` now matches ASCII `-`, Unicode minus `−`, plus signs, dot or comma decimals and an optional space before `%`, so `−10.14 %`, `−18.94 %.`, `-0,1229` and `+19.88 %` receive the correct red/green badges while dates and code spans stay plain.
+- `PortfolioTable` uses the same localized numeric grammar, so Unicode-minus percentages and comma decimals right-align as numeric columns.
+- `extract_numbers()` normalizes Unicode minus before matching and parses localized numbers: comma decimals (`-0,1229`, `0,0108`, `0,5`), thousands commas (`1,200`), mixed separators, multiple dots and Spanish thousands dots (`4.958` also yields `4958.0`) without changing `0.999` or four-decimal NAVs.
+- `parse_chart_plan()` now skips a text-only table when at least one valid numeric chart exists, and still raises the `numeric column` error when the plan contains only text-only tables.
+- Skill 1 explicitly forbids qualitative-only tables in Rules 2 and 5.
+- Tests cover the new localized metric badges, table alignment, number extraction and mixed text-only/numeric chart plans.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: frontend tests (127 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,833,217 bytes with 0 external references; backend `pytest` (176 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass.

@@ -67,12 +67,44 @@ describe("AnswerText", () => {
     );
   });
 
+  it("marks Unicode minus, comma decimals and spaced percentages", () => {
+    const html = renderToStaticMarkup(
+      <AnswerText text={"−10.14 %, (−16.54 % y −17.31 %), −18.94 %. -0,1229, +19.88 %"} />,
+    );
+
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--negative">−10.14 %</span>',
+    );
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--negative">−16.54 %</span>',
+    );
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--negative">−17.31 %</span>',
+    );
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--negative">−18.94 %</span>.',
+    );
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--negative">-0,1229</span>',
+    );
+    expect(html).toContain(
+      '<span class="answer-text__metric answer-text__metric--positive">+19.88 %</span>',
+    );
+  });
+
   it("leaves unsigned numbers and dates as plain text", () => {
     const html = renderToStaticMarkup(
-      <AnswerText text={"Revenue rose from 100 to 150 on 2026-11-05."} />,
+      <AnswerText text={"Revenue rose from 100 to 150 on 2026-11-05 and 2022-01-03."} />,
     );
     expect(html).not.toContain("answer-text__metric");
-    expect(html).toContain("Revenue rose from 100 to 150 on 2026-11-05.");
+    expect(html).toContain("Revenue rose from 100 to 150 on 2026-11-05 and 2022-01-03.");
+  });
+
+  it("leaves signed metrics inside code spans untouched", () => {
+    const html = renderToStaticMarkup(<AnswerText text={"`−10,14 %` and `+19.88 %`"} />);
+    expect(html).toContain("<code>−10,14 %</code>");
+    expect(html).toContain("<code>+19.88 %</code>");
+    expect(html).not.toContain("answer-text__metric");
   });
 
   it("marks a standalone signed metric cell", () => {

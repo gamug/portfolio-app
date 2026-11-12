@@ -40,9 +40,14 @@ CARTESIAN_TYPES: tuple[ChartType, ...] = ("bar", "horizontal_bar", "stacked_bar"
 CIRCULAR_TYPES: tuple[ChartType, ...] = ("pie", "donut")
 MAX_CHARTS = 8
 DEFAULT_MAX_TOKENS = 2500
-NUMBER_PATTERN = re.compile(r"(?<![\w.])-?\d[\d,]*(?:\.\d+)?")
+NUMBER_PATTERN = re.compile(r"(?<![\w.])-?\d+(?:[.,]\d+)*")
+THOUSANDS_DOT_PATTERN = re.compile(r"^-?[1-9]\d{0,2}\.\d{3}$")
 EMPTY_CELL = "–"
 EMPTY_CELL_MARKERS = frozenset({"-", "–", "n/a"})
+
+
+class _TextOnlyTableError(ReportSkillError):
+    """A table with no numeric column; skipped when other charts are valid."""
 
 
 def strip_fences(text: str) -> str:
@@ -58,12 +63,42 @@ def strip_fences(text: str) -> str:
     return "\n".join(lines).strip()
 
 
+def _parse_number_token(token: str) -> set[float]:
+    """Parse one numeric token using Spanish and English separator conventions."""
+    if "." not in token and "," not in token:
+        return {float(token)}
+
+    if "." in token and "," in token:
+        if token.rfind(".") > token.rfind(","):
+            return {float(token.replace(",", ""))}
+        return {float(token.replace(".", "").replace(",", "."))}
+
+    if "," in token:
+        parts = token.split(",")
+        if len(parts) > 2:
+            return {float(token.replace(",", ""))}
+        head, tail = parts
+        if head in {"0", "-0"} or len(tail) != 3:
+            return {float(token.replace(",", "."))}
+        return {float(token.replace(",", ""))}
+
+    parts = token.split(".")
+    if len(parts) > 2:
+        return {float(token.replace(".", ""))}
+
+    values = {float(token)}
+    if THOUSANDS_DOT_PATTERN.fullmatch(token):
+        values.add(float(token.replace(".", "")))
+    return values
+
+
 def extract_numbers(text: str) -> set[float]:
     """Return every numeric token in the answer text, keeping the written scale."""
+    normalized = text.replace("\u2212", "-")
     numbers: set[float] = set()
-    for match in NUMBER_PATTERN.finditer(text):
+    for match in NUMBER_PATTERN.finditer(normalized):
         try:
-            numbers.add(float(match.group(0).replace(",", "")))
+            numbers.update(_parse_number_token(match.group(0)))
         except ValueError:
             continue
     return numbers
@@ -177,7 +212,7 @@ def _columns(value: object, source_numbers: set[float]) -> tuple[ChartColumn, ..
                 raise ReportSkillError("Table cells must be strings or numbers.")
         columns.append(ChartColumn(label=label.strip(), values=tuple(cells)))
     if not has_number:
-        raise ReportSkillError("A table chart needs at least one numeric column.")
+        raise _TextOnlyTableError("A table chart needs at least one numeric column.")
     return tuple(columns)
 
 
@@ -243,11 +278,19 @@ def parse_chart_plan(document: object, answers: Sequence[str]) -> ChartPlan:
     if len(raw_charts) > MAX_CHARTS:
         raise ReportSkillError(f"The chart plan cannot contain more than {MAX_CHARTS} charts.")
     source_numbers = extract_numbers("\n".join(answers))
-    charts = tuple(_chart(item, source_numbers) for item in raw_charts)
+    parsed_charts: list[ChartSpec] = []
+    text_only_error: _TextOnlyTableError | None = None
+    for item in raw_charts:
+        try:
+            parsed_charts.append(_chart(item, source_numbers))
+        except _TextOnlyTableError as error:
+            text_only_error = error
+    if not parsed_charts and text_only_error is not None:
+        raise text_only_error
     return ChartPlan(
         title=title,
         summary=summary,
-        charts=charts,
+        charts=tuple(parsed_charts),
         conclusions=conclusions,
     )
 
