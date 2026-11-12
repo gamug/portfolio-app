@@ -820,9 +820,53 @@ function shortLabel(label: string, maximum: number): string {
   return label.length > maximum ? `${label.slice(0, maximum - 1)}…` : label;
 }
 
+function stackedCategoryValues(categoryCount: number, series: ChartSeriesData[]): number[] {
+  const totals: number[] = [];
+  for (let categoryIndex = 0; categoryIndex < categoryCount; categoryIndex += 1) {
+    let positive = 0;
+    let negative = 0;
+    for (const entry of series) {
+      const value = entry.values[categoryIndex];
+      if (!Number.isFinite(value)) {
+        continue;
+      }
+      if ((value as number) >= 0) {
+        positive += value as number;
+      } else {
+        negative += value as number;
+      }
+    }
+    totals.push(positive, negative);
+  }
+  return totals;
+}
+
 function buildBarAxis(values: number[]): YAxis {
   const finite = values.filter((value) => Number.isFinite(value));
-  return buildYAxis(finite.length > 0 ? [...finite, 0] : [0]);
+  const axis = buildYAxis(finite.length > 0 ? [...finite, 0] : [0]);
+  const ticks = [...axis.ticks];
+  if (ticks.length < 2) {
+    return axis;
+  }
+  const first = ticks[0];
+  const second = ticks[1];
+  if (first === undefined || second === undefined) {
+    return axis;
+  }
+  const step = second - first;
+  let min = axis.min;
+  let max = axis.max;
+  if (axis.rawMin < first) {
+    const previous = first - step;
+    ticks.unshift(previous);
+    min = Math.min(min, previous);
+  }
+  if (axis.rawMax > (ticks[ticks.length - 1] ?? second)) {
+    const next = (ticks[ticks.length - 1] ?? second) + step;
+    ticks.push(next);
+    max = Math.max(max, next);
+  }
+  return { ...axis, min, max, ticks };
 }
 
 function PortfolioBarChart({ kind, ...props }: ChartProps & { kind: BarKind }) {
@@ -835,7 +879,13 @@ function PortfolioBarChart({ kind, ...props }: ChartProps & { kind: BarKind }) {
   const allValues = visibleSeries.flatMap((entry) =>
     entry.values.filter((value) => Number.isFinite(value)),
   );
-  const axis = buildBarAxis(allValues);
+  const variant = readBarVariant(props.variant);
+  const isMultiSeries = series.length > 1;
+  const axisValues =
+    isMultiSeries && variant === "stacked"
+      ? stackedCategoryValues(labels.length, visibleSeries)
+      : allValues;
+  const axis = buildBarAxis(axisValues);
   const chartHeight = readHeight(props.height);
   const isHorizontal = kind === "horizontal-bar";
   const longestLabel = labels.reduce((longest, label) => Math.max(longest, label.length), 0);
@@ -843,13 +893,11 @@ function PortfolioBarChart({ kind, ...props }: ChartProps & { kind: BarKind }) {
   const plotWidth = VIEW_WIDTH - plotLeft - PLOT_RIGHT;
   const plotHeight = chartHeight - PLOT_TOP - PLOT_BOTTOM;
   const categoryBand = (isHorizontal ? plotHeight : plotWidth) / Math.max(labels.length, 1);
-  const variant = readBarVariant(props.variant);
-  const isMultiSeries = series.length > 1;
   const colors = mode === "dark" ? DARK_BAR_PALETTE : LIGHT_BAR_PALETTE;
-  const valueLabel = inferYLabel(props.yLabel, allValues);
+  const valueLabel = inferYLabel(props.yLabel, axisValues);
   const categoryLabel = inferXLabel(props.xLabel, labels) ?? "Categoría";
-  const hasNegative = allValues.some((value) => value < 0);
-  const hasPositive = allValues.some((value) => value > 0);
+  const hasNegative = axisValues.some((value) => value < 0);
+  const hasPositive = axisValues.some((value) => value > 0);
   const activeLabel = activeIndex === null ? "" : (labels[activeIndex] ?? "");
 
   function colorForCategory(index: number): string {

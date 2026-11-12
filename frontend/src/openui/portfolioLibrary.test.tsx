@@ -19,6 +19,16 @@ function barFills(html: string): string[] {
   );
 }
 
+function barGeometry(html: string): Array<{ y: number; height: number }> {
+  return [...html.matchAll(/<rect[^>]*class="portfolio-chart__bar"[^>]*>/g)].map((match) => {
+    const tag = match[0];
+    return {
+      y: Number(/\by="([^"]+)"/.exec(tag)?.[1] ?? Number.NaN),
+      height: Number(/\bheight="([^"]+)"/.exec(tag)?.[1] ?? Number.NaN),
+    };
+  });
+}
+
 function axisTickLabels(html: string, axis: "x" | "y"): string[] {
   const pattern = new RegExp(`data-chart-tick="${axis}"[^>]*>([^<]+)<`, "g");
   return [...html.matchAll(pattern)].map((match) => (match[1] ?? "").trim());
@@ -188,6 +198,22 @@ describe("portfolioReportLibrary", () => {
     expect(barFills(html)).toEqual(["#10B981", "#0284C7", "#10B981", "#0284C7"]);
     expect(html).toContain('data-bar-series="Low"');
     expect(html).toContain('data-bar-series="High"');
+  });
+
+  it("scales stacked bars to category totals so they stay inside the plot", () => {
+    const html = render(
+      'root = Card([c])\nc = BarChart(["Total"], [Series("First", [60]), Series("Second", [50])], "stacked", "Period", "Value")',
+    );
+
+    const ticks = yTicks(html);
+    expect(Math.max(...ticks)).toBeGreaterThanOrEqual(110);
+    expect(html).toContain("Rango: 0 – 110");
+    const bars = barGeometry(html);
+    expect(bars).toHaveLength(2);
+    for (const bar of bars) {
+      expect(bar.y).toBeGreaterThanOrEqual(20);
+      expect(bar.y + bar.height).toBeLessThanOrEqual(320);
+    }
   });
 
   it("draws positive and negative bars around a zero baseline", () => {

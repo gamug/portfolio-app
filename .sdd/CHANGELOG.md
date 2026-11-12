@@ -479,3 +479,14 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests cover SPARQL block extraction, 404s, client requests, lazy/cached viewer state, multiple queries, empty/error/loading states, distinct bar colors, series legends, stacked bars and negative values.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, REST/SSE contract or API response-shape change.
 - Verification: frontend tests (141 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,840,578 bytes with 0 external references; backend `pytest` (180 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass.
+
+## 2026-11-12 (stacked bar axis extent)
+
+### TASK-034 progress — Scale stacked bars to category totals (WI-014; FR-015)
+
+- `PortfolioBarChart` now derives its axis values from per-category stacked positive and negative totals when the chart is multi-series and uses the `"stacked"` variant, rather than individual series values.
+- `buildBarAxis()` now extends the bar domain and ticks when the raw stacked extent falls outside the last nice tick, so tall stacked bars stay inside the SVG plot.
+- The `Rango` header pill follows the stacked extent, and the value-axis label inference uses the same totals.
+- Added a regression test with stacked series `[60]` and `[50]` asserting ticks reach at least `110`, the range shows `0 – 110`, and both bar rectangles stay within the plot height.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: frontend tests (142 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template remains a single inline file with 0 external references.
