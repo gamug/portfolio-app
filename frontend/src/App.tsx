@@ -9,6 +9,7 @@ import { createPairClient } from "./sessions/pairClient";
 import { createRelevanceClient } from "./sessions/relevanceClient";
 import { createReportClient } from "./sessions/reportClient";
 import { createReportExporter } from "./sessions/reportExport";
+import { createSparqlClient } from "./sessions/sparqlClient";
 import { useSessionController } from "./sessions/useSessionController";
 import { portfolioDarkTheme, portfolioLightTheme, useResolvedThemeMode } from "./theme";
 
@@ -27,6 +28,7 @@ export function App() {
       ),
     [storage],
   );
+  const sparqlClient = useMemo(() => createSparqlClient("/api/threads"), []);
   const state = useSessionController(controller);
   const resolvedMode = useResolvedThemeMode();
   const initialized = useRef(false);
@@ -65,6 +67,7 @@ export function App() {
           onEraseHistory={() => void controller.eraseHistory(true)}
           onEraseReport={() => void controller.eraseReport(true)}
           onCancelReport={() => controller.cancelReportGeneration()}
+          loadSparql={sparqlClient.getSparql}
         />
       </div>
     </ThemeProvider>

@@ -26,11 +26,11 @@ def _client(tmp_path: Path) -> tuple[TestClient, SQLiteQuestionAnswerStore]:
     return TestClient(app), store
 
 
-def _pair(session_id: str) -> QuestionAnswerPair:
+def _pair(session_id: str, raw_answer: str = "Synthetic raw answer") -> QuestionAnswerPair:
     return QuestionAnswerPair(
         session_id=session_id,
         question="Synthetic question",
-        raw_answer="Synthetic raw answer",
+        raw_answer=raw_answer,
         openui_lang="root = Card([])",
     )
 
@@ -102,6 +102,73 @@ def test_thread_lifecycle_history_report_and_relevance(tmp_path: Path) -> None:
         assert client.get(f"/api/threads/{thread_id}/pairs/{pair.id}/relevance").status_code == 404
         assert asyncio.run(store.list_for_session(thread_id)) == []
         assert asyncio.run(store.get_report(thread_id)) is None
+
+
+def test_pair_sparql_returns_a_single_fenced_query(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        thread = client.post("/api/threads/create", json={"messages": []}).json()
+        pair = _pair(
+            thread["id"],
+            "Answer.\n\n```sparql\nSELECT ?s WHERE { ?s a :Book }\n```\n",
+        )
+        asyncio.run(store.save(pair))
+
+        response = client.get(f"/api/threads/{thread['id']}/pairs/{pair.id}/sparql")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "pair_id": pair.id,
+        "queries": ["SELECT ?s WHERE { ?s a :Book }"],
+    }
+
+
+def test_pair_sparql_returns_multiple_case_insensitive_queries(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        thread = client.post("/api/threads/create", json={"messages": []}).json()
+        pair = _pair(
+            thread["id"],
+            "Before\n```SPARQL\nSELECT * WHERE { ?s ?p ?o }\n```\n"
+            "Middle\n```sparql\n  ASK { ?s ?p ?o }  \n```\nAfter",
+        )
+        asyncio.run(store.save(pair))
+
+        response = client.get(f"/api/threads/{thread['id']}/pairs/{pair.id}/sparql")
+
+    assert response.status_code == 200
+    assert response.json()["queries"] == [
+        "SELECT * WHERE { ?s ?p ?o }",
+        "ASK { ?s ?p ?o }",
+    ]
+
+
+def test_pair_sparql_returns_an_empty_list_without_a_sparql_block(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        thread = client.post("/api/threads/create", json={"messages": []}).json()
+        pair = _pair(thread["id"], "Answer with only prose.\n```python\nprint('x')\n```")
+        asyncio.run(store.save(pair))
+
+        response = client.get(f"/api/threads/{thread['id']}/pairs/{pair.id}/sparql")
+
+    assert response.status_code == 200
+    assert response.json() == {"pair_id": pair.id, "queries": []}
+
+
+def test_pair_sparql_returns_404_for_unknown_thread_or_pair(tmp_path: Path) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        thread = client.post("/api/threads/create", json={"messages": []}).json()
+        other = client.post("/api/threads/create", json={"messages": []}).json()
+        pair = _pair(thread["id"])
+        asyncio.run(store.save(pair))
+
+        wrong_thread = client.get(f"/api/threads/{other['id']}/pairs/{pair.id}/sparql")
+        missing_pair = client.get(f"/api/threads/{thread['id']}/pairs/unknown/sparql")
+
+    assert wrong_thread.status_code == 404
+    assert missing_pair.status_code == 404
 
 
 def test_list_cursor_is_validated(tmp_path: Path) -> None:

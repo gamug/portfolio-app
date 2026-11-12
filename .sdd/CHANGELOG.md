@@ -466,3 +466,27 @@ Record completed Work Items and their associated tasks here after verification. 
 - Tests cover the new localized metric badges, table alignment, number extraction and mixed text-only/numeric chart plans.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: frontend tests (127 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,833,217 bytes with 0 external references; backend `pytest` (176 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass.
+
+## 2026-11-12 (SPARQL viewer and distinct bar charts)
+
+### TASK-034 progress — Add a lazy SPARQL viewer and portfolio-colored bar charts (WI-014; FR-015)
+
+- Added `SQLiteQuestionAnswerStore.get_raw_answer()` and `GET /api/threads/{thread_id}/pairs/{pair_id}/sparql`, which returns `{pair_id, queries}` extracted from fenced `sparql` blocks in the stored raw answer. Missing pairs or pairs from another thread return 404; the history response shape is unchanged.
+- Added `createSparqlClient()` and wired an optional loader through `App`, `SessionDetail`, `ChatPanel` and `PairAnswer`.
+- Chat answers now expose `Show SPARQL query` / `Hide SPARQL query` next to the chart toggle. Queries load lazily on first open, stay cached per pair, reset when the message changes, and render in `.message__sparql` panels inside `.message__card` with per-query Copy/Copied feedback, loading, error and empty states.
+- Added `PortfolioBarChart` overrides for both `BarChart` and `HorizontalBarChart` in the report and chat libraries. Single-series charts color every category from the emerald-first dark/light palette, multi-series charts color by series and keep legend toggles, grouped/stacked layouts and negative values around a zero baseline are supported, and the header pills swap value/category axis labels for horizontal bars.
+- Added bar-specific zero-line styling to the app and exported report, plus SPARQL panel styles in the app stylesheet. The exported report still builds as one inline file with zero external references.
+- Tests cover SPARQL block extraction, 404s, client requests, lazy/cached viewer state, multiple queries, empty/error/loading states, distinct bar colors, series legends, stacked bars and negative values.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, REST/SSE contract or API response-shape change.
+- Verification: frontend tests (141 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,840,578 bytes with 0 external references; backend `pytest` (180 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass.
+
+## 2026-11-12 (stacked bar axis extent)
+
+### TASK-034 progress — Scale stacked bars to category totals (WI-014; FR-015)
+
+- `PortfolioBarChart` now derives its axis values from per-category stacked positive and negative totals when the chart is multi-series and uses the `"stacked"` variant, rather than individual series values.
+- `buildBarAxis()` now extends the bar domain and ticks when the raw stacked extent falls outside the last nice tick, so tall stacked bars stay inside the SVG plot.
+- The `Rango` header pill follows the stacked extent, and the value-axis label inference uses the same totals.
+- Added a regression test with stacked series `[60]` and `[50]` asserting ticks reach at least `110`, the range shows `0 – 110`, and both bar rectangles stay within the plot height.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: frontend tests (142 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template remains a single inline file with 0 external references.

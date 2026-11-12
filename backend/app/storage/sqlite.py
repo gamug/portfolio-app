@@ -56,6 +56,9 @@ class SQLiteQuestionAnswerStore:
     async def get_relevance(self, session_id: str, pair_id: str) -> RelevanceMark | None:
         return await asyncio.to_thread(self._get_relevance_sync, session_id, pair_id)
 
+    async def get_raw_answer(self, session_id: str, pair_id: str) -> str | None:
+        return await asyncio.to_thread(self._get_raw_answer_sync, session_id, pair_id)
+
     async def set_relevance(
         self, session_id: str, pair_id: str, relevant: bool
     ) -> RelevanceMark | None:
@@ -247,6 +250,18 @@ class SQLiteQuestionAnswerStore:
                 (session_id, pair_id),
             ).fetchone()
         return _relevance_from_row(row) if row is not None else None
+
+    def _get_raw_answer_sync(self, session_id: str, pair_id: str) -> str | None:
+        with self.database.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT raw_answer
+                FROM question_answer_pairs
+                WHERE id = ? AND session_id = ?
+                """,
+                (pair_id, session_id),
+            ).fetchone()
+        return str(row["raw_answer"]) if row is not None else None
 
     def _delete_pair_sync(self, session_id: str, pair_id: str) -> bool:
         with self.database.connect() as connection, connection:

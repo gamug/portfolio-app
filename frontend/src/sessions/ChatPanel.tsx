@@ -3,12 +3,14 @@ import { AnswerText } from "./AnswerText";
 import { PairAnswer } from "./PairAnswer";
 import { messageText } from "./answerText";
 import type { SessionState } from "./SessionController";
+import type { SparqlClient } from "./sparqlClient";
 
 type ChatPanelProps = {
   state: SessionState;
   onToggleRelevance: (pairId: string) => void;
   onDeletePair: (pairId: string) => void;
   onSendQuestion: (question: string) => void;
+  loadSparql?: SparqlClient["getSparql"];
 };
 
 export function ChatPanel({
@@ -16,6 +18,7 @@ export function ChatPanel({
   onToggleRelevance,
   onDeletePair,
   onSendQuestion,
+  loadSparql,
 }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const controlsDisabled = state.isLoading || state.isGeneratingReport || state.isSendingChat;
@@ -68,6 +71,7 @@ export function ChatPanel({
                       state={state}
                       onToggleRelevance={onToggleRelevance}
                       onDeletePair={onDeletePair}
+                      loadSparql={loadSparql}
                     />
                   ) : (
                     <p className="chat-panel__question">{messageText(message)}</p>
