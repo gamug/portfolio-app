@@ -385,6 +385,13 @@ body {
   opacity: 0.8;
 }
 
+.export-report .portfolio-chart__zero {
+  stroke: var(--app-text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.6;
+}
+
 .export-report .portfolio-chart__axis-label {
   fill: var(--app-text-muted);
   font-size: 11.5px;

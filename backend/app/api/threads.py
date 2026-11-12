@@ -1,5 +1,6 @@
 """Thread, report and relevance endpoints over the SQLite store."""
 
+import re
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -8,6 +9,10 @@ from pydantic import BaseModel
 from app.storage import RelevanceMark, Report, Session, SQLiteQuestionAnswerStore
 
 router = APIRouter(prefix="/api/threads", tags=["threads"])
+SPARQL_FENCE_PATTERN = re.compile(
+    r"```[ \t]*sparql[ \t]*\r?\n(.*?)```",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class ThreadCreateRequest(BaseModel):
@@ -52,6 +57,11 @@ class RelevanceResponse(BaseModel):
     updated_at: str
 
 
+class SparqlQueriesResponse(BaseModel):
+    pair_id: str
+    queries: list[str]
+
+
 def _store(request: Request) -> SQLiteQuestionAnswerStore:
     store = request.app.state.store
     if not isinstance(store, SQLiteQuestionAnswerStore):
@@ -78,6 +88,15 @@ def _relevance(mark: RelevanceMark) -> RelevanceResponse:
         relevant=mark.relevant,
         updated_at=mark.updated_at,
     )
+
+
+def _extract_sparql_queries(raw_answer: str) -> list[str]:
+    queries: list[str] = []
+    for match in SPARQL_FENCE_PATTERN.finditer(raw_answer):
+        query = match.group(1).strip()
+        if query:
+            queries.append(query)
+    return queries
 
 
 def _title_from_messages(messages: list[dict[str, Any]]) -> str:
@@ -190,6 +209,17 @@ async def get_relevance(thread_id: str, pair_id: str, request: Request) -> Relev
     if mark is None:
         raise HTTPException(status_code=404, detail="Question-answer pair not found.")
     return _relevance(mark)
+
+
+@router.get("/{thread_id}/pairs/{pair_id}/sparql")
+async def get_pair_sparql(thread_id: str, pair_id: str, request: Request) -> SparqlQueriesResponse:
+    raw_answer = await _store(request).get_raw_answer(thread_id, pair_id)
+    if raw_answer is None:
+        raise HTTPException(status_code=404, detail="Question-answer pair not found.")
+    return SparqlQueriesResponse(
+        pair_id=pair_id,
+        queries=_extract_sparql_queries(raw_answer),
+    )
 
 
 @router.put("/{thread_id}/pairs/{pair_id}/relevance")

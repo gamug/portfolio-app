@@ -386,6 +386,23 @@ function formatExact(value: number): string {
   return EXACT_FORMAT.format(Object.is(value, -0) ? 0 : value);
 }
 
+export function toggleSeriesVisibility(
+  current: ReadonlySet<string>,
+  name: string,
+  seriesNames: string[],
+): ReadonlySet<string> {
+  const next = new Set(current);
+  if (next.has(name)) {
+    next.delete(name);
+    return next;
+  }
+  const remaining = seriesNames.filter((entry) => entry !== name && !next.has(entry));
+  if (remaining.length > 0) {
+    next.add(name);
+  }
+  return next;
+}
+
 function formatTick(value: number, decimals: number): string {
   const absolute = Math.abs(value);
   if (absolute >= 10000) {
@@ -525,18 +542,13 @@ function PortfolioChart({ kind, ...props }: ChartProps & { kind: ChartKind }) {
   }
 
   function toggleSeries(name: string): void {
-    setHidden((current) => {
-      const next = new Set(current);
-      if (next.has(name)) {
-        next.delete(name);
-        return next;
-      }
-      const remaining = series.filter((entry) => !next.has(entry.name) && entry.name !== name);
-      if (remaining.length > 0) {
-        next.add(name);
-      }
-      return next;
-    });
+    setHidden((current) =>
+      toggleSeriesVisibility(
+        current,
+        name,
+        series.map((entry) => entry.name),
+      ),
+    );
   }
 
   if (labels.length === 0 || series.length === 0) {
@@ -781,6 +793,472 @@ function PortfolioChart({ kind, ...props }: ChartProps & { kind: ChartKind }) {
   );
 }
 
+const DARK_BAR_PALETTE = ["#34D399", "#38BDF8", "#A78BFA", "#FBBF24", "#FB7185"];
+const LIGHT_BAR_PALETTE = ["#10B981", "#0284C7", "#7C3AED", "#D97706", "#E11D48"];
+
+type BarKind = "bar" | "horizontal-bar";
+type BarVariant = "grouped" | "stacked";
+
+type BarRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  value: number;
+  color: string;
+  category: string;
+  seriesName: string;
+  categoryIndex: number;
+  seriesIndex: number;
+};
+
+function readBarVariant(value: unknown): BarVariant {
+  return value === "stacked" ? "stacked" : "grouped";
+}
+
+function shortLabel(label: string, maximum: number): string {
+  return label.length > maximum ? `${label.slice(0, maximum - 1)}…` : label;
+}
+
+function buildBarAxis(values: number[]): YAxis {
+  const finite = values.filter((value) => Number.isFinite(value));
+  return buildYAxis(finite.length > 0 ? [...finite, 0] : [0]);
+}
+
+function PortfolioBarChart({ kind, ...props }: ChartProps & { kind: BarKind }) {
+  const { mode } = useTheme();
+  const labels = normalizeLabels(props.labels);
+  const series = normalizeSeries(props.series, labels);
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const visibleSeries = series.filter((entry) => !hidden.has(entry.name));
+  const allValues = visibleSeries.flatMap((entry) =>
+    entry.values.filter((value) => Number.isFinite(value)),
+  );
+  const axis = buildBarAxis(allValues);
+  const chartHeight = readHeight(props.height);
+  const isHorizontal = kind === "horizontal-bar";
+  const longestLabel = labels.reduce((longest, label) => Math.max(longest, label.length), 0);
+  const plotLeft = isHorizontal ? Math.min(220, Math.max(120, longestLabel * 7 + 20)) : PLOT_LEFT;
+  const plotWidth = VIEW_WIDTH - plotLeft - PLOT_RIGHT;
+  const plotHeight = chartHeight - PLOT_TOP - PLOT_BOTTOM;
+  const categoryBand = (isHorizontal ? plotHeight : plotWidth) / Math.max(labels.length, 1);
+  const variant = readBarVariant(props.variant);
+  const isMultiSeries = series.length > 1;
+  const colors = mode === "dark" ? DARK_BAR_PALETTE : LIGHT_BAR_PALETTE;
+  const valueLabel = inferYLabel(props.yLabel, allValues);
+  const categoryLabel = inferXLabel(props.xLabel, labels) ?? "Categoría";
+  const hasNegative = allValues.some((value) => value < 0);
+  const hasPositive = allValues.some((value) => value > 0);
+  const activeLabel = activeIndex === null ? "" : (labels[activeIndex] ?? "");
+
+  function colorForCategory(index: number): string {
+    return colors[index % colors.length] ?? LIGHT_BAR_PALETTE[0]!;
+  }
+
+  function colorForSeries(index: number): string {
+    return colors[index % colors.length] ?? LIGHT_BAR_PALETTE[0]!;
+  }
+
+  function colorForEntry(entry: ChartSeriesData, categoryIndex: number): string {
+    return isMultiSeries ? colorForSeries(series.indexOf(entry)) : colorForCategory(categoryIndex);
+  }
+
+  function valuePosition(value: number): number {
+    const ratio = (value - axis.min) / (axis.max - axis.min);
+    return isHorizontal ? plotLeft + ratio * plotWidth : PLOT_TOP + (1 - ratio) * plotHeight;
+  }
+
+  function categoryStart(index: number): number {
+    return (isHorizontal ? PLOT_TOP : plotLeft) + index * categoryBand;
+  }
+
+  function categoryCenter(index: number): number {
+    return categoryStart(index) + categoryBand / 2;
+  }
+
+  function toggleSeries(name: string): void {
+    setHidden((current) =>
+      toggleSeriesVisibility(
+        current,
+        name,
+        series.map((entry) => entry.name),
+      ),
+    );
+  }
+
+  if (labels.length === 0 || series.length === 0) {
+    return <p className="portfolio-chart__empty">No data available for this chart.</p>;
+  }
+
+  const bars: BarRect[] = [];
+
+  function pushBar(
+    categoryIndex: number,
+    seriesIndex: number,
+    value: number,
+    start: number,
+    end: number,
+    color: string,
+    thickness: number,
+    offset: number,
+  ): void {
+    const startPosition = valuePosition(start);
+    const endPosition = valuePosition(end);
+    bars.push({
+      x: isHorizontal ? Math.min(startPosition, endPosition) : offset,
+      y: isHorizontal ? offset : Math.min(startPosition, endPosition),
+      width: isHorizontal ? Math.abs(endPosition - startPosition) : thickness,
+      height: isHorizontal ? thickness : Math.abs(endPosition - startPosition),
+      value,
+      color,
+      category: labels[categoryIndex] ?? "",
+      seriesName: series[seriesIndex]?.name ?? "",
+      categoryIndex,
+      seriesIndex,
+    });
+  }
+
+  if (!isMultiSeries) {
+    const entry = visibleSeries[0];
+    const seriesIndex = entry === undefined ? 0 : series.indexOf(entry);
+    const thickness = categoryBand * 0.58;
+    if (entry !== undefined) {
+      labels.forEach((_, categoryIndex) => {
+        const value = entry.values[categoryIndex];
+        if (!Number.isFinite(value)) {
+          return;
+        }
+        pushBar(
+          categoryIndex,
+          seriesIndex,
+          value as number,
+          0,
+          value as number,
+          colorForCategory(categoryIndex),
+          thickness,
+          categoryStart(categoryIndex) + (categoryBand - thickness) / 2,
+        );
+      });
+    }
+  } else if (variant === "stacked") {
+    const thickness = categoryBand * 0.58;
+    labels.forEach((_, categoryIndex) => {
+      let positive = 0;
+      let negative = 0;
+      const offset = categoryStart(categoryIndex) + (categoryBand - thickness) / 2;
+      visibleSeries.forEach((entry) => {
+        const value = entry.values[categoryIndex];
+        if (!Number.isFinite(value)) {
+          return;
+        }
+        const seriesIndex = series.indexOf(entry);
+        let start: number;
+        let end: number;
+        if ((value as number) >= 0) {
+          start = positive;
+          end = positive + (value as number);
+          positive = end;
+        } else {
+          start = negative;
+          end = negative + (value as number);
+          negative = end;
+        }
+        pushBar(
+          categoryIndex,
+          seriesIndex,
+          value as number,
+          start,
+          end,
+          colorForSeries(seriesIndex),
+          thickness,
+          offset,
+        );
+      });
+    });
+  } else {
+    const groupBand = categoryBand * 0.76;
+    const slot = groupBand / Math.max(visibleSeries.length, 1);
+    const thickness = slot * 0.82;
+    labels.forEach((_, categoryIndex) => {
+      const groupStart = categoryStart(categoryIndex) + (categoryBand - groupBand) / 2;
+      visibleSeries.forEach((entry, visibleIndex) => {
+        const value = entry.values[categoryIndex];
+        if (!Number.isFinite(value)) {
+          return;
+        }
+        const seriesIndex = series.indexOf(entry);
+        pushBar(
+          categoryIndex,
+          seriesIndex,
+          value as number,
+          0,
+          value as number,
+          colorForSeries(seriesIndex),
+          thickness,
+          groupStart + visibleIndex * slot + (slot - thickness) / 2,
+        );
+      });
+    });
+  }
+
+  const categoryTickIndices = new Set<number>();
+  const categoryStride = Math.max(1, Math.ceil(labels.length / (isHorizontal ? 10 : 8)));
+  for (let index = 0; index < labels.length; index += categoryStride) {
+    categoryTickIndices.add(index);
+  }
+  if (categoryStride > 1 && categoryTickIndices.has(labels.length - 2)) {
+    categoryTickIndices.delete(labels.length - 2);
+  }
+  categoryTickIndices.add(labels.length - 1);
+
+  const tooltipWidth = 220;
+  const tooltipHeight = 28 + visibleSeries.length * 18;
+  const tooltipPosition =
+    activeIndex === null
+      ? { x: plotLeft, y: PLOT_TOP + 8 }
+      : isHorizontal
+        ? {
+            x: Math.max(plotLeft, VIEW_WIDTH - PLOT_RIGHT - tooltipWidth),
+            y: Math.min(
+              Math.max(categoryCenter(activeIndex) - tooltipHeight / 2, PLOT_TOP),
+              PLOT_TOP + plotHeight - tooltipHeight,
+            ),
+          }
+        : {
+            x: Math.min(
+              Math.max(categoryCenter(activeIndex) - tooltipWidth / 2, plotLeft),
+              VIEW_WIDTH - PLOT_RIGHT - tooltipWidth,
+            ),
+            y: PLOT_TOP + 8,
+          };
+
+  return (
+    <figure className="portfolio-chart" data-chart-kind={kind}>
+      <div className="portfolio-chart__context">
+        {isHorizontal ? (
+          <>
+            <span className="portfolio-chart__pill" data-chart-axis="x">
+              Eje X: {valueLabel}
+            </span>
+            <span className="portfolio-chart__pill" data-chart-axis="range">
+              Rango: {formatExact(axis.rawMin)} – {formatExact(axis.rawMax)}
+            </span>
+            <span className="portfolio-chart__pill" data-chart-axis="y">
+              Eje Y: {categoryLabel}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="portfolio-chart__pill" data-chart-axis="y">
+              Eje Y: {valueLabel}
+            </span>
+            <span className="portfolio-chart__pill" data-chart-axis="range">
+              Rango: {formatExact(axis.rawMin)} – {formatExact(axis.rawMax)}
+            </span>
+            <span className="portfolio-chart__pill" data-chart-axis="x">
+              Eje X: {categoryLabel}
+            </span>
+          </>
+        )}
+      </div>
+
+      {isMultiSeries && (
+        <div className="portfolio-chart__legend" aria-label="Series legend">
+          {series.map((entry, index) => {
+            const finiteValues = entry.values.filter((value) => Number.isFinite(value));
+            const first = finiteValues[0];
+            const last = finiteValues[finiteValues.length - 1];
+            const isHidden = hidden.has(entry.name);
+            return (
+              <button
+                key={`${entry.name}-${index}`}
+                type="button"
+                className={`portfolio-chart__legend-item${isHidden ? " is-hidden" : ""}`}
+                aria-pressed={!isHidden}
+                data-series-legend={entry.name}
+                onClick={() => toggleSeries(entry.name)}
+              >
+                <span
+                  className="portfolio-chart__swatch"
+                  style={{ backgroundColor: colorForSeries(index) }}
+                  aria-hidden="true"
+                />
+                <span className="portfolio-chart__legend-copy">
+                  <span className="portfolio-chart__legend-name">{entry.name}</span>
+                  {first !== undefined && last !== undefined && finiteValues.length >= 2 && (
+                    <span className="portfolio-chart__legend-range">
+                      {formatExact(first)} → {formatExact(last)}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <svg
+        className="portfolio-chart__plot"
+        viewBox={`0 0 ${VIEW_WIDTH} ${chartHeight}`}
+        height={chartHeight}
+        role="img"
+        aria-label={`${isHorizontal ? "Horizontal bar" : "Bar"} chart: ${labels.join(", ")}`}
+      >
+        {axis.ticks.map((tick) => {
+          const position = valuePosition(tick);
+          return isHorizontal ? (
+            <g key={tick}>
+              <line
+                className="portfolio-chart__grid"
+                x1={position}
+                x2={position}
+                y1={PLOT_TOP}
+                y2={PLOT_TOP + plotHeight}
+              />
+              <text
+                className="portfolio-chart__axis-label"
+                data-chart-tick="x"
+                x={position}
+                y={chartHeight - 12}
+                textAnchor="middle"
+              >
+                {formatTick(tick, axis.decimals)}
+              </text>
+            </g>
+          ) : (
+            <g key={tick}>
+              <line
+                className="portfolio-chart__grid"
+                x1={plotLeft}
+                x2={VIEW_WIDTH - PLOT_RIGHT}
+                y1={position}
+                y2={position}
+              />
+              <text
+                className="portfolio-chart__axis-label"
+                data-chart-tick="y"
+                x={plotLeft - 10}
+                y={position + 4}
+                textAnchor="end"
+              >
+                {formatTick(tick, axis.decimals)}
+              </text>
+            </g>
+          );
+        })}
+
+        {[...categoryTickIndices]
+          .sort((left, right) => left - right)
+          .map((index) => {
+            const label = labels[index] ?? "";
+            return isHorizontal ? (
+              <text
+                key={`${label}-${index}`}
+                className="portfolio-chart__axis-label"
+                data-chart-tick="y"
+                x={plotLeft - 10}
+                y={categoryCenter(index) + 4}
+                textAnchor="end"
+              >
+                {shortLabel(label, 28)}
+              </text>
+            ) : (
+              <text
+                key={`${label}-${index}`}
+                className="portfolio-chart__axis-label portfolio-chart__axis-label--x"
+                data-chart-tick="x"
+                x={categoryCenter(index)}
+                y={chartHeight - 12}
+                textAnchor="middle"
+              >
+                {shortLabel(label, 14)}
+              </text>
+            );
+          })}
+
+        {hasNegative && hasPositive && (
+          <line
+            className="portfolio-chart__zero"
+            x1={isHorizontal ? valuePosition(0) : plotLeft}
+            x2={isHorizontal ? valuePosition(0) : VIEW_WIDTH - PLOT_RIGHT}
+            y1={isHorizontal ? PLOT_TOP : valuePosition(0)}
+            y2={isHorizontal ? PLOT_TOP + plotHeight : valuePosition(0)}
+          />
+        )}
+
+        {bars.map((bar) => (
+          <rect
+            key={`${bar.categoryIndex}-${bar.seriesIndex}-${bar.value}`}
+            className="portfolio-chart__bar"
+            x={bar.x}
+            y={bar.y}
+            width={bar.width}
+            height={bar.height}
+            rx="2.5"
+            fill={bar.color}
+            data-bar-value={bar.value}
+            data-bar-category={bar.category}
+            data-bar-series={bar.seriesName}
+          />
+        ))}
+
+        {labels.map((label, index) => {
+          const values = visibleSeries
+            .map((entry) => {
+              const value = entry.values[index];
+              return Number.isFinite(value)
+                ? `${entry.name} ${formatExact(value as number)}`
+                : `${entry.name} –`;
+            })
+            .join(", ");
+          return (
+            <rect
+              key={`hover-${label}-${index}`}
+              x={isHorizontal ? plotLeft : categoryStart(index)}
+              y={isHorizontal ? categoryStart(index) : PLOT_TOP}
+              width={isHorizontal ? plotWidth : categoryBand}
+              height={isHorizontal ? categoryBand : plotHeight}
+              fill="transparent"
+              tabIndex={0}
+              role="img"
+              aria-label={`${label}: ${values}`}
+              onMouseEnter={() => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(null)}
+              onFocus={() => setActiveIndex(index)}
+              onBlur={() => setActiveIndex(null)}
+            />
+          );
+        })}
+
+        {activeIndex !== null && (
+          <g
+            className="portfolio-chart__tooltip"
+            pointerEvents="none"
+            transform={`translate(${tooltipPosition.x}, ${tooltipPosition.y})`}
+          >
+            <rect width={tooltipWidth} height={tooltipHeight} rx="9" />
+            <text className="portfolio-chart__tooltip-title" x="12" y="19">
+              {activeLabel}
+            </text>
+            {visibleSeries.map((entry, index) => {
+              const value = entry.values[activeIndex];
+              return (
+                <g key={entry.name} transform={`translate(12, ${36 + index * 18})`}>
+                  <circle r="4" fill={colorForEntry(entry, activeIndex)} />
+                  <text x="10" y="4">
+                    {entry.name}: {Number.isFinite(value) ? formatExact(value as number) : "–"}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        )}
+      </svg>
+    </figure>
+  );
+}
+
 function PortfolioLineChart(props: ChartProps) {
   return <PortfolioChart kind="line" {...props} />;
 }
@@ -827,6 +1305,21 @@ function createPortfolioComponents(library: SchemaLibrary) {
       description: "Filled area under lines; use for cumulative totals or volume trends over time",
       component: ({ props }) => <PortfolioAreaChart {...(props as ChartProps)} />,
     }),
+    barChart: defineComponent({
+      name: "BarChart",
+      props: schemaOf(library, "BarChart"),
+      description:
+        "Vertical bars; use for comparing values across categories with one or more series",
+      component: ({ props }) => <PortfolioBarChart kind="bar" {...(props as ChartProps)} />,
+    }),
+    horizontalBarChart: defineComponent({
+      name: "HorizontalBarChart",
+      props: schemaOf(library, "HorizontalBarChart"),
+      description: "Horizontal bars; prefer when category labels are long or for ranked lists",
+      component: ({ props }) => (
+        <PortfolioBarChart kind="horizontal-bar" {...(props as ChartProps)} />
+      ),
+    }),
   };
 }
 
@@ -841,6 +1334,8 @@ export const portfolioReportLibrary = openuiLibrary.extend({
       reportComponents.table,
       reportComponents.lineChart,
       reportComponents.areaChart,
+      reportComponents.barChart,
+      reportComponents.horizontalBarChart,
     ],
   },
 });
@@ -853,6 +1348,8 @@ export const portfolioChatLibrary = openuiChatLibrary.extend({
       chatComponents.table,
       chatComponents.lineChart,
       chatComponents.areaChart,
+      chatComponents.barChart,
+      chatComponents.horizontalBarChart,
     ],
   },
 });

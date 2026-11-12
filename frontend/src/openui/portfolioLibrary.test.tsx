@@ -3,10 +3,20 @@ import { describe, expect, it } from "vitest";
 import { Renderer } from "@openuidev/react-lang";
 import { ThemeProvider } from "@openuidev/react-ui";
 import { portfolioDarkTheme, portfolioLightTheme } from "../theme";
-import { portfolioChatLibrary, portfolioReportLibrary } from "./portfolioLibrary";
+import {
+  portfolioChatLibrary,
+  portfolioReportLibrary,
+  toggleSeriesVisibility,
+} from "./portfolioLibrary";
 
 function render(response: string, library = portfolioReportLibrary) {
   return renderToStaticMarkup(<Renderer response={response} library={library} />);
+}
+
+function barFills(html: string): string[] {
+  return [...html.matchAll(/<rect[^>]*class="portfolio-chart__bar"[^>]*fill="([^"]+)"/g)].map(
+    (match) => match[1] ?? "",
+  );
 }
 
 function axisTickLabels(html: string, axis: "x" | "y"): string[] {
@@ -122,6 +132,73 @@ describe("portfolioReportLibrary", () => {
     expect(axisTickLabels(html, "y").some((label) => label.includes("."))).toBe(false);
     expect(axisTickLabels(html, "x")).not.toContain("2022-09");
     expect(axisTickLabels(html, "x")).toContain("2022-10");
+  });
+
+  it("colors every single-series bar distinctly instead of using flat blue", () => {
+    const html = renderToStaticMarkup(
+      <ThemeProvider mode="dark" lightTheme={portfolioLightTheme} darkTheme={portfolioDarkTheme}>
+        <Renderer
+          response={
+            'root = Card([c])\nc = BarChart(["P1", "P2", "P3"], [Series("Alerts", [10, 20, 30])], "grouped", "Period", "Alerts")'
+          }
+          library={portfolioReportLibrary}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(html).toContain('data-chart-kind="bar"');
+    expect(barFills(html)).toEqual(["#34D399", "#38BDF8", "#A78BFA"]);
+    expect(html).not.toContain("#60A5FA");
+    expect(html).not.toContain("#2563EB");
+  });
+
+  it("colors horizontal bars distinctly and labels the value axis", () => {
+    const html = render(
+      'root = Card([c])\nc = HorizontalBarChart(["Alpha", "Beta", "Gamma"], [Series("Return", [12, 18, 25])], "grouped", "Strategy", "Return (%)")',
+    );
+
+    expect(html).toContain('data-chart-kind="horizontal-bar"');
+    expect(barFills(html)).toEqual(["#10B981", "#0284C7", "#7C3AED"]);
+    expect(html).toContain("Eje X: Return (%)");
+    expect(html).toContain("Eje Y: Strategy");
+    expect(html).toMatch(/data-chart-tick="x"/);
+  });
+
+  it("colors multi-series bars by series and exposes legend toggles", () => {
+    const html = render(
+      'root = Card([c])\nc = BarChart(["P1", "P2"], [Series("Low", [10, 15]), Series("High", [20, 25])], "grouped", "Period", "Value")',
+    );
+
+    expect(barFills(html)).toEqual(["#10B981", "#0284C7", "#10B981", "#0284C7"]);
+    expect(html).toContain('data-series-legend="Low"');
+    expect(html).toContain('data-series-legend="High"');
+    expect(html).toContain('aria-pressed="true"');
+
+    const hidden = toggleSeriesVisibility(new Set(), "Low", ["Low", "High"]);
+    expect(hidden.has("Low")).toBe(true);
+    expect(toggleSeriesVisibility(hidden, "Low", ["Low", "High"]).has("Low")).toBe(false);
+    expect(toggleSeriesVisibility(new Set(), "Only", ["Only"]).size).toBe(0);
+  });
+
+  it("stacks multi-series bars while preserving series colors", () => {
+    const html = render(
+      'root = Card([c])\nc = BarChart(["P1", "P2"], [Series("Low", [10, 15]), Series("High", [20, 25])], "stacked", "Period", "Value")',
+    );
+
+    expect(barFills(html)).toEqual(["#10B981", "#0284C7", "#10B981", "#0284C7"]);
+    expect(html).toContain('data-bar-series="Low"');
+    expect(html).toContain('data-bar-series="High"');
+  });
+
+  it("draws positive and negative bars around a zero baseline", () => {
+    const html = render(
+      'root = Card([c])\nc = BarChart(["Loss", "Gain"], [Series("Return", [-10, 20])], "grouped", "Period", "Return (%)")',
+    );
+
+    expect(html).toContain("portfolio-chart__zero");
+    expect(html).toContain('data-bar-value="-10"');
+    expect(html).toContain('data-bar-value="20"');
+    expect(barFills(html)).toHaveLength(2);
   });
 
   it("provides the same signed-metric overrides to chat charts", () => {

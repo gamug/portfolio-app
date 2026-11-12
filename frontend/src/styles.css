@@ -977,6 +977,100 @@ input::placeholder {
   min-width: 0;
 }
 
+.message__footer .message__sparql-toggle {
+  margin-top: 0;
+  padding: 0.25rem 0.58rem;
+  color: var(--app-text-muted);
+  font-size: 0.76rem;
+  background: transparent;
+  border-color: var(--app-border);
+  border-radius: 999px;
+}
+
+.message__footer .message__sparql-toggle:hover:not(:disabled) {
+  color: var(--app-accent-strong);
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent-border);
+}
+
+.message__card {
+  margin-top: 0.7rem;
+  padding: 0.7rem;
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.message__sparql {
+  overflow: hidden;
+  background: var(--app-surface-inset);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+}
+
+.message__sparql + .message__sparql {
+  margin-top: 0.55rem;
+}
+
+.message__sparql-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.38rem 0.55rem;
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.message__sparql-title {
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.message__sparql-copy {
+  padding: 0.16rem 0.5rem;
+  color: var(--app-text-muted);
+  font-size: 0.7rem;
+  background: transparent;
+  border-color: var(--app-border);
+  border-radius: 999px;
+}
+
+.message__sparql-copy:hover:not(:disabled) {
+  color: var(--app-accent-strong);
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent-border);
+}
+
+.message__sparql pre {
+  max-height: 22rem;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  overflow: auto;
+}
+
+.message__sparql code {
+  color: var(--app-text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.message__sparql-status {
+  margin: 0;
+  padding: 0.2rem 0.1rem;
+  color: var(--app-text-muted);
+  font-size: 0.82rem;
+}
+
+.message__sparql-status--error {
+  color: var(--app-danger-text);
+}
+
 .message__relevance label {
   display: inline-flex;
   align-items: center;
@@ -1323,6 +1417,13 @@ input::placeholder {
   stroke: var(--app-border);
   stroke-width: 1;
   opacity: 0.8;
+}
+
+.portfolio-chart__zero {
+  stroke: var(--app-text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.6;
 }
 
 .portfolio-chart__axis-label {

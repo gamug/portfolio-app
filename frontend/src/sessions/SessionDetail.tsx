@@ -2,6 +2,7 @@ import { ThemeToggle } from "../ThemeToggle";
 import { ChatPanel } from "./ChatPanel";
 import { ReportPanel } from "./ReportPanel";
 import type { SessionState } from "./SessionController";
+import type { SparqlClient } from "./sparqlClient";
 
 type SessionDetailProps = {
   state: SessionState;
@@ -14,6 +15,7 @@ type SessionDetailProps = {
   onEraseHistory: () => void;
   onEraseReport: () => void;
   onCancelReport: () => void;
+  loadSparql?: SparqlClient["getSparql"];
 };
 
 export function SessionDetail({
@@ -27,6 +29,7 @@ export function SessionDetail({
   onEraseHistory,
   onEraseReport,
   onCancelReport,
+  loadSparql,
 }: SessionDetailProps) {
   const active = state.sessions.find((session) => session.id === state.activeSessionId);
   if (active === undefined) {
@@ -54,6 +57,7 @@ export function SessionDetail({
           onToggleRelevance={onToggleRelevance}
           onDeletePair={onDeletePair}
           onSendQuestion={onSendQuestion}
+          loadSparql={loadSparql}
         />
         <ReportPanel
           key={`report-${state.activeSessionId ?? "none"}`}
