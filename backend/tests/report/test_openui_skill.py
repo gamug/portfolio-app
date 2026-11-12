@@ -154,6 +154,8 @@ def test_prompts_document_portfolio_chart_types_and_axis_labels() -> None:
         "single-series periodic counts",
         "Retorno acum.",
         "MUST include non-empty",
+        'Do NOT emit a "table" chart',
+        "purely qualitative answers",
     ):
         assert phrase in plan_prompt
     for phrase in (

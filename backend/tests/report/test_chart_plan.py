@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from app.connector.settings import Settings
-from app.report.chart_plan import ChartPlanSkill, parse_chart_plan
+from app.report.chart_plan import ChartPlanSkill, extract_numbers, parse_chart_plan
 from app.report.models import ReportSkillError
 from app.storage import QuestionAnswerPair
 
@@ -61,6 +61,74 @@ def test_matches_numbers_written_with_thousands_separators() -> None:
         ["In January revenue was 1,200 and in February revenue was 1,500."],
     )
     assert plan.charts[0].series[0].values == (1200.0, 1500.0)
+
+
+def test_extract_numbers_handles_unicode_minus_and_localized_separators() -> None:
+    numbers = extract_numbers(
+        "Returns were −10.55 %, −18.94 %, -0,1229, 0,0108, 0,5 and 0,0. "
+        "Assets were 4.958 and 1.289; the ratio was 0.999 and 0.8945."
+    )
+    assert -10.55 in numbers
+    assert -18.94 in numbers
+    assert -0.1229 in numbers
+    assert 0.0108 in numbers
+    assert 0.5 in numbers
+    assert 0.0 in numbers
+    assert 4.958 in numbers
+    assert 4958.0 in numbers
+    assert 1.289 in numbers
+    assert 1289.0 in numbers
+    assert 0.999 in numbers
+    assert 0.8945 in numbers
+
+
+def test_parse_plan_accepts_unicode_minus_and_localized_numbers() -> None:
+    document = _document()
+    document["charts"] = [
+        {
+            "type": "bar",
+            "title": "Returns",
+            "labels": ["A", "B", "C"],
+            "series": [{"category": "Return", "values": [-10.55, -18.94, -0.1229]}],
+            "takeaway": "Returns were negative.",
+        },
+        {
+            "type": "table",
+            "title": "Ratios",
+            "columns": [
+                {"label": "Ratio", "values": [0.0108, 0.5, 4958.0, 1289.0, 0.999]},
+            ],
+            "takeaway": "Ratios are shown.",
+        },
+    ]
+    plan = parse_chart_plan(
+        document,
+        ["−10.55 %, −18.94 %, -0,1229, 0,0108, 0,5, 4.958, 1.289 and 0.999"],
+    )
+    assert plan.charts[0].series[0].values == (-10.55, -18.94, -0.1229)
+    assert plan.charts[1].columns[0].values == (0.0108, 0.5, 4958.0, 1289.0, 0.999)
+
+
+@pytest.mark.parametrize("text_table_first", [True, False])
+def test_skips_text_only_table_when_other_numeric_charts_exist(
+    text_table_first: bool,
+) -> None:
+    document = _document()
+    text_table = {
+        "type": "table",
+        "title": "Rules",
+        "columns": [
+            {"label": "Rule", "values": ["Maximum weight", "Minimum weight"]},
+            {"label": "Objective", "values": ["Minimize risk", "Maximize return"]},
+        ],
+        "takeaway": "Rules are qualitative.",
+    }
+    numeric_chart = document["charts"][0]
+    document["charts"] = (
+        [text_table, numeric_chart] if text_table_first else [numeric_chart, text_table]
+    )
+    plan = parse_chart_plan(document, [ANSWERS])
+    assert [chart.type for chart in plan.charts] == ["line"]
 
 
 def test_accepts_a_pie_and_a_table() -> None:

@@ -68,7 +68,10 @@ RULES
    exactly as written: 1,200 becomes 1200, 12.5% becomes 12.5 and the unit goes in the title or
    label. A chart value that does not appear in an answer makes the plan invalid.
 2. Skip every pair with no numeric content. If no relevant pair has numeric content, return
-   "charts": [] and say in the summary that the marked answers contain no numeric data.
+   "charts": [] and say in the summary that the marked answers contain no numeric data. Do NOT
+   emit a "table" chart whose columns contain only strings, labels, or rule names with no numeric
+   column (for example objective or weighting-rule comparisons); summarize purely qualitative
+   answers in "summary" or "conclusions" instead.
 3. Use at most 6 charts. Use at least 1 chart when numeric content exists.
 4. Choose the chart type from what the data supports:
    - "line": time series, NAV trajectories, cumulative returns, or multi-period performance
@@ -104,7 +107,9 @@ RULES
    "donut", include "labels" and "values" with the same length. For "table", include a non-empty
    "columns" array; every column has the same number of values, and at least one column is
    numeric. The first table column is usually the row label. For a missing table value use the
-   string "–", never null.
+   string "–", never null. Do NOT emit a "table" chart whose columns contain only strings,
+   labels, or rule names with no numeric column (for example objective or weighting-rule
+   comparisons); summarize purely qualitative answers in "summary" or "conclusions" instead.
 6. Labels and titles must describe what is in the answers. Do not add facts, entities, periods
    or categories that are not in the pairs. Keep proper names unchanged.
 7. Write the title, summary, chart titles, takeaways and conclusions in the analyst's language:

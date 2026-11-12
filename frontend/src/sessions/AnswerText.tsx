@@ -12,7 +12,7 @@ const TABLE_DIVIDER_PATTERN = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s
 
 export function renderMetrics(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const pattern = /(^|[\s(])([+-]\$?\d[\d,]*(?:\.\d+)?%?)/g;
+  const pattern = /(^|[\s(])([+\-\u2212]\$?\d+(?:[.,]\d+)*(?: ?%)?)/g;
   let lastIndex = 0;
   let match = pattern.exec(text);
 

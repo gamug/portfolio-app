@@ -65,6 +65,19 @@ describe("portfolioReportLibrary", () => {
     expect(html).toContain("answer-text__metric--negative");
   });
 
+  it("right-aligns and highlights Unicode-minus metrics in table cells", () => {
+    const html = render(
+      "root = Card([t])\nt = Table([c1, c2])\n" +
+        'c1 = Col("Metric", ["Return", "Drawdown"])\n' +
+        'c2 = Col("Result", ["−10.14 %", "-0,1229"])',
+    );
+
+    expect(html).toContain("answer-text__metric--negative");
+    expect(html).toContain("−10.14 %");
+    expect(html.match(/data-col-align="right"/g) ?? []).toHaveLength(3);
+    expect(html).toContain("portfolio-table__col--numeric");
+  });
+
   it("scales NAV line charts around the data and explains the axes", () => {
     const html = renderToStaticMarkup(
       <ThemeProvider mode="dark" lightTheme={portfolioLightTheme} darkTheme={portfolioDarkTheme}>

@@ -94,7 +94,7 @@ function PortfolioInlineHeader({
 }
 
 const TABLE_PAGE_SIZE = 10;
-const NUMERIC_CELL_PATTERN = /^([+-]?\$?\d[\d,]*(?:\.\d+)?%?|[–—-])$/;
+const NUMERIC_CELL_PATTERN = /^([+\-\u2212]?\$?\d+(?:[.,]\d+)*(?: ?%)?|[–—-])$/;
 
 type TableColumn = {
   label: string;
