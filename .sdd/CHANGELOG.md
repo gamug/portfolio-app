@@ -502,3 +502,14 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added backend tests for Spanish/English disclaimers, in-sample caveats, provenance lines, duplicate suppression, last-line root cards, report-plan extraction, payload serialization, prompt rules, agent injection and optional Node parser validation. Added a frontend answer-text extraction test for small disclaimers.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, REST/SSE contract or API response-shape change.
 - Verification: backend `pytest` (190 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,841,103 bytes with 0 external references.
+
+## 2026-11-13 (disclaimer deduplication)
+
+### TASK-034 progress — Avoid duplicate disclaimers and provenance notes (WI-014; FR-015)
+
+- Strengthened the shared note presence check: it decodes OpenUI string literals, normalizes whitespace and Markdown emphasis, and checks multi-sentence notes sentence by sentence.
+- A note split across several `TextContent` statements, or rendered with Markdown formatting, is now recognized as already present, so the app no longer appends a second copy.
+- Added regression tests for a Spanish disclaimer and provenance line split across separate `TextContent` statements in both the chat converter and the report agent.
+- Both the chat converter and report Skill 2 prompts now explicitly say to keep an already-visible mandatory note only once.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: backend `pytest` (192 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier and `tsc --noEmit` pass.

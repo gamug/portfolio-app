@@ -32,11 +32,13 @@ CHUNKS = [
     'title = CardHeader("Quarter", "Report")\n',
     'chart = TextContent("Revenue rose.")',
 ]
-DISCLAIMER = (
+DISCLAIMER_SENTENCES = (
     "Interpretación generada por un modelo de lenguaje el 3 de noviembre de 2026, a partir del "
-    "informe disponible en la fecha D. Por su entrenamiento, el modelo pudo conocer hechos "
-    "posteriores a D. No es un dato de la fecha D ni un hecho verificado."
+    "informe disponible en la fecha D.",
+    "Por su entrenamiento, el modelo pudo conocer hechos posteriores a D.",
+    "No es un dato de la fecha D ni un hecho verificado.",
 )
+DISCLAIMER = " ".join(DISCLAIMER_SENTENCES)
 PROVENANCE = "Provenance: /reports/2026/report.html"
 
 
@@ -200,6 +202,40 @@ def test_stream_injects_missing_disclaimers_before_validation_and_storage(
     dependencies = DEFAULT_VALIDATOR_PATH.parents[1] / "node_modules" / "@openuidev" / "react-lang"
     if shutil.which("node") is not None and dependencies.is_dir():
         asyncio.run(NodeOpenUIParser().validate(report.openui_lang))
+
+
+def test_stream_does_not_duplicate_disclaimers_already_in_the_report(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    asyncio.run(store.save(_pair()))
+    plan = ChartPlan(
+        title="Quarter",
+        summary="Revenue rose.",
+        charts=(),
+        conclusions="The quarter improved.",
+        disclaimers=(DISCLAIMER, PROVENANCE),
+    )
+    first, second, third = DISCLAIMER_SENTENCES
+    render = FakeRenderSkill(
+        chunks=[
+            "root = Card([title, first, second, third, source])\n",
+            'title = TextContent("Quarter")\n',
+            f'first = TextContent("{first}")\n',
+            f'second = TextContent("{second}")\n',
+            f'third = TextContent("{third}")\n',
+            f'source = TextContent("{PROVENANCE}")',
+        ]
+    )
+    agent = _agent(store, plan=FakePlanSkill(plan=plan), render=render)
+
+    async def scenario() -> Any:
+        context = await agent.prepare("s1")
+        [event async for event in agent.stream(context)]
+        return await store.get_report("s1")
+
+    report = asyncio.run(scenario())
+    assert report is not None
+    assert "mandatoryNote" not in report.openui_lang
+    assert report.openui_lang.count(PROVENANCE) == 1
 
 
 def test_regenerate_replaces_the_previous_report(tmp_path: Path) -> None:

@@ -40,7 +40,8 @@ Visible text rules:
   provenance/source note, copy it verbatim into a separate TextContent("...", "small"). Never
   paraphrase, shorten, translate, omit or merge it. It does NOT count against the "1-2 sentence
   key takeaway" limit, does NOT count against the "at most 6 statements" card budget, and is
-  exempt from the "process notes" exclusion.
+  exempt from the "process notes" exclusion. If the answer already includes the note visibly,
+  keep it only once and do not add a duplicate.
 - Keep TextContent concise: a 1-2 sentence key takeaway with explicit "+" or "-" signs on
   returns and deltas when the answer supports them, rather than repeating the entire raw answer
   table. The key takeaway limit does not include mandatory disclaimers, caveats or provenance
