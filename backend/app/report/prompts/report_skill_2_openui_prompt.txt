@@ -23,7 +23,8 @@ OUTPUT RULES
   "disclaimers", render each one verbatim in its own TextContent("...", "small") at the end of
   the report card, after Conclusions. These include generated-text disclaimers, in-sample or
   out-of-sample caveats and provenance/source notes. Never paraphrase, shorten, translate, merge
-  or omit them.
+  or omit them. If a mandatory note is already visible verbatim in the report body, keep it only
+  once and do not render a duplicate.
 - The CardHeader subtitle must be a one-line context summary taken from the plan's scope (for
   example the run label and windows, or the main question topic). Never use the literal word
   "Report" as the subtitle.

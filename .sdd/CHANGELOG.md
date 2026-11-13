@@ -502,3 +502,25 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added backend tests for Spanish/English disclaimers, in-sample caveats, provenance lines, duplicate suppression, last-line root cards, report-plan extraction, payload serialization, prompt rules, agent injection and optional Node parser validation. Added a frontend answer-text extraction test for small disclaimers.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, REST/SSE contract or API response-shape change.
 - Verification: backend `pytest` (190 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,841,103 bytes with 0 external references.
+
+## 2026-11-13 (disclaimer deduplication)
+
+### TASK-034 progress — Avoid duplicate disclaimers and provenance notes (WI-014; FR-015)
+
+- Strengthened the shared note presence check: it decodes OpenUI string literals, normalizes whitespace and Markdown emphasis, and checks multi-sentence notes sentence by sentence.
+- A note split across several `TextContent` statements, or rendered with Markdown formatting, is now recognized as already present, so the app no longer appends a second copy.
+- Added regression tests for a Spanish disclaimer and provenance line split across separate `TextContent` statements in both the chat converter and the report agent.
+- Both the chat converter and report Skill 2 prompts now explicitly say to keep an already-visible mandatory note only once.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: backend `pytest` (192 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier and `tsc --noEmit` pass.
+
+## 2026-11-13 (real Apple disclaimer parsing)
+
+### TASK-034 progress — Match real Apple disclaimers and inline provenance (WI-014; FR-015)
+
+- Expanded `PROVENANCE_PATTERN` and note-label stripping to cover `provenance:`, `provenanceNote:`, `provenance note:`, `procedencia:`, `procedencia declarada:`, `fuente:`, `source:`, `origen:` and `informe:`.
+- Inline provenance clauses are now split out of disclaimer paragraphs/lines, so the disclaimer and provenance remain separate notes. `Texto generado: "..."` wrappers and outer quotes are stripped from the disclaimer.
+- `_note_present()` now compares case-insensitively against decoded/plain text, strips labels, outer quotes and trailing punctuation from the note core, and checks every sentence core for split disclaimers.
+- Added regression tests using both real Apple raw answers and their LLM OpenUI outputs, plus a case where only the provenance note is missing and only that note is appended.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: backend `pytest` (195 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass.
