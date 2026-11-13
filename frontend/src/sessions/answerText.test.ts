@@ -24,6 +24,16 @@ describe("answer text", () => {
     expect(extractAnswerText("root = Card([])")).toBe("");
   });
 
+  it("extracts a small TextContent disclaimer without truncation", () => {
+    const disclaimer =
+      "Interpretación generada por un modelo de lenguaje el 3 de noviembre de 2026, a partir del " +
+      "informe disponible en la fecha D. Por su entrenamiento, el modelo pudo conocer hechos " +
+      "posteriores a D. No es un dato de la fecha D ni un hecho verificado.";
+    const openuiLang = `root = Card([note])\nnote = TextContent(${JSON.stringify(disclaimer)}, "small")`;
+
+    expect(extractAnswerText(openuiLang)).toBe(disclaimer);
+  });
+
   it("reads string content", () => {
     expect(messageText({ id: "p1", role: "assistant", content: "answer" })).toBe("answer");
   });

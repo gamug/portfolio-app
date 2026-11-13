@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from app.report.models import (
     ReportProgress,
     ReportSkillError,
 )
+from app.report.openui import DEFAULT_VALIDATOR_PATH, NodeOpenUIParser
 from app.storage import QuestionAnswerPair, SQLiteQuestionAnswerStore
 
 PLAN = ChartPlan(
@@ -30,6 +32,12 @@ CHUNKS = [
     'title = CardHeader("Quarter", "Report")\n',
     'chart = TextContent("Revenue rose.")',
 ]
+DISCLAIMER = (
+    "Interpretación generada por un modelo de lenguaje el 3 de noviembre de 2026, a partir del "
+    "informe disponible en la fecha D. Por su entrenamiento, el modelo pudo conocer hechos "
+    "posteriores a D. No es un dato de la fecha D ni un hecho verificado."
+)
+PROVENANCE = "Provenance: /reports/2026/report.html"
 
 
 def _settings() -> Settings:
@@ -160,6 +168,38 @@ def test_success_strips_markdown_fences_before_storing(tmp_path: Path) -> None:
     assert render.validated == ["root = Card([])"]
     assert report is not None
     assert report.openui_lang == "root = Card([])"
+
+
+def test_stream_injects_missing_disclaimers_before_validation_and_storage(
+    tmp_path: Path,
+) -> None:
+    store = _store(tmp_path)
+    asyncio.run(store.save(_pair()))
+    plan = ChartPlan(
+        title="Quarter",
+        summary="Revenue rose.",
+        charts=(),
+        conclusions="The quarter improved.",
+        disclaimers=(DISCLAIMER, PROVENANCE),
+    )
+    render = FakeRenderSkill(chunks=["root = Card([title])\n", 'title = TextContent("Quarter")'])
+    agent = _agent(store, plan=FakePlanSkill(plan=plan), render=render)
+
+    async def scenario() -> Any:
+        context = await agent.prepare("s1")
+        [event async for event in agent.stream(context)]
+        return await store.get_report("s1")
+
+    report = asyncio.run(scenario())
+    assert report is not None
+    assert DISCLAIMER in report.openui_lang
+    assert PROVENANCE in report.openui_lang
+    assert "mandatoryNote1" in report.openui_lang
+    assert render.validated == [report.openui_lang]
+
+    dependencies = DEFAULT_VALIDATOR_PATH.parents[1] / "node_modules" / "@openuidev" / "react-lang"
+    if shutil.which("node") is not None and dependencies.is_dir():
+        asyncio.run(NodeOpenUIParser().validate(report.openui_lang))
 
 
 def test_regenerate_replaces_the_previous_report(tmp_path: Path) -> None:

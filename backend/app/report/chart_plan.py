@@ -13,6 +13,7 @@ from openai import APITimeoutError, AsyncOpenAI
 from app.connector.language import Language
 from app.connector.models import total_tokens
 from app.connector.settings import Settings
+from app.disclaimers import extract_mandatory_notes, merge_notes
 from app.storage.models import QuestionAnswerPair
 
 from .language import plan_language_instruction
@@ -126,6 +127,21 @@ def _optional_text(document: dict[str, Any], key: str) -> str:
     if not isinstance(value, str):
         raise ReportSkillError(f"The chart plan field {key} must be a string.")
     return value.strip()
+
+
+def _disclaimers(value: object) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise ReportSkillError("The chart plan field disclaimers must be an array.")
+    notes: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise ReportSkillError(
+                "The chart plan field disclaimers must contain only non-empty strings."
+            )
+        notes.append(item)
+    return tuple(notes)
 
 
 def _number_list(value: object, field: str) -> tuple[float, ...]:
@@ -278,6 +294,9 @@ def parse_chart_plan(document: object, answers: Sequence[str]) -> ChartPlan:
     if len(raw_charts) > MAX_CHARTS:
         raise ReportSkillError(f"The chart plan cannot contain more than {MAX_CHARTS} charts.")
     source_numbers = extract_numbers("\n".join(answers))
+    disclaimers = merge_notes(
+        (*_disclaimers(document.get("disclaimers")), *extract_mandatory_notes("\n".join(answers)))
+    )
     parsed_charts: list[ChartSpec] = []
     text_only_error: _TextOnlyTableError | None = None
     for item in raw_charts:
@@ -292,6 +311,7 @@ def parse_chart_plan(document: object, answers: Sequence[str]) -> ChartPlan:
         summary=summary,
         charts=tuple(parsed_charts),
         conclusions=conclusions,
+        disclaimers=disclaimers,
     )
 
 

@@ -73,6 +73,7 @@ class ChartPlan:
     summary: str
     charts: tuple[ChartSpec, ...]
     conclusions: str
+    disclaimers: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
