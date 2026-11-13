@@ -513,3 +513,14 @@ Record completed Work Items and their associated tasks here after verification. 
 - Both the chat converter and report Skill 2 prompts now explicitly say to keep an already-visible mandatory note only once.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: backend `pytest` (192 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier and `tsc --noEmit` pass.
+
+## 2026-11-13 (real Apple disclaimer parsing)
+
+### TASK-034 progress — Match real Apple disclaimers and inline provenance (WI-014; FR-015)
+
+- Expanded `PROVENANCE_PATTERN` and note-label stripping to cover `provenance:`, `provenanceNote:`, `provenance note:`, `procedencia:`, `procedencia declarada:`, `fuente:`, `source:`, `origen:` and `informe:`.
+- Inline provenance clauses are now split out of disclaimer paragraphs/lines, so the disclaimer and provenance remain separate notes. `Texto generado: "..."` wrappers and outer quotes are stripped from the disclaimer.
+- `_note_present()` now compares case-insensitively against decoded/plain text, strips labels, outer quotes and trailing punctuation from the note core, and checks every sentence core for split disclaimers.
+- Added regression tests using both real Apple raw answers and their LLM OpenUI outputs, plus a case where only the provenance note is missing and only that note is appended.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
+- Verification: backend `pytest` (195 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass.
