@@ -6,11 +6,13 @@ from collections.abc import AsyncIterator
 
 from app.connector.language import Language, detect_language
 from app.connector.settings import Settings
+from app.disclaimers import append_missing_notes
 from app.storage import Report, SQLiteQuestionAnswerStore
 
 from .chart_plan import ChartPlanSkill
 from .language import report_error_message
 from .models import (
+    ChartPlan,
     ReportContext,
     ReportDelta,
     ReportDone,
@@ -59,6 +61,7 @@ class ReportAgent:
     async def stream(self, context: ReportContext) -> AsyncIterator[ReportEvent]:
         yield ReportProgress(stage="planning")
         partial: list[str] = []
+        plan: ChartPlan | None = None
         try:
             plan = await self.plan_skill.build(context.pairs, context.language)
             yield ReportProgress(stage="rendering")
@@ -72,6 +75,7 @@ class ReportAgent:
                 if callable(close):
                     await close()
             text = strip_code_fences("".join(partial))
+            text = append_missing_notes(text, plan.disclaimers)
             if not text:
                 raise RuntimeError("the report is empty")
             await self.render_skill.validate(text)
@@ -89,6 +93,8 @@ class ReportAgent:
                 exc_info=False,
             )
             text = strip_code_fences("".join(partial))
+            if plan is not None:
+                text = append_missing_notes(text, plan.disclaimers)
             stored_partial = await self._store_partial(context.session_id, text)
             yield ReportFailed(
                 error=report_error_message("generation", context.language, partial=stored_partial),

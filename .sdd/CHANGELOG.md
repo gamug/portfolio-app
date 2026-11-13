@@ -490,3 +490,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added a regression test with stacked series `[60]` and `[50]` asserting ticks reach at least `110`, the range shows `0 – 110`, and both bar rectangles stay within the plot height.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: frontend tests (142 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template remains a single inline file with 0 external references.
+
+## 2026-11-13 (verbatim disclaimers and caveats)
+
+### TASK-034 progress — Preserve mandatory generated-text and provenance notes (WI-014; FR-015)
+
+- Added shared `app.disclaimers` helpers that ignore fenced code/SPARQL blocks, extract generated-text disclaimers, in-sample caveats and provenance/source lines, deduplicate notes, and append missing notes as valid `TextContent(..., "small")` statements referenced from `root = Card([...])` with quote-aware balanced bracket matching.
+- The chat OpenUI converter prompt now requires verbatim preservation and exempts mandatory notes from the takeaway, statement and process-note limits. `OpenUIConverter.convert()` deterministically appends any missing note after fence stripping.
+- Added optional `ChartPlan.disclaimers`, Skill 1 prompt and parsing support, automatic extraction from answers, and `plan_payload` serialization only when notes exist.
+- Skill 2 now requires every plan disclaimer, caveat and provenance note to be rendered verbatim after Conclusions. `ReportAgent` appends any missing note before validation and storage, including partial reports when a plan exists.
+- Added backend tests for Spanish/English disclaimers, in-sample caveats, provenance lines, duplicate suppression, last-line root cards, report-plan extraction, payload serialization, prompt rules, agent injection and optional Node parser validation. Added a frontend answer-text extraction test for small disclaimers.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, REST/SSE contract or API response-shape change.
+- Verification: backend `pytest` (190 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass; report template 3,841,103 bytes with 0 external references.

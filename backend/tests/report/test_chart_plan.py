@@ -17,6 +17,13 @@ ANSWERS = (
     "In February revenue was 120 and cost was 50. "
     "In March revenue was 150 and cost was 60."
 )
+SPANISH_DISCLAIMER = (
+    "Interpretación generada por un modelo de lenguaje el 3 de noviembre de 2026, a partir del "
+    "informe disponible en la fecha D. Por su entrenamiento, el modelo pudo conocer hechos "
+    "posteriores a D. No es un dato de la fecha D ni un hecho verificado."
+)
+IN_SAMPLE = "Performance is in-sample and may not repeat."
+PROVENANCE = "Provenance: /reports/2026/report.html"
 
 
 def _pair(question: str = "Synthetic question", answer: str = ANSWERS) -> QuestionAnswerPair:
@@ -50,6 +57,26 @@ def test_validates_a_plan_and_keeps_only_answer_numbers() -> None:
     assert plan.title == "Quarter"
     assert len(plan.charts) == 1
     assert plan.charts[0].series[0].values == (100.0, 120.0, 150.0)
+
+
+def test_parse_plan_preserves_explicit_and_extracted_disclaimers() -> None:
+    document = _document()
+    document["disclaimers"] = ["Explicit note"]
+    answers = f"{ANSWERS}\n\n{SPANISH_DISCLAIMER}\n\n{IN_SAMPLE}\n\n{PROVENANCE}"
+
+    plan = parse_chart_plan(document, [answers])
+
+    assert plan.disclaimers == (
+        "Explicit note",
+        SPANISH_DISCLAIMER,
+        IN_SAMPLE,
+        PROVENANCE,
+    )
+
+
+def test_parse_plan_defaults_to_no_disclaimers() -> None:
+    plan = parse_chart_plan(_document(), [ANSWERS])
+    assert plan.disclaimers == ()
 
 
 def test_matches_numbers_written_with_thousands_separators() -> None:

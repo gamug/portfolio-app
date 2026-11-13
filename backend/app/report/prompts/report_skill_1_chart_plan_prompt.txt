@@ -58,7 +58,8 @@ Return exactly one JSON object with no markdown fences, no comments and no text 
           "takeaway": "one sentence about what this table shows"
         }
       ],
-      "conclusions": "1-3 sentences that only restate what the charts show"
+      "conclusions": "1-3 sentences that only restate what the charts show",
+      "disclaimers": ["exact generated-text disclaimer, caveat or provenance line copied verbatim"]
     }
 
 RULES
@@ -125,4 +126,9 @@ RULES
     positive changes that the answers support, write the explicit leading "+" (for example
     "+19.88%") and use "-" for negative values, so the UI can highlight them. Only add a sign
     when the answer supports a positive or negative change; never change the value or invent a
-    sign. Keep methodological caveats (such as in-sample notes) concise.
+    sign. Preserve methodological caveats verbatim as required by rule 12.
+12. Preserve mandatory notes verbatim. If any pair contains a generated-text disclaimer, an
+    in-sample/out-of-sample caveat, or a provenance/source note, copy the complete text verbatim
+    into "disclaimers": ["..."]. Include every such note and never paraphrase, shorten,
+    translate, merge or omit it. Omit the field or use an empty array only when no such note
+    exists.

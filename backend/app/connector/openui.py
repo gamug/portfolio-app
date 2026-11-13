@@ -6,6 +6,8 @@ from typing import Any
 
 from openai import APITimeoutError, AsyncOpenAI
 
+from app.disclaimers import preserve_mandatory_notes
+
 from .language import Language, conversion_instruction
 from .models import ConnectorError, ConnectorTimeout, ConversionResult, total_tokens
 from .settings import Settings
@@ -22,16 +24,27 @@ Hard limits:
   sections or carousels in this short conversion.
 - Do not invent facts, numbers, categories or labels beyond the answer text. Return only
   OpenUI Lang, without markdown fences.
+- Mandatory generated-text disclaimers, in-sample/out-of-sample caveats and provenance/source
+  notes are not optional. Preserve each note verbatim in a visible TextContent(..., "small")
+  below the card body or chart. This note does NOT count against the "at most 6 statements" card
+  budget.
 
 Visible text rules:
 - Never emit a loose label, a bare type name such as "number" or "text", a field or column name,
   or a heading or title without content as visible text. Omit headings and labels that have no
   content under them, and do not render empty text components.
 - Show only the analyst-facing answer. Do not include raw queries, code blocks, tool metadata or
-  process notes.
+  process notes. This exclusion does not apply to mandatory disclaimers, caveats or provenance
+  notes.
+- If the answer contains a generated-text disclaimer, an in-sample/out-of-sample caveat, or a
+  provenance/source note, copy it verbatim into a separate TextContent("...", "small"). Never
+  paraphrase, shorten, translate, omit or merge it. It does NOT count against the "1-2 sentence
+  key takeaway" limit, does NOT count against the "at most 6 statements" card budget, and is
+  exempt from the "process notes" exclusion.
 - Keep TextContent concise: a 1-2 sentence key takeaway with explicit "+" or "-" signs on
   returns and deltas when the answer supports them, rather than repeating the entire raw answer
-  table.
+  table. The key takeaway limit does not include mandatory disclaimers, caveats or provenance
+  notes.
 
 Chart rules:
 - Add a chart only when the answer contains a table with at least two numeric values over
@@ -108,6 +121,7 @@ class OpenUIConverter:
 
         content = response.choices[0].message.content or ""
         converted = _strip_fences(content)
+        converted = preserve_mandatory_notes(converted, answer)
         if not converted:
             raise ConnectorError(
                 "The OpenUI conversion returned an empty response.",

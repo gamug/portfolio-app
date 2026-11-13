@@ -68,12 +68,15 @@ def plan_payload(plan: ChartPlan) -> dict[str, Any]:
                 {"label": column.label, "values": list(column.values)} for column in chart.columns
             ]
         charts.append(item)
-    return {
+    payload: dict[str, Any] = {
         "title": plan.title,
         "summary": plan.summary,
         "charts": charts,
         "conclusions": plan.conclusions,
     }
+    if plan.disclaimers:
+        payload["disclaimers"] = list(plan.disclaimers)
+    return payload
 
 
 class OpenUIParser(Protocol):
