@@ -20,11 +20,12 @@ OUTPUT RULES
 - Build the report in this order: CardHeader(title, "<one-line context summary>"),
   TextContent(summary), one section per plan chart in the same order, then
   InlineHeader("Conclusions") and TextContent(conclusions). If the plan contains
-  "disclaimers", render each one verbatim in its own TextContent("...", "small") at the end of
-  the report card, after Conclusions. These include generated-text disclaimers, in-sample or
-  out-of-sample caveats and provenance/source notes. Never paraphrase, shorten, translate, merge
-  or omit them. If a mandatory note is already visible verbatim in the report body, keep it only
-  once and do not render a duplicate.
+  "disclaimers", render each unique item verbatim exactly once in its own TextContent("...", "small")
+  at the end of the report card, after Conclusions. These include generated-text disclaimers,
+  in-sample or out-of-sample caveats and provenance/source notes. Do not render equivalent notes
+  twice under different labels: keep one entry per unique disclaimer, caveat and provenance note.
+  Never paraphrase, shorten, translate, merge or omit them. If a mandatory note is already visible
+  verbatim in the report body, keep it only once and do not render a duplicate.
 - The CardHeader subtitle must be a one-line context summary taken from the plan's scope (for
   example the run label and windows, or the main question topic). Never use the literal word
   "Report" as the subtitle.
@@ -43,8 +44,10 @@ OUTPUT RULES
   Use "number" for a column whose values are all numbers and "string" otherwise. Omit x_label
   and y_label when either is empty; never pass placeholder axis labels such as "Category" or
   "Value".
-- Define root first so the report shell appears immediately while streaming. Every defined name
-  must be reachable from root; do not leave orphan variables.
+- Define root first so the report shell appears immediately while streaming. Every identifier
+  referenced in root = Card([...]) must be defined by a statement in the same program; never
+  reference an identifier you have not emitted. Every defined name must also be reachable from
+  root; do not leave orphan variables.
 - Do not add commentary, sources, citations, buttons, follow-up questions or a title other than
   the plan's title. This exclusion does not apply to plan disclaimers: render every mandatory
   disclaimer, caveat and provenance note verbatim as required above.
