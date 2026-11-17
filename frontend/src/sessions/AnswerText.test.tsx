@@ -119,4 +119,18 @@ describe("AnswerText", () => {
     expect(html).toContain("<code>+19.88%</code>");
     expect(html).not.toContain("answer-text__metric");
   });
+
+  it.each(["---", "***", "___"])("renders a standalone %s line as a horizontal rule", (rule) => {
+    const html = renderToStaticMarkup(<AnswerText text={`Alpha\n\n${rule}\n\nBeta`} />);
+    expect(html).toContain('<hr class="answer-text__rule"/>');
+    expect(html).not.toContain(`<p>${rule}</p>`);
+    expect(html).toContain("Alpha");
+    expect(html).toContain("Beta");
+  });
+
+  it("does not treat inline dashes or underscores as a horizontal rule", () => {
+    const html = renderToStaticMarkup(<AnswerText text={"Alpha --- Beta __ Gamma"} />);
+    expect(html).not.toContain("answer-text__rule");
+    expect(html).toContain("Alpha --- Beta __ Gamma");
+  });
 });

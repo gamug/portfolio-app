@@ -11,6 +11,12 @@ const TEXT_COMPONENTS = [
 type TextComponent = (typeof TEXT_COMPONENTS)[number];
 const TEXT_COMPONENT_PATTERN = new RegExp(`\\b(${TEXT_COMPONENTS.join("|")})\\s*\\(`, "g");
 const MULTI_STRING_COMPONENTS = new Set<TextComponent>(["CardHeader", "InlineHeader"]);
+const SPARQL_FENCE_PATTERN = /```[ \t]*sparql[ \t]*\r?\n[\s\S]*?```/gi;
+const OPEN_SPARQL_FENCE_PATTERN = /```[ \t]*sparql[\s\S]*$/i;
+
+export function stripSparqlFences(text: string): string {
+  return text.replace(SPARQL_FENCE_PATTERN, "").replace(OPEN_SPARQL_FENCE_PATTERN, "").trimEnd();
+}
 
 export function messageText(message: Message): string {
   return typeof message.content === "string" ? message.content : "";

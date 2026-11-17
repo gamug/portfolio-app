@@ -62,6 +62,16 @@ class SparqlQueriesResponse(BaseModel):
     queries: list[str]
 
 
+class AnswerEntry(BaseModel):
+    pair_id: str
+    text: str
+    created_at: str
+
+
+class ThreadAnswersResponse(BaseModel):
+    answers: list[AnswerEntry]
+
+
 def _store(request: Request) -> SQLiteQuestionAnswerStore:
     store = request.app.state.store
     if not isinstance(store, SQLiteQuestionAnswerStore):
@@ -97,6 +107,12 @@ def _extract_sparql_queries(raw_answer: str) -> list[str]:
         if query:
             queries.append(query)
     return queries
+
+
+def _strip_sparql_fences(raw_answer: str) -> str:
+    without_fences = SPARQL_FENCE_PATTERN.sub("", raw_answer)
+    without_fences = re.sub(r"\n{3,}", "\n\n", without_fences)
+    return without_fences.rstrip()
 
 
 def _title_from_messages(messages: list[dict[str, Any]]) -> str:
@@ -142,6 +158,23 @@ async def get_thread(thread_id: str, request: Request) -> list[MessageResponse]:
         )
         messages.append(MessageResponse(id=pair.id, role="assistant", content=pair.openui_lang))
     return messages
+
+
+@router.get("/{thread_id}/answers")
+async def get_answers(thread_id: str, request: Request) -> ThreadAnswersResponse:
+    store = _store(request)
+    if await store.get_session(thread_id) is None:
+        raise HTTPException(status_code=404, detail="Thread not found.")
+    return ThreadAnswersResponse(
+        answers=[
+            AnswerEntry(
+                pair_id=pair.id,
+                text=_strip_sparql_fences(pair.raw_answer),
+                created_at=pair.created_at,
+            )
+            for pair in await store.list_for_session(thread_id)
+        ]
+    )
 
 
 @router.patch("/update/{thread_id}")

@@ -40,6 +40,11 @@ export function ReportPanel({
     state.reportProgress === null
       ? PROGRESS_LABELS.planning
       : PROGRESS_LABELS[state.reportProgress];
+  const assistantMessages = state.messages.filter((message) => message.role === "assistant");
+  const totalAnswers = assistantMessages.length;
+  const relevantCount = assistantMessages.filter(
+    (message) => state.relevance[message.id] ?? true,
+  ).length;
   const view =
     state.reportStream.length > 0 ? "stream" : state.report === null ? "empty" : "current";
 
@@ -97,6 +102,20 @@ export function ReportPanel({
           </button>
         </div>
       </div>
+
+      {totalAnswers > 0 && (
+        <div className="report-panel__meta">
+          <span className="report-panel__meta-pill">
+            {relevantCount} of {totalAnswers} marked relevant
+          </span>
+        </div>
+      )}
+
+      {state.report !== null && state.reportOutdated && (
+        <div className="report-panel__outdated" role="status">
+          Report outdated — regenerate to reflect your latest changes.
+        </div>
+      )}
 
       {confirmingErase === "history" && (
         <div className="panel-confirm" role="alertdialog">

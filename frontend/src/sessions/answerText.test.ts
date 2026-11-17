@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractAnswerText, messageText } from "./answerText";
+import { extractAnswerText, messageText, stripSparqlFences } from "./answerText";
 
 const SAMPLE_OPENUI = `root = Card([header, summary, chart, followUps])
 header = CardHeader("Monthly Revenue", "January – March")
@@ -36,5 +36,41 @@ describe("answer text", () => {
 
   it("reads string content", () => {
     expect(messageText({ id: "p1", role: "assistant", content: "answer" })).toBe("answer");
+  });
+});
+
+describe("stripSparqlFences", () => {
+  it("strips complete SPARQL fenced blocks case-insensitively", () => {
+    const text =
+      "Revenue rose.\n\n```sparql\nSELECT * WHERE { ?s ?p ?o }\n```\n\n" +
+      "```SPARQL\nASK { ?s ?p ?o }\n```\n";
+
+    expect(stripSparqlFences(text)).toBe("Revenue rose.");
+  });
+
+  it("keeps prose that surrounds a SPARQL block", () => {
+    const text = "Before.\n```sparql\nSELECT * WHERE { ?s ?p ?o }\n```\nAfter.";
+
+    expect(stripSparqlFences(text)).toBe("Before.\n\nAfter.");
+  });
+
+  it("strips a trailing unclosed SPARQL block while streaming", () => {
+    const text = "Revenue rose.\n\n```sparql\nSELECT * WHERE { ?s ?p ?o";
+
+    expect(stripSparqlFences(text)).toBe("Revenue rose.");
+  });
+
+  it("strips a trailing SPARQL marker before its first token arrives", () => {
+    expect(stripSparqlFences("Revenue rose.\n\n```sparql")).toBe("Revenue rose.");
+  });
+
+  it("keeps other fenced code blocks", () => {
+    const text = "Revenue rose.\n```python\nprint('x')\n```";
+
+    expect(stripSparqlFences(text)).toBe(text);
+  });
+
+  it("trims trailing whitespace", () => {
+    expect(stripSparqlFences("Answer.\n\n  ")).toBe("Answer.");
   });
 });

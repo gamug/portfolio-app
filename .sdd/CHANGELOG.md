@@ -524,3 +524,16 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added regression tests using both real Apple raw answers and their LLM OpenUI outputs, plus a case where only the provenance note is missing and only that note is appended.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, HTTP endpoint or API change.
 - Verification: backend `pytest` (195 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (143 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass.
+
+## 2026-11-17 (chat analytical view and report sync)
+
+### TASK-034 progress — Show the full analytical answer in chat and flag stale reports (WI-014; FR-002, FR-003, FR-013, FR-015, FR-021, FR-022)
+
+- Added `_strip_sparql_fences()` and `GET /api/threads/{thread_id}/answers`, which returns each pair's cleaned `raw_answer` and `created_at` as `{answers: [{pair_id, text, created_at}]}`. The endpoint returns 404 for an unknown thread. The stored `raw_answer`/`openui_lang` columns and the `GET /api/threads/get/{thread_id}` history response are unchanged.
+- Added `createAnswersClient()` and loaded the cleaned answers beside the history, report and relevance when a session opens and after a question completes. A session switch replaces the answers; deleting a pair removes its text; erasing the history clears the map.
+- Removed the chat chart toggle, its reducer and the nested `Renderer` card from `PairAnswer`; chat now prefers the backend analytical text and falls back to the stored OpenUI text, rendered through `AnswerText`. Streaming answers use `stripSparqlFences()` so a fenced query never flashes at the end of the stream. `portfolioChatLibrary` remains exported for its own tests.
+- Added horizontal-rule rendering (`---`, `***`, `___`) to `AnswerText` with subtle app styling.
+- `ReportPanel` is now the only chart and executive-synthesis surface. It shows an `X of Y marked relevant` pill and a warning banner when `reportOutdated` is set. The controller marks the report outdated after a successful relevance toggle, pair deletion or question while a report exists, and on session load when any answer is newer than `report.updated_at`; it clears the flag on report generation, report/history erase, session creation/switch and when no report exists.
+- Added backend tests for 0/1/multiple SPARQL fences, the cleaned text plus `created_at`, and the unknown-thread 404. Added frontend tests for the answers client, fence stripping while streaming, horizontal rules, the answer preference/fallback, the report relevance count and outdated notice, and the controller freshness rules.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, storage contract or history response-shape change.
+- Verification: backend `pytest` (200 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (171 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass (report template 3,841,246 bytes, 0 external references); `check_sdd.py`, `check_consistency.py` and `pre-commit run --all-files` pass.

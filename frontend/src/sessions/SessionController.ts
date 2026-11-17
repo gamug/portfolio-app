@@ -1,4 +1,5 @@
 import type { ChatStorage, Message, Thread, UserMessage } from "@openuidev/react-ui";
+import type { AnswerItem, AnswersClient } from "./answersClient";
 
 export type ThreadStorage = ChatStorage["thread"];
 
@@ -53,7 +54,9 @@ export type SessionState = {
   sessions: Thread[];
   activeSessionId: string | null;
   messages: Message[];
+  answers: Record<string, string>;
   report: SessionReport | null;
+  reportOutdated: boolean;
   relevance: Record<string, boolean>;
   isLoading: boolean;
   error: string | null;
@@ -120,12 +123,20 @@ function errorText(error: unknown, fallback: string): string {
   return error instanceof Error && error.message.trim().length > 0 ? error.message : fallback;
 }
 
+function answerTexts(answerItems: Record<string, AnswerItem>): Record<string, string> {
+  return Object.fromEntries(
+    Object.values(answerItems).map((answer) => [answer.pairId, answer.text]),
+  );
+}
+
 export class SessionController {
   private state: SessionState = {
     sessions: [],
     activeSessionId: null,
     messages: [],
+    answers: {},
     report: null,
+    reportOutdated: false,
     relevance: {},
     isLoading: false,
     error: null,
@@ -143,6 +154,7 @@ export class SessionController {
     private readonly chats: ChatClient,
     private readonly exporter: ReportExporter,
     private readonly eraser: EraseClient,
+    private readonly answers: AnswersClient = { getAnswers: async () => ({}) },
   ) {}
 
   subscribe = (listener: () => void): (() => void) => {
@@ -182,7 +194,9 @@ export class SessionController {
           sessions: [session],
           activeSessionId: session.id,
           messages: [],
+          answers: {},
           report: null,
+          reportOutdated: false,
           relevance: {},
           isLoading: false,
         });
@@ -207,7 +221,9 @@ export class SessionController {
         sessions: [session, ...this.state.sessions],
         activeSessionId: session.id,
         messages: [],
+        answers: {},
         report: null,
+        reportOutdated: false,
         relevance: {},
         isLoading: false,
       });
@@ -230,9 +246,10 @@ export class SessionController {
     this.abortStreams();
     this.setState({ ...idleStreamingState(), isLoading: true, error: null });
     try {
-      const [messages, report] = await Promise.all([
+      const [messages, report, answerItems] = await Promise.all([
         this.storage.getMessages(sessionId),
         this.reports.getReport(sessionId),
+        this.answers.getAnswers(sessionId),
       ]);
       const pairIds = messages
         .filter((message) => message.role === "assistant")
@@ -243,10 +260,15 @@ export class SessionController {
           return [pairId, relevant] as const;
         }),
       );
+      const reportOutdated =
+        report !== null &&
+        Object.values(answerItems).some((answer) => answer.createdAt > report.updated_at);
       this.setState({
         activeSessionId: sessionId,
         messages,
+        answers: answerTexts(answerItems),
         report,
+        reportOutdated,
         relevance: Object.fromEntries(relevanceEntries),
         isLoading: false,
       });
@@ -313,7 +335,9 @@ export class SessionController {
         sessions: [replacement, ...remaining],
         activeSessionId: replacement.id,
         messages: [],
+        answers: {},
         report: null,
+        reportOutdated: false,
         relevance: {},
         isLoading: false,
       });
@@ -355,9 +379,13 @@ export class SessionController {
       await this.pairs.deletePair(sessionId, pairId);
       const relevance = { ...this.state.relevance };
       delete relevance[pairId];
+      const answers = { ...this.state.answers };
+      delete answers[pairId];
       this.setState({
         messages: this.withoutPair(this.state.messages, pairId),
+        answers,
         relevance,
+        reportOutdated: this.state.report !== null,
         isLoading: false,
       });
     } catch {
@@ -379,6 +407,7 @@ export class SessionController {
       const relevant = await this.relevance.setRelevance(sessionId, pairId, !current);
       this.setState({
         relevance: { ...this.state.relevance, [pairId]: relevant },
+        reportOutdated: this.state.report !== null,
         isLoading: false,
       });
     } catch {
@@ -422,7 +451,10 @@ export class SessionController {
       if (controller.signal.aborted || this.state.activeSessionId !== sessionId) {
         return;
       }
-      const messages = await this.storage.getMessages(sessionId);
+      const [messages, answerItems] = await Promise.all([
+        this.storage.getMessages(sessionId),
+        this.answers.getAnswers(sessionId),
+      ]);
       const pairIds = messages
         .filter((message) => message.role === "assistant")
         .map((message) => message.id);
@@ -437,7 +469,9 @@ export class SessionController {
       }
       this.setState({
         messages,
+        answers: answerTexts(answerItems),
         relevance: Object.fromEntries(relevanceEntries),
+        reportOutdated: this.state.report !== null,
         isSendingChat: false,
         chatStream: null,
       });
@@ -494,6 +528,7 @@ export class SessionController {
         if (event.type === "done") {
           this.setState({
             report: event.report,
+            reportOutdated: false,
             isGeneratingReport: false,
             reportProgress: null,
             reportStream: "",
@@ -615,7 +650,9 @@ export class SessionController {
       await this.eraser.eraseHistory(sessionId);
       this.setState({
         messages: [],
+        answers: {},
         report: null,
+        reportOutdated: false,
         relevance: {},
         chatStream: null,
         chatError: null,
@@ -649,6 +686,7 @@ export class SessionController {
       await this.eraser.eraseReport(sessionId);
       this.setState({
         report: null,
+        reportOutdated: false,
         reportProgress: null,
         reportStream: "",
         reportError: null,

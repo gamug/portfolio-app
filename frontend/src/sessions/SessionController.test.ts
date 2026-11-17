@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Message, Thread, UserMessage } from "@openuidev/react-ui";
+import type { AnswerItem, AnswersClient } from "./answersClient";
 import {
   NO_REPORT_MESSAGE,
   SessionController,
@@ -167,6 +168,26 @@ class FakePairs implements PairClient {
   }
 }
 
+class FakeAnswers implements AnswersClient {
+  answers = new Map<string, Record<string, AnswerItem>>();
+  calls: string[] = [];
+  fail = false;
+
+  async getAnswers(sessionId: string): Promise<Record<string, AnswerItem>> {
+    if (this.fail) throw new Error("answers failed");
+    this.calls.push(sessionId);
+    return { ...(this.answers.get(sessionId) ?? {}) };
+  }
+}
+
+function answer(
+  pairId: string,
+  text = `Answer ${pairId}`,
+  createdAt = "2026-11-07T00:00:00Z",
+): AnswerItem {
+  return { pairId, text, createdAt };
+}
+
 function report(text: string, incomplete = false): SessionReport {
   return {
     openui_lang: text,
@@ -192,6 +213,7 @@ function makeController() {
   const chats = new FakeChats();
   const exporter = new FakeExporter();
   const eraser = new FakeErase();
+  const answers = new FakeAnswers();
   return {
     storage,
     reports,
@@ -200,7 +222,17 @@ function makeController() {
     chats,
     exporter,
     eraser,
-    controller: new SessionController(storage, reports, relevance, pairs, chats, exporter, eraser),
+    answers,
+    controller: new SessionController(
+      storage,
+      reports,
+      relevance,
+      pairs,
+      chats,
+      exporter,
+      eraser,
+      answers,
+    ),
   };
 }
 
@@ -1020,5 +1052,163 @@ describe("SessionController erase actions", () => {
     await controller.eraseReport(true);
 
     expect(eraser.reportCalls).toEqual([]);
+  });
+});
+
+describe("SessionController analytical answers and report freshness", () => {
+  it("loads the cleaned analytical answers and marks a newer report outdated", async () => {
+    const { storage, reports, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("previous"));
+    answers.answers.set("s1", {
+      p1: answer("p1", "Fresh analytical answer", "2026-11-07T00:01:00Z"),
+    });
+
+    await controller.initialize();
+
+    const state = controller.getSnapshot();
+    expect(state.answers).toEqual({ p1: "Fresh analytical answer" });
+    expect(state.reportOutdated).toBe(true);
+  });
+
+  it("keeps the report current when every answer predates it", async () => {
+    const { storage, reports, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("previous"));
+    answers.answers.set("s1", {
+      p1: answer("p1", "Stored analytical answer", "2026-11-06T23:59:59Z"),
+    });
+
+    await controller.initialize();
+
+    expect(controller.getSnapshot().answers).toEqual({ p1: "Stored analytical answer" });
+    expect(controller.getSnapshot().reportOutdated).toBe(false);
+  });
+
+  it("never marks a missing report outdated", async () => {
+    const { storage, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    answers.answers.set("s1", {
+      p1: answer("p1", "Future answer", "2026-11-08T00:00:00Z"),
+    });
+
+    await controller.initialize();
+
+    expect(controller.getSnapshot().reportOutdated).toBe(false);
+  });
+
+  it("marks the report outdated after a relevance toggle", async () => {
+    const { storage, reports, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+
+    await controller.toggleRelevance("p1");
+
+    expect(controller.getSnapshot().reportOutdated).toBe(true);
+  });
+
+  it("removes the deleted answer and marks the report outdated", async () => {
+    const { storage, reports, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [
+      message("q1", "user", "Question"),
+      message("p1", "assistant", "root = Card([])"),
+    ]);
+    reports.reports.set("s1", report("previous"));
+    answers.answers.set("s1", { p1: answer("p1", "Analytical answer") });
+    await controller.initialize();
+
+    await controller.deletePair("p1", true);
+
+    const state = controller.getSnapshot();
+    expect(state.answers).toEqual({});
+    expect(state.reportOutdated).toBe(true);
+  });
+
+  it("reloads the answers after a question and marks an existing report outdated", async () => {
+    const { storage, reports, chats, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    reports.reports.set("s1", report("previous"));
+    await controller.initialize();
+    chats.chunks = ["Streamed answer"];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    answers.answers.set("s1", { p1: answer("p1", "Analytical answer") });
+
+    await controller.sendQuestion("Question");
+
+    const state = controller.getSnapshot();
+    expect(state.answers).toEqual({ p1: "Analytical answer" });
+    expect(state.reportOutdated).toBe(true);
+  });
+
+  it("clears the outdated flag when report generation finishes", async () => {
+    const { storage, reports, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("previous"));
+    answers.answers.set("s1", {
+      p1: answer("p1", "Fresh answer", "2026-11-07T00:01:00Z"),
+    });
+    await controller.initialize();
+    expect(controller.getSnapshot().reportOutdated).toBe(true);
+    reports.generateImpl = async function* () {
+      yield { type: "done", report: report("fresh") };
+    };
+
+    await controller.generateReport();
+
+    expect(controller.getSnapshot().reportOutdated).toBe(false);
+  });
+
+  it("clears the answers and the outdated flag when erasing the history", async () => {
+    const { storage, reports, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("previous"));
+    answers.answers.set("s1", {
+      p1: answer("p1", "Fresh answer", "2026-11-07T00:01:00Z"),
+    });
+    await controller.initialize();
+
+    await controller.eraseHistory(true);
+
+    const state = controller.getSnapshot();
+    expect(state.answers).toEqual({});
+    expect(state.reportOutdated).toBe(false);
+  });
+
+  it("clears the outdated flag when erasing the report", async () => {
+    const { storage, reports, answers, controller } = makeController();
+    storage.threads = [session("s1")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("previous"));
+    answers.answers.set("s1", {
+      p1: answer("p1", "Fresh answer", "2026-11-07T00:01:00Z"),
+    });
+    await controller.initialize();
+
+    await controller.eraseReport(true);
+
+    expect(controller.getSnapshot().reportOutdated).toBe(false);
+  });
+
+  it("replaces the answers when switching sessions", async () => {
+    const { storage, reports, answers, controller } = makeController();
+    storage.threads = [session("s1"), session("s2")];
+    storage.messages.set("s1", [message("p1", "assistant", "root = Card([])")]);
+    reports.reports.set("s1", report("first"));
+    answers.answers.set("s1", { p1: answer("p1", "First answer") });
+    await controller.initialize();
+
+    await controller.selectSession("s2");
+
+    const state = controller.getSnapshot();
+    expect(state.answers).toEqual({});
+    expect(state.reportOutdated).toBe(false);
   });
 });

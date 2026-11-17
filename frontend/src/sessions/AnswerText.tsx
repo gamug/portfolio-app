@@ -8,6 +8,7 @@ const INLINE_PATTERN = /(\*\*(?:[^*]|\*(?!\*))+\*\*|`[^`]+`|(?<!\*)\*(?!\*)[^*]+
 const BULLET_PATTERN = /^\s*[-*+]\s+(.*)$/;
 const ORDERED_PATTERN = /^\s*\d+[.)]\s+(.*)$/;
 const HEADING_PATTERN = /^(#{1,6})\s+(.*)$/;
+const HORIZONTAL_RULE_PATTERN = /^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/;
 const TABLE_DIVIDER_PATTERN = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/;
 
 export function renderMetrics(text: string): ReactNode[] {
@@ -74,6 +75,7 @@ function isBlockStart(line: string): boolean {
   return (
     line.trim().length === 0 ||
     HEADING_PATTERN.test(line) ||
+    HORIZONTAL_RULE_PATTERN.test(line) ||
     BULLET_PATTERN.test(line) ||
     ORDERED_PATTERN.test(line) ||
     line.includes("|")
@@ -138,6 +140,13 @@ function renderBlocks(text: string): ReactNode[] {
         </div>,
       );
       key += 1;
+      continue;
+    }
+
+    if (HORIZONTAL_RULE_PATTERN.test(line)) {
+      blocks.push(<hr className="answer-text__rule" key={key} />);
+      key += 1;
+      index += 1;
       continue;
     }
 

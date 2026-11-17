@@ -10,7 +10,9 @@ const baseState: SessionState = {
   sessions: [{ id: "s1", title: "Session", createdAt: "2026-11-07T00:00:00Z" }],
   activeSessionId: "s1",
   messages: [{ id: "p1", role: "assistant", content: "root = Card([])" }],
+  answers: {},
   report: null,
+  reportOutdated: false,
   relevance: { p1: false },
   isLoading: false,
   error: null,
@@ -189,5 +191,17 @@ describe("SessionDetail chat and report panels", () => {
     expect(html).toContain('class="chat-panel__raw"');
     expect(html).toContain("<strong>March was strong</strong>");
     expect(html).toContain("answer-text__metric--positive");
+  });
+
+  it("strips a SPARQL block from the streamed answer", () => {
+    const html = renderDetail({
+      chatStream: {
+        question: "Question",
+        answer: "Revenue rose.\n\n```sparql\nSELECT * WHERE { ?s ?p ?o }\n```\n\nMarch was strong.",
+      },
+    });
+    expect(html).toContain("Revenue rose.");
+    expect(html).toContain("March was strong.");
+    expect(html).not.toContain("SELECT * WHERE");
   });
 });

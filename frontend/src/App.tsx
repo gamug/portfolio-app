@@ -3,6 +3,7 @@ import { restStorage, ThemeProvider } from "@openuidev/react-ui";
 import { SessionController } from "./sessions/SessionController";
 import { SessionDetail } from "./sessions/SessionDetail";
 import { SessionList } from "./sessions/SessionList";
+import { createAnswersClient } from "./sessions/answersClient";
 import { createChatClient } from "./sessions/chatClient";
 import { createEraseClient } from "./sessions/eraseClient";
 import { createPairClient } from "./sessions/pairClient";
@@ -25,6 +26,7 @@ export function App() {
         createChatClient("/api"),
         createReportExporter(),
         createEraseClient("/api/threads"),
+        createAnswersClient("/api/threads"),
       ),
     [storage],
   );

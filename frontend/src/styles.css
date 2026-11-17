@@ -723,6 +723,53 @@ input::placeholder {
   margin: 0.55rem 0 0;
 }
 
+.report-panel__meta {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.55rem 0 0;
+}
+
+.report-panel__meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  color: var(--app-text-muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+}
+
+.report-panel__outdated {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  color: var(--app-warning-text);
+  font-size: 0.86rem;
+  background: var(--app-warning-bg);
+  border: 1px solid var(--app-warning-border);
+  border-radius: 10px;
+}
+
+.report-panel__outdated::before {
+  content: "!";
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+
 .report-panel__incomplete {
   color: var(--app-warning-text);
   font-size: 0.85rem;
@@ -776,34 +823,6 @@ input::placeholder {
   box-shadow: var(--app-shadow-card);
 }
 
-.message__chart-toggle {
-  margin-top: 0.7rem;
-  padding: 0.28rem 0.6rem;
-  color: var(--app-text-muted);
-  font-size: 0.78rem;
-  background: transparent;
-  border-color: var(--app-border);
-  border-radius: 999px;
-}
-
-.message__chart-toggle:hover:not(:disabled) {
-  color: var(--app-accent-strong);
-  background: var(--app-accent-soft);
-  border-color: var(--app-accent-border);
-}
-
-.message__chart {
-  max-width: 100%;
-  margin-top: 0.7rem;
-  padding: 0.75rem;
-  overflow-x: auto;
-  color: var(--app-text);
-  background: var(--app-surface-muted);
-  border: 1px solid var(--app-border);
-  border-radius: 14px;
-}
-
-.message__chart .openui-table-container,
 .report-panel__body .openui-table-container {
   max-width: 100%;
   overflow-x: auto;
@@ -811,7 +830,6 @@ input::placeholder {
   border-radius: 12px;
 }
 
-.message__chart .openui-card,
 .report-panel__body .openui-card {
   background: var(--app-surface-muted);
   border: 1px solid var(--app-border);
@@ -819,37 +837,30 @@ input::placeholder {
   box-shadow: none;
 }
 
-.message__chart .openui-callout,
 .report-panel__body .openui-callout {
   border-radius: 12px;
 }
 
-.message__chart .openui-table,
 .report-panel__body .openui-table {
   font-variant-numeric: tabular-nums;
 }
 
-.message__chart .openui-table-head,
 .report-panel__body .openui-table-head {
   background: var(--app-surface-inset);
 }
 
-.message__chart .openui-table-cell,
 .report-panel__body .openui-table-cell {
   border-color: var(--app-border);
 }
 
-.message__chart .openui-metric-indicator__trend--success,
 .report-panel__body .openui-metric-indicator__trend--success {
   color: var(--app-positive-text);
 }
 
-.message__chart .openui-metric-indicator__trend--danger,
 .report-panel__body .openui-metric-indicator__trend--danger {
   color: var(--app-negative-text);
 }
 
-.message__chart [class*="--animated"],
 .report-panel__body [class*="--animated"] {
   opacity: 1 !important;
 }
@@ -874,6 +885,13 @@ input::placeholder {
   margin: 0.55rem 0 0.35rem;
   font-size: 0.98rem;
   letter-spacing: -0.01em;
+}
+
+.answer-text__rule {
+  height: 1px;
+  margin: 0.9rem 0;
+  background: linear-gradient(90deg, transparent, var(--app-border-strong), transparent);
+  border: 0;
 }
 
 .answer-text ul,
@@ -1150,10 +1168,6 @@ input::placeholder {
 
 .chat-panel__raw .answer-text {
   font-size: 0.92rem;
-}
-
-.message__footer .message__chart-toggle {
-  margin-top: 0;
 }
 
 .empty-state {

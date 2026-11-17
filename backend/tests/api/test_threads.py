@@ -171,6 +171,56 @@ def test_pair_sparql_returns_404_for_unknown_thread_or_pair(tmp_path: Path) -> N
     assert missing_pair.status_code == 404
 
 
+@pytest.mark.parametrize(
+    ("raw_answer", "expected"),
+    [
+        ("Prose only.\n", "Prose only."),
+        (
+            "Revenue rose.\n\n```sparql\nSELECT * WHERE { ?s ?p ?o }\n```\n",
+            "Revenue rose.",
+        ),
+        (
+            "Before.\n```sparql\nSELECT * WHERE { ?s ?p ?o }\n```\nAfter.",
+            "Before.\n\nAfter.",
+        ),
+        (
+            "Intro\n```sparql\nSELECT ?s WHERE { ?s a :Book }\n```\n"
+            "Middle\n```SPARQL\nASK { ?s ?p ?o }\n```\nOutro",
+            "Intro\n\nMiddle\n\nOutro",
+        ),
+    ],
+)
+def test_answers_returns_cleaned_analytical_text(
+    tmp_path: Path, raw_answer: str, expected: str
+) -> None:
+    client, store = _client(tmp_path)
+    with client:
+        thread = client.post("/api/threads/create", json={"messages": []}).json()
+        pair = _pair(thread["id"], raw_answer)
+        asyncio.run(store.save(pair))
+
+        response = client.get(f"/api/threads/{thread['id']}/answers")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "answers": [
+            {
+                "pair_id": pair.id,
+                "text": expected,
+                "created_at": pair.created_at,
+            }
+        ]
+    }
+
+
+def test_answers_returns_404_for_an_unknown_thread(tmp_path: Path) -> None:
+    client, _ = _client(tmp_path)
+    with client:
+        response = client.get("/api/threads/missing/answers")
+
+    assert response.status_code == 404
+
+
 def test_list_cursor_is_validated(tmp_path: Path) -> None:
     client, _ = _client(tmp_path)
     with client:
