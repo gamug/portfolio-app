@@ -537,3 +537,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added backend tests for 0/1/multiple SPARQL fences, the cleaned text plus `created_at`, and the unknown-thread 404. Added frontend tests for the answers client, fence stripping while streaming, horizontal rules, the answer preference/fallback, the report relevance count and outdated notice, and the controller freshness rules.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, storage contract or history response-shape change.
 - Verification: backend `pytest` (200 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (171 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass (report template 3,841,246 bytes, 0 external references); `check_sdd.py`, `check_consistency.py` and `pre-commit run --all-files` pass.
+
+## 2026-11-17 (report disclaimer dedup and Skill 2 budget)
+
+### TASK-034 progress — Stop duplicate report notes and raise the Skill 2 token budget (WI-014; FR-015)
+
+- `extract_mandatory_notes()` now stops a generated-text disclaimer once its closing sentence is reached (`no es un dato de la fecha` / `hecho verificado` / `not a verified fact`), so unrelated technical prose in the same paragraph (`Los libros TOPN_MV_* ...`) is no longer captured as part of the disclaimer. A disclaimer with no closing sentence keeps only its opening sentence instead of swallowing the rest of the paragraph.
+- `merge_notes()` now deduplicates by normalized core text (`_plain_text(_core_note(note)).casefold()`), so `Provenance:`, `provenanceNote:` and `Procedencia declarada:` variants of the same note keep only the first entry. It also decomposes notes into sentence/provenance atoms and removes a combined note when its atoms are already covered by smaller notes, or removes smaller duplicates when a combined note is the only complete copy. `parse_chart_plan()` applies this to Skill 1 `document["disclaimers"]` plus `extract_mandatory_notes(answers)`, turning the observed combined-plus-split duplicate set into two atomic notes.
+- Raised `DEFAULT_MAX_TOKENS` for Skill 2 from 4000 to 8192 so multi-table reports and disclaimers do not truncate mid-stream.
+- Clarified the Skill 2 prompt: every identifier referenced in `root = Card([...])` must be defined by an emitted statement, and each unique item in `"disclaimers"` renders exactly once after Conclusions without duplicating equivalent notes.
+- Added tests for disclaimer extraction before technical prose, equivalent provenance labels, combined Skill 1 notes versus split answer notes in both directions, the eight-pair duplicate set, the 8192-token budget and the new prompt rules.
+- `TASK-034` remains unchecked. No dependency, SQLite schema or API change.
+- Verification: backend `pytest` (206 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (171 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass (report template 3,841,246 bytes, 0 external references); `check_sdd.py`, `check_consistency.py` and `pre-commit run --all-files` pass.

@@ -11,6 +11,7 @@ import pytest
 from app.connector.models import ConnectorError
 from app.connector.openui import CONVERSION_TASK, DEFAULT_PROMPT_PATH, OpenUIConverter
 from app.connector.settings import Settings
+from app.disclaimers import extract_mandatory_notes, merge_notes
 from app.report.openui import DEFAULT_VALIDATOR_PATH, NodeOpenUIParser
 
 
@@ -143,6 +144,29 @@ APPLE_A_RAW = (
 )
 APPLE_A_PROVENANCE_TEXT = f'Procedencia declarada: "{APPLE_PROVENANCE_CORE}". ...'
 APPLE_B_RAW = f'{APPLE_B_DISCLAIMER}\nprovenanceNote: "{APPLE_PROVENANCE_CORE}".'
+
+
+def test_disclaimer_extraction_stops_before_unrelated_technical_text() -> None:
+    answer = (
+        f"{SPANISH_DISCLAIMER} Los libros TOPN_MV_* contienen los datos usados para el cálculo."
+    )
+
+    notes = extract_mandatory_notes(answer)
+
+    assert notes == (SPANISH_DISCLAIMER,)
+    assert all("TOPN_MV" not in note for note in notes)
+
+
+def test_equivalent_provenance_labels_deduplicate_to_one_note() -> None:
+    notes = merge_notes(
+        (
+            f'Provenance: "{APPLE_PROVENANCE_CORE}".',
+            f'provenanceNote: "{APPLE_PROVENANCE_CORE}".',
+            f'Procedencia declarada: "{APPLE_PROVENANCE_CORE}".',
+        )
+    )
+
+    assert notes == (f'Provenance: "{APPLE_PROVENANCE_CORE}".',)
 
 
 def test_appends_spanish_disclaimer_and_provenance_verbatim(tmp_path: Path) -> None:

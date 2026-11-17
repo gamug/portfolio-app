@@ -24,7 +24,7 @@ DEFAULT_REFERENCE_PATH = (
 DEFAULT_VALIDATOR_PATH = (
     Path(__file__).resolve().parents[3] / "frontend" / "scripts" / "validate-openui-report.mjs"
 )
-DEFAULT_MAX_TOKENS = 4000
+DEFAULT_MAX_TOKENS = 8192
 VALIDATOR_TIMEOUT_SECONDS = 60.0
 
 

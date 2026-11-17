@@ -12,6 +12,7 @@ from app.connector.settings import Settings
 from app.report.chart_plan import DEFAULT_PROMPT_PATH as PLAN_PROMPT_PATH
 from app.report.models import ChartPlan, ChartSeries, ChartSpec, ReportSkillError
 from app.report.openui import (
+    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT_PATH,
     DEFAULT_REFERENCE_PATH,
     DEFAULT_VALIDATOR_PATH,
@@ -136,6 +137,12 @@ def test_prompt_files_are_drafts_and_exist() -> None:
     assert "one-line context summary" in report_prompt
     assert "Never use the literal word" in report_prompt
     assert '"Report" as the subtitle' in report_prompt
+    assert "exactly once" in report_prompt
+    assert "reference an identifier you have not emitted" in report_prompt
+
+
+def test_skill_2_has_a_large_enough_token_budget() -> None:
+    assert DEFAULT_MAX_TOKENS == 8192
 
 
 def test_prompts_document_portfolio_chart_types_and_axis_labels() -> None:
