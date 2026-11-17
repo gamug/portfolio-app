@@ -29,6 +29,15 @@ SPLIT_PROVENANCE = f'Procedencia declarada: "{APPLE_PROVENANCE_CORE}".'
 COMBINED_DISCLAIMERS = (
     f'Texto generado: "{SPANISH_DISCLAIMER}" Procedencia declarada: "{APPLE_PROVENANCE_CORE}".'
 )
+FUNDAMENTAL_ANSWERS = (
+    "At 2023-06-30 the fundamental score was 68.0/100, ROIC was 18.5%, gross margin 44.2%, "
+    "operating margin 30.1%, net margin 25.4%, revenue growth 4.0% and FCF growth -3.2%. "
+    "Market cap was 2800000000000 USD.\n\n"
+    "At 2024-06-30 the fundamental score was 66.0/100, ROIC 19.2%, gross margin 46.1%, "
+    "revenue growth 5.1%. Market cap 3000000000000 USD.\n\n"
+    "At 2026-08-03 the fundamental score was 80.0/100, ROIC 20.1%, gross margin 47.6%, "
+    "revenue growth 6.2%. Market cap 3500000000000 USD."
+)
 
 
 def _pair(question: str = "Synthetic question", answer: str = ANSWERS) -> QuestionAnswerPair:
@@ -214,6 +223,70 @@ def test_accepts_a_pie_and_a_table() -> None:
     ]
     plan = parse_chart_plan(document, ["Product 90, Service 60, January 100, February 120."])
     assert [chart.type for chart in plan.charts] == ["pie", "table"]
+
+
+def test_accepts_multi_unit_table_with_same_unit_and_cross_date_charts() -> None:
+    document = _document()
+    document["charts"] = [
+        {
+            "type": "table",
+            "title": "Fundamental snapshot",
+            "columns": [
+                {"label": "Date", "values": ["2023-06-30", "2024-06-30", "2026-08-03"]},
+                {"label": "Fundamental score (/100)", "values": [68.0, 66.0, 80.0]},
+                {"label": "ROIC (%)", "values": [18.5, 19.2, 20.1]},
+                {"label": "Gross margin (%)", "values": [44.2, 46.1, 47.6]},
+                {"label": "Revenue growth (%)", "values": [4.0, 5.1, 6.2]},
+                {
+                    "label": "Market cap (USD)",
+                    "values": [2800000000000, 3000000000000, 3500000000000],
+                },
+            ],
+            "takeaway": "The snapshot mixes score, percentages and USD amounts.",
+        },
+        {
+            "type": "horizontal_bar",
+            "title": "Same-unit percentage metrics",
+            "labels": [
+                "ROIC",
+                "Gross margin",
+                "Operating margin",
+                "Net margin",
+                "Revenue growth",
+                "FCF growth",
+            ],
+            "series": [
+                {
+                    "category": "Percentage",
+                    "values": [18.5, 44.2, 30.1, 25.4, 4.0, -3.2],
+                }
+            ],
+            "x_label": "Percentage (%)",
+            "y_label": "Metric",
+            "takeaway": "Margins are strong while FCF growth contracts.",
+        },
+        {
+            "type": "bar",
+            "title": "Fundamental score by date",
+            "labels": ["2023-06-30", "2024-06-30", "2026-08-03"],
+            "series": [
+                {
+                    "category": "Fundamental score",
+                    "values": [68.0, 66.0, 80.0],
+                }
+            ],
+            "x_label": "Date",
+            "y_label": "Fundamental score (/100)",
+            "takeaway": "The score improved after 2024.",
+        },
+    ]
+
+    plan = parse_chart_plan(document, [FUNDAMENTAL_ANSWERS])
+
+    assert [chart.type for chart in plan.charts] == ["table", "horizontal_bar", "bar"]
+    assert plan.charts[1].series[0].values[-1] == -3.2
+    assert plan.charts[2].labels == ("2023-06-30", "2024-06-30", "2026-08-03")
+    assert plan.charts[2].series[0].values == (68.0, 66.0, 80.0)
 
 
 @pytest.mark.parametrize("chart_type", ["line", "area"])

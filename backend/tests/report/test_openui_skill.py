@@ -141,6 +141,22 @@ def test_prompt_files_are_drafts_and_exist() -> None:
     assert "reference an identifier you have not emitted" in report_prompt
 
 
+def test_plan_prompt_requires_same_unit_charts_alongside_multi_unit_tables() -> None:
+    prompt = PLAN_PROMPT_PATH.read_text(encoding="utf-8")
+
+    for phrase in (
+        'all-"table" report',
+        "chartable same-unit subset",
+        "3 or more metrics in the same unit",
+        'ALSO emit a "horizontal_bar"',
+        "MUST NOT share a chart axis",
+        "full multi-unit snapshot",
+        "same asset or entity at different dates",
+        "NOT duplicate",
+    ):
+        assert phrase in prompt
+
+
 def test_skill_2_has_a_large_enough_token_budget() -> None:
     assert DEFAULT_MAX_TOKENS == 8192
 

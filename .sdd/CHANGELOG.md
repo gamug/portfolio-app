@@ -549,3 +549,15 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added tests for disclaimer extraction before technical prose, equivalent provenance labels, combined Skill 1 notes versus split answer notes in both directions, the eight-pair duplicate set, the 8192-token budget and the new prompt rules.
 - `TASK-034` remains unchecked. No dependency, SQLite schema or API change.
 - Verification: backend `pytest` (206 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (171 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass (report template 3,841,246 bytes, 0 external references); `check_sdd.py`, `check_consistency.py` and `pre-commit run --all-files` pass.
+
+## 2026-11-17 (fundamental charts in reports)
+
+### TASK-034 progress — Mix multi-unit tables with same-unit and cross-date charts (WI-014; FR-015)
+
+- Skill 1 keeps `"table"` for full multi-unit snapshots and now states explicitly that metrics with incompatible units (`/100` score, `x` ratios, `%`, USD) MUST NOT share a chart axis.
+- Added rule 3 guidance against an all-`"table"` report when the answers contain a chartable subset that shares one unit.
+- Added rule 4 guidance to emit a `"horizontal_bar"` alongside the summary table when 3 or more metrics share the same unit (for example margins, ROIC, revenue growth and FCF growth), so positive strengths and negative contractions are visible within the 6-chart limit.
+- Added rule 4 guidance for distinct pairs about the same asset or entity at different dates: they are not duplicate answers under rule 10, and may use a `"bar"` or `"line"` comparison across dates on one shared metric or unit, such as fundamental score or `%` margins, with the exact numbers from each answer.
+- Added a prompt-content regression check for the same-unit and cross-date guidance, and a `parse_chart_plan()` test combining a multi-unit table with a same-unit `"horizontal_bar"` containing positive and negative percentages plus a cross-date `"bar"`.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, API or frontend change.
+- Verification: backend `pytest` (208 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (171 passed); `check_sdd.py`, `check_consistency.py` and `pre-commit run --all-files` pass.
