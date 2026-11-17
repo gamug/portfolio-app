@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { AnswerText } from "./AnswerText";
 import { PairAnswer } from "./PairAnswer";
-import { messageText } from "./answerText";
+import { messageText, stripSparqlFences } from "./answerText";
 import type { SessionState } from "./SessionController";
 import type { SparqlClient } from "./sparqlClient";
 
@@ -90,7 +90,7 @@ export function ChatPanel({
             <div className="message message--assistant">
               {state.chatStream.answer.length > 0 ? (
                 <div className="chat-panel__raw">
-                  <AnswerText text={state.chatStream.answer} />
+                  <AnswerText text={stripSparqlFences(state.chatStream.answer)} />
                 </div>
               ) : (
                 <p>Waiting for the answer…</p>

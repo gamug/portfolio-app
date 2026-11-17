@@ -1,7 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from "react";
-import { Renderer } from "@openuidev/react-lang";
 import type { Message } from "@openuidev/react-ui";
-import { portfolioChatLibrary } from "../openui/portfolioLibrary";
 import { AnswerText } from "./AnswerText";
 import { extractAnswerText, messageText } from "./answerText";
 import type { SessionState } from "./SessionController";
@@ -12,13 +10,8 @@ type PairAnswerProps = {
   state: SessionState;
   onToggleRelevance: (pairId: string) => void;
   onDeletePair: (pairId: string) => void;
-  initialShowChart?: boolean;
   loadSparql?: SparqlClient["getSparql"];
 };
-
-export function chartReducer(open: boolean): boolean {
-  return !open;
-}
 
 export type SparqlState = {
   open: boolean;
@@ -124,17 +117,15 @@ export function PairAnswer({
   state,
   onToggleRelevance,
   onDeletePair,
-  initialShowChart = false,
   loadSparql,
 }: PairAnswerProps) {
-  const [showChart, toggleChart] = useReducer(chartReducer, initialShowChart);
   const [confirming, setConfirming] = useState(false);
   const [sparql, dispatchSparql] = useReducer(sparqlReducer, INITIAL_SPARQL_STATE);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const sparqlRequest = useRef(0);
   const controlsDisabled = state.isLoading || state.isGeneratingReport || state.isSendingChat;
   const rawContent = messageText(message);
-  const answerText = extractAnswerText(rawContent);
+  const answerText = state.answers[message.id] ?? extractAnswerText(rawContent);
 
   useEffect(() => {
     sparqlRequest.current += 1;
@@ -193,12 +184,6 @@ export function PairAnswer({
         </p>
       )}
 
-      {showChart && (
-        <div className="message__chart" data-chart-view="open">
-          <Renderer response={rawContent} library={portfolioChatLibrary} />
-        </div>
-      )}
-
       <SparqlQueriesPanel
         state={sparql}
         copiedIndex={copiedIndex}
@@ -207,15 +192,6 @@ export function PairAnswer({
 
       <div className="message__footer">
         <div className="message__footer-left">
-          <button
-            type="button"
-            className="message__chart-toggle"
-            aria-expanded={showChart}
-            onClick={() => toggleChart()}
-          >
-            {showChart ? "Hide chart" : "Show chart"}
-          </button>
-
           <button
             type="button"
             className="message__sparql-toggle"
