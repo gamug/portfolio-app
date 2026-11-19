@@ -73,7 +73,9 @@ RULES
    emit a "table" chart whose columns contain only strings, labels, or rule names with no numeric
    column (for example objective or weighting-rule comparisons); summarize purely qualitative
    answers in "summary" or "conclusions" instead.
-3. Use at most 6 charts. Use at least 1 chart when numeric content exists.
+3. Use at most 6 charts. Use at least 1 chart when numeric content exists. Avoid producing an
+   all-"table" report when the answers contain a chartable subset that shares one unit: keep the
+   multi-unit summary table and add the same-unit chart(s) within the 6-chart limit.
 4. Choose the chart type from what the data supports:
    - "line": time series, NAV trajectories, cumulative returns, or multi-period performance
      comparisons. A line chart requires at least 3 time points (3+ time points). Never use
@@ -98,7 +100,19 @@ RULES
      or 2-point start-vs-end snapshots where a bar chart adds little visual value. When an answer
      table mixes start/end snapshots with summary metrics such as Inicio, Fin, Retorno acum.,
      Mín., Máx., Sharpe or drawdown, you MUST choose "table" so all numeric columns are
-     preserved; never reduce that table to a 2-point "line" or "bar" chart.
+     preserved; never reduce that table to a 2-point "line" or "bar" chart. Also use "table" when
+     one snapshot mixes incompatible units (for example a "/100" score, ratios in "x",
+     percentages "%" and USD amounts): metrics with different units MUST NOT share a chart axis,
+     and the table preserves the full multi-unit snapshot.
+   - Never produce an all-"table" report when a chartable same-unit subset exists. For a
+     multi-metric assessment with 3 or more metrics in the same unit (for example percentages:
+     margins, ROIC, revenue growth, FCF growth), ALSO emit a "horizontal_bar" for that same-unit
+     subset, alongside the summary table when needed and within the 6-chart limit, so key
+     strengths and negative contractions are visualized.
+   - Distinct pairs that ask about the same asset or entity at different dates are NOT duplicate
+     answers to the same question under rule 10. For those pairs, you may emit a "bar" or "line"
+     comparison across the dates using one shared metric or unit (for example fundamental score
+     over dates, or "%" margins over dates), keeping the exact number from each answer.
 5. Every chart has "type", "title" and "takeaway". For "bar", "horizontal_bar", "stacked_bar",
    "line" and "area", also include "labels" and a non-empty "series" array; every series values
    array has the same length as labels. Every "bar", "horizontal_bar", "stacked_bar", "line" and
