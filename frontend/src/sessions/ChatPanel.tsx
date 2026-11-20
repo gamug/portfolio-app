@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { AnswerText } from "./AnswerText";
 import { PairAnswer } from "./PairAnswer";
-import { messageText, stripSparqlFences } from "./answerText";
+import { messageText, stripSparqlFences } from "./answerTextFormat";
 import type { SessionState } from "./SessionController";
 import type { SparqlClient } from "./sparqlClient";
 

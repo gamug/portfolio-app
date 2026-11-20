@@ -53,6 +53,8 @@ DOCUMENTS = (
 RENAMED = {
     "scripts/check_commit_msg.py": "backend/app/devtools/check_commit_msg.py",
     "backend/tests/test_commit_msg.py": "backend/tests/devtools/test_check_commit_msg.py",
+    "frontend/src/sessions/answerText.ts": "frontend/src/sessions/answerTextFormat.ts",
+    "frontend/src/sessions/answerText.test.ts": "frontend/src/sessions/answerTextFormat.test.ts",
 }
 PATH_PREFIXES = (
     "backend/",

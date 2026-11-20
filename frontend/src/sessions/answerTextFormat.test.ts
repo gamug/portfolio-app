@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractAnswerText, messageText, stripSparqlFences } from "./answerText";
+import { extractAnswerText, messageText, stripSparqlFences } from "./answerTextFormat";
 
 const SAMPLE_OPENUI = `root = Card([header, summary, chart, followUps])
 header = CardHeader("Monthly Revenue", "January – March")

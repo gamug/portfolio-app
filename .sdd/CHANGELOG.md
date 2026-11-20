@@ -561,3 +561,14 @@ Record completed Work Items and their associated tasks here after verification. 
 - Added a prompt-content regression check for the same-unit and cross-date guidance, and a `parse_chart_plan()` test combining a multi-unit table with a same-unit `"horizontal_bar"` containing positive and negative percentages plus a cross-date `"bar"`.
 - `TASK-034` remains unchecked. No dependency, SQLite schema, API or frontend change.
 - Verification: backend `pytest` (208 passed, 1 skipped), `ruff check`, `ruff format --check` and `mypy app` pass; frontend tests (171 passed); `check_sdd.py`, `check_consistency.py` and `pre-commit run --all-files` pass.
+
+## 2026-11-20 (case-insensitive import collision)
+
+### TASK-034 progress — Rename the answerText utility to fix macOS/Windows builds (WI-014; FR-015)
+
+- Renamed `frontend/src/sessions/answerText.ts` to `answerTextFormat.ts` and `answerText.test.ts` to `answerTextFormat.test.ts`, so the utility no longer shares a case-insensitive stem with `AnswerText.tsx` and `AnswerText.test.tsx`.
+- Updated the imports in `ChatPanel.tsx`, `PairAnswer.tsx` and the renamed test to `./answerTextFormat`; no behavior changed.
+- Registered the old file names in the `RENAMED` map of `backend/app/devtools/check_consistency.py` so the historical paths cited here resolve.
+- Verified zero case-insensitive stem collisions remain under `frontend/src/`.
+- `TASK-034` remains unchecked. No dependency, SQLite schema, API or frontend behavior change.
+- Verification: frontend tests (171 passed), ESLint, Prettier, `tsc --noEmit` and the production build pass (report template 3,841,246 bytes, 0 external references); backend `pytest` (208 passed, 1 skipped); `check_sdd.py`, `check_consistency.py` and `pre-commit run --all-files` pass.
