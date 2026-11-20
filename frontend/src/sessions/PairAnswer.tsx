@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import type { Message } from "@openuidev/react-ui";
 import { AnswerText } from "./AnswerText";
-import { extractAnswerText, messageText } from "./answerText";
+import { extractAnswerText, messageText } from "./answerTextFormat";
 import type { SessionState } from "./SessionController";
 import type { SparqlClient } from "./sparqlClient";
 
